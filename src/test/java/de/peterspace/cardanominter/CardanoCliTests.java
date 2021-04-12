@@ -1,6 +1,11 @@
 package de.peterspace.cardanominter;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import javax.validation.ConstraintViolationException;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,5 +28,30 @@ public class CardanoCliTests {
 	@Test
 	void createAccount() throws Exception {
 		cardanoCli.createAccount();
+	}
+
+	@Test
+	void getBalanceWithInvalidAccountKey() throws Exception {
+		Exception exception = assertThrows(ConstraintViolationException.class, () -> {
+			cardanoCli.getBalance("c:\\");
+		});
+		String expectedMessage = "getBalance.key: TokenFormatError";
+		String actualMessage = exception.getMessage();
+		assertEquals(expectedMessage, actualMessage);
+	}
+
+	@Test
+	void getBalanceWithValidAccountKey() throws Exception {
+		String key = cardanoCli.createAccount();
+		long balance = cardanoCli.getBalance(key);
+		assertEquals(0, balance);
+	}
+
+	@Test
+	void getBalanceWithDepositedAccountKey() throws Exception {
+		// https://developers.cardano.org/en/testnets/cardano/tools/faucet/
+		String key = "e6041580-513b-4402-9039-083300f31235";
+		long balance = cardanoCli.getBalance(key);
+		assertThat(balance).isGreaterThan(1000000000 - 1);
 	}
 }
