@@ -54,4 +54,13 @@ public class CardanoCliTests {
 		long balance = cardanoCli.getBalance(key);
 		assertThat(balance).isGreaterThan(1000000000 - 1);
 	}
+
+	@Test
+	void creatMintTransactionWithDepositedAccountKey() throws Exception {
+		// https://developers.cardano.org/en/testnets/cardano/tools/faucet/
+		String key = "e6041580-513b-4402-9039-083300f31235";
+		String receiver = "addr_test1vzs760mglmuup9kef90lt8vpd7f3uj5ne8xmm80xnljx2dcmmjkl8";
+		cardanoCli.mintCoin(key, receiver, "HUHU", 1);
+	}
+
 }

@@ -1,19 +1,18 @@
 package de.peterspace.cardanominter.cli;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.PostConstruct;
-import javax.validation.Valid;
 import javax.validation.constraints.Pattern;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -25,16 +24,7 @@ import de.peterspace.cardanominter.annotations.AnnotationHelper;
 @Validated
 public class CardanoCli {
 
-	// cardano.cli.path=docker run --rm -v testnet-ipc:/ipc -v
-	// C:\\github\\cardano-minter\\cardano-minter-workdir:/workdir -w /workdir -e
-	// CARDANO_NODE_SOCKET_PATH=/ipc/node.socket --entrypoint cardano-cli
-	// inputoutput/cardano-node
-	// cat.path=docker run --rm -v
-	// C:\\github\\cardano-minter\\cardano-minter-workdir:/workdir -w /workdir
-	// --entrypoint cat inputoutput/cardano-node
-
 	private String[] cardanoCliCmd;
-	private String[] catCmd;
 	private String[] networkMagicCmd;
 
 	@Value("${cardano.node.socket.volume}")
@@ -60,13 +50,6 @@ public class CardanoCli {
 			"-w", "/workdir",
 			"-e", "CARDANO_NODE_SOCKET_PATH=" + cardanoNodeSocketPath,
 			"--entrypoint", "cardano-cli",
-			"inputoutput/cardano-node"
-		};
-		catCmd = new String[] {
-			"docker", "run", "--rm",
-			"-v", workingDir + ":/workdir",
-			"-w", "/workdir",
-			"--entrypoint", "cat",
 			"inputoutput/cardano-node"
 		};
 		networkMagicCmd = networkMagic.split(" ");
@@ -118,10 +101,106 @@ public class CardanoCli {
 		cmd.addAll(List.of(networkMagicCmd));
 		runCommand(cmd.toArray(new String[0]));
 
+		cmd = new ArrayList<String>();
+		cmd.addAll(List.of(cardanoCliCmd));
+		cmd.add("address");
+		cmd.add("build");
+		cmd.add("--payment-verification-key-file");
+		cmd.add(key + ".vkey");
+		cmd.add("--out-file");
+		cmd.add(key + ".addr");
+		cmd.addAll(List.of(networkMagicCmd));
+		runCommand(cmd.toArray(new String[0]));
+
 		return key;
 	}
 
-	public long getBalance(@Pattern(regexp = AnnotationHelper.UUID_PATTERN, message = "TokenFormatError") String key) throws Exception {
+	public String getPolicyId(@Pattern(regexp = AnnotationHelper.UUID_PATTERN, message = "TokenFormatError") String key) throws Exception {
+		ArrayList<String> cmd = new ArrayList<String>();
+		cmd.addAll(List.of(cardanoCliCmd));
+		cmd.add("transaction");
+		cmd.add("policyid");
+		cmd.add("--script-file");
+		cmd.add(key + ".script");
+		String policyId = runCommand(cmd.toArray(new String[0]));
+		return policyId;
+	}
+
+	public void mintCoin(@Pattern(regexp = AnnotationHelper.UUID_PATTERN, message = "TokenFormatError") String key, String receiver, String tokenName, long tokenAmount) {
+
+	}
+
+	public void createMintTransaction(@Pattern(regexp = AnnotationHelper.UUID_PATTERN, message = "TokenFormatError") String key, String receiver, String tokenName, long tokenAmount, long fee) throws Exception {
+		JSONObject utxo = getUtxo(key);
+		long balance = getBalance(key);
+		long dueSlot = createPolicy(key);
+		String policyId = getPolicyId(key);
+
+		ArrayList<String> cmd = new ArrayList<String>();
+		cmd.addAll(List.of(cardanoCliCmd));
+
+		cmd.add("transaction");
+		cmd.add("build-raw");
+
+		cmd.add("--fee");
+		cmd.add("" + fee);
+
+		Iterator<String> utxoKeys = utxo.keys();
+		while (utxoKeys.hasNext()) {
+			cmd.add("--tx-in");
+			cmd.add(utxoKeys.next());
+		}
+
+		cmd.add("--tx-out");
+		cmd.add(String.format("%s+%d+%d %s.%s", receiver, balance - fee, tokenAmount, policyId, tokenName));
+
+		cmd.add("--mint");
+		cmd.add(String.format("%d %s.%s", tokenAmount, policyId, tokenName));
+
+		cmd.add("--out-file");
+		cmd.add(key + ".raw");
+
+		cmd.add("--invalid-hereafter");
+		cmd.add("" + dueSlot);
+
+		runCommand(cmd.toArray(new String[0]));
+	}
+
+	public long calculateFee(@Pattern(regexp = AnnotationHelper.UUID_PATTERN, message = "TokenFormatError") String key) throws Exception {
+		ArrayList<String> cmd = new ArrayList<String>();
+		cmd.addAll(List.of(cardanoCliCmd));
+
+		cmd.add("transaction");
+		cmd.add("calculate-min-fee");
+
+		cmd.add("--tx-body-file");
+		cmd.add(key + ".raw");
+
+		cmd.add("--tx-in-count");
+		int count = 0;
+		Iterator<String> keysIterator = getUtxo(key).keys();
+		while (keysIterator.hasNext()) {
+			keysIterator.next();
+			count++;
+		}
+		cmd.add("" + count);
+
+		cmd.add("--tx-out-count");
+		cmd.add("1");
+
+		cmd.add("--witness-count");
+		cmd.add("1");
+
+		cmd.addAll(List.of(networkMagicCmd));
+
+		cmd.add("--protocol-params-file");
+		cmd.add("protocol.json");
+
+		String fee = runCommand(cmd.toArray(new String[0]));
+		return Long.parseLong(fee.split(" ")[0]);
+	}
+
+	public JSONObject getUtxo(@Pattern(regexp = AnnotationHelper.UUID_PATTERN, message = "TokenFormatError") String key) throws Exception {
 
 		String address = readAddress(key);
 
@@ -138,6 +217,13 @@ public class CardanoCli {
 
 		JSONObject readUtxo = readUtxo(key);
 
+		return readUtxo;
+	}
+
+	public long getBalance(@Pattern(regexp = AnnotationHelper.UUID_PATTERN, message = "TokenFormatError") String key) throws Exception {
+
+		JSONObject readUtxo = getUtxo(key);
+
 		long sum = 0;
 
 		Iterator<String> txidIterator = readUtxo.keys();
@@ -147,6 +233,38 @@ public class CardanoCli {
 		}
 
 		return sum;
+	}
+
+	private long createPolicy(String key) throws Exception {
+
+		// slot
+		long dueSlot = getTip() + 60 * 10;
+
+		// address hash
+		ArrayList<String> cmd = new ArrayList<String>();
+		cmd.addAll(List.of(cardanoCliCmd));
+		cmd.add("address");
+		cmd.add("key-hash");
+		cmd.add("--payment-verification-key-file");
+		cmd.add(key + ".vkey");
+		String keyHash = runCommand(cmd.toArray(new String[0]));
+
+		// @formatter:off
+		JSONObject script = new JSONObject()
+				.put("type", "all")
+				.put("scripts",
+						new JSONArray()
+							.put(new JSONObject()
+									.put("slot", dueSlot)
+									.put("type", "before"))
+							.put(new JSONObject()
+									.put("keyHash", keyHash)
+									.put("type", "sig")));
+		// @formatter:on
+		writeFile(key + ".script", script.toString(3));
+
+		return dueSlot;
+
 	}
 
 	private String readAddress(String key) throws Exception {
@@ -160,10 +278,11 @@ public class CardanoCli {
 	}
 
 	private String readFile(String filename) throws Exception {
-		ArrayList<String> cmd = new ArrayList<String>();
-		cmd.addAll(List.of(catCmd));
-		cmd.add(filename);
-		return runCommand(cmd.toArray(new String[0]));
+		return Files.readString(Paths.get(workingDir, filename));
+	}
+
+	private void writeFile(String filename, String content) throws Exception {
+		Files.writeString(Paths.get(workingDir, filename), content);
 	}
 
 	private String runCommand(String... cmd) throws Exception {
