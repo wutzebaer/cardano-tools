@@ -3,10 +3,10 @@ package de.peterspace.cardanominter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import javax.validation.ConstraintViolationException;
 
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,7 +21,7 @@ public class CardanoCliTests {
 
 	@Test
 	void tipQuery() throws Exception {
-		long tip = cardanoCli.getTip();
+		long tip = cardanoCli.queryTip();
 		assertThat(tip).isGreaterThan(0);
 	}
 
@@ -31,9 +31,9 @@ public class CardanoCliTests {
 	}
 
 	@Test
-	void getBalanceWithInvalidAccountKey() throws Exception {
+	void getUtxoWithInvalidAccountKey() throws Exception {
 		Exception exception = assertThrows(ConstraintViolationException.class, () -> {
-			cardanoCli.getBalance("c:\\");
+			cardanoCli.getUtxo("c:\\");
 		});
 		String expectedMessage = "getBalance.key: TokenFormatError";
 		String actualMessage = exception.getMessage();
@@ -41,9 +41,10 @@ public class CardanoCliTests {
 	}
 
 	@Test
-	void getBalanceWithValidAccountKey() throws Exception {
+	void getUtxoWithValidAccountKey() throws Exception {
 		String key = cardanoCli.createAccount();
-		long balance = cardanoCli.getBalance(key);
+		JSONObject utxo = cardanoCli.getUtxo(key);
+		long balance = cardanoCli.calculateBalance(utxo);
 		assertEquals(0, balance);
 	}
 
@@ -51,12 +52,13 @@ public class CardanoCliTests {
 	void getBalanceWithDepositedAccountKey() throws Exception {
 		// https://developers.cardano.org/en/testnets/cardano/tools/faucet/
 		String key = "e6041580-513b-4402-9039-083300f31235";
-		long balance = cardanoCli.getBalance(key);
+		JSONObject utxo = cardanoCli.getUtxo(key);
+		long balance = cardanoCli.calculateBalance(utxo);
 		assertThat(balance).isGreaterThan(1000000000 - 1);
 	}
 
 	@Test
-	void creatMintTransactionWithDepositedAccountKey() throws Exception {
+	void mintCoin() throws Exception {
 		// https://developers.cardano.org/en/testnets/cardano/tools/faucet/
 		String key = "e6041580-513b-4402-9039-083300f31235";
 		String receiver = "addr_test1vzs760mglmuup9kef90lt8vpd7f3uj5ne8xmm80xnljx2dcmmjkl8";

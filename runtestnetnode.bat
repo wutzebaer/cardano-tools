@@ -1,0 +1,1 @@
+docker run --name testnode --rm -v testenet-data:/data -v %cd%:/work -v testnet-ipc:/ipc -e NETWORK=testnet inputoutput/cardano-node:master
