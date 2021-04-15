@@ -1,10 +1,14 @@
 package de.peterspace.cardanominter.cli;
 
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -31,10 +35,13 @@ public class CardanoNode {
 	public void init() throws Exception {
 
 		// determine network
+		Date systemStart;
 		if (network.equals("testnet")) {
 			networkMagicArgs = new String[] { "--testnet-magic", "1097911063" };
+			systemStart = Date.from(Instant.from(DateTimeFormatter.ISO_INSTANT.parse("2019-07-24T20:20:16Z")));
 		} else if (network.equals("mainnet")) {
 			networkMagicArgs = new String[] { "--mainnet" };
+			systemStart = Date.from(Instant.from(DateTimeFormatter.ISO_INSTANT.parse("2017-09-23T21:44:51Z")));
 		} else {
 			throw new RuntimeException("Network must be testnet or mainnet");
 		}
@@ -52,11 +59,50 @@ public class CardanoNode {
 		}
 
 		// ensure node is synced
+		long epochLength = 432000;
+		while (true) {
+			try {
+				JSONObject tip = queryTip();
+				if (tip.get("epoch") == JSONObject.NULL) {
+					log.error("Not synced: {}", tip.toString());
+				} else {
+					long elapsedSeconds = (System.currentTimeMillis() - systemStart.getTime()) / 1000;
+					long expectedEpoch = elapsedSeconds / epochLength;
+					log.info("Synced {}", String.format("%.2f%%", (double) tip.getLong("epoch") / expectedEpoch * 100));
+					if (tip.getLong("epoch") == expectedEpoch) {
+						break;
+					}
+				}
+			} catch (Exception e) {
+				log.error("Not synced: {}", e.getMessage());
+			}
+			Thread.sleep(10000);
+		}
+	}
 
+	private JSONObject queryTip() throws Exception {
+		ArrayList<String> cmd = new ArrayList<String>();
+
+		cmd.add("docker");
+		cmd.add("exec");
+
+		cmd.add("-e");
+		cmd.add("CARDANO_NODE_SOCKET_PATH=/ipc/node.socket");
+
+		cmd.add(containerName);
+
+		cmd.add("cardano-cli");
+		cmd.add("query");
+		cmd.add("tip");
+
+		cmd.addAll(List.of(networkMagicArgs));
+		String jsonString = ProcessUtil.runCommand(cmd.toArray(new String[0]));
+		JSONObject jsonObject = new JSONObject(jsonString);
+		return jsonObject;
 	}
 
 	private void startContainer() throws Exception {
-		ProcessUtil.runCommand(new String[] { "docker", "pull", "inputoutput/cardano-node:master" });
+		ProcessUtil.runCommand(new String[] { "docker", "pull", "inputoutput/cardano-node" });
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.add("docker");
@@ -80,7 +126,7 @@ public class CardanoNode {
 		cmd.add("-e");
 		cmd.add("NETWORK=" + network);
 
-		cmd.add("inputoutput/cardano-node:master");
+		cmd.add("inputoutput/cardano-node");
 
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 	}

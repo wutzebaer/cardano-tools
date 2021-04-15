@@ -3,14 +3,12 @@ package de.peterspace.cardanominter.cli;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
-import javax.validation.constraints.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
@@ -19,7 +17,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import de.peterspace.cardanominter.annotations.AnnotationHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -112,11 +109,11 @@ public class CardanoCli {
 		return key;
 	}
 
-	public Object getAddress(@Pattern(regexp = AnnotationHelper.UUID_PATTERN, message = "TokenFormatError") String key) throws Exception {
+	public Object getAddress(String key) throws Exception {
 		return readFile(key + ".addr");
 	}
 
-	public JSONObject getUtxo(@Pattern(regexp = AnnotationHelper.UUID_PATTERN, message = "TokenFormatError") String key) throws Exception {
+	public JSONObject getUtxo(String key) throws Exception {
 
 		String address = readAddress(key);
 
@@ -148,7 +145,7 @@ public class CardanoCli {
 		return sum;
 	}
 
-	public void mintCoin(@Pattern(regexp = AnnotationHelper.UUID_PATTERN, message = "TokenFormatError") String key, String receiver, String tokenName, long tokenAmount, Map<String, String> metaData) throws Exception {
+	public void mintCoin(String key, String receiver, String tokenName, long tokenAmount, Map<String, String> metaData) throws Exception {
 		JSONObject utxo = getUtxo(key);
 		long tip = queryTip();
 		createMintTransaction(key, utxo, receiver, tokenName, tokenAmount, 0, tip, metaData);
@@ -229,7 +226,7 @@ public class CardanoCli {
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 	}
 
-	private long calculateFee(@Pattern(regexp = AnnotationHelper.UUID_PATTERN, message = "TokenFormatError") String key, JSONObject utxo) throws Exception {
+	private long calculateFee(String key, JSONObject utxo) throws Exception {
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
 
@@ -332,7 +329,7 @@ public class CardanoCli {
 
 	}
 
-	private String getPolicyId(@Pattern(regexp = AnnotationHelper.UUID_PATTERN, message = "TokenFormatError") String key) throws Exception {
+	private String getPolicyId(String key) throws Exception {
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
 		cmd.add("transaction");
