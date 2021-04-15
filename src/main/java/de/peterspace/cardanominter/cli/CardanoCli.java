@@ -20,21 +20,22 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 import de.peterspace.cardanominter.annotations.AnnotationHelper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Validated
 @Slf4j
+@RequiredArgsConstructor
 public class CardanoCli {
 
-	private String[] cardanoCliCmd;
-	private String[] networkMagicCmd;
+	private final CardanoNode cardanoNode;
 
 	@Value("${working.dir}")
 	private String workingDir;
 
-	@Value("${network.magic}")
-	private String networkMagic;
+	private String[] cardanoCliCmd;
+	private String[] networkMagicArgs;
 
 	@PostConstruct
 	public void init() throws Exception {
@@ -44,11 +45,12 @@ public class CardanoCli {
                 "docker", "exec",
                 "-w", "/workdir",
                 "-e", "CARDANO_NODE_SOCKET_PATH=/ipc/node.socket",
-                "testnode",
+                cardanoNode.getContainerName(),
                 "cardano-cli"
         };
-        networkMagicCmd = networkMagic.split(" ");
         // @formatter:on
+
+		this.networkMagicArgs = cardanoNode.getNetworkMagicArgs();
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
@@ -56,8 +58,8 @@ public class CardanoCli {
 		cmd.add("protocol-parameters");
 		cmd.add("--out-file");
 		cmd.add("protocol.json");
-		cmd.addAll(List.of(networkMagicCmd));
-		runCommand(cmd.toArray(new String[0]));
+		cmd.addAll(List.of(networkMagicArgs));
+		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 	}
 
 	public long queryTip() throws Exception {
@@ -65,8 +67,8 @@ public class CardanoCli {
 		cmd.addAll(List.of(cardanoCliCmd));
 		cmd.add("query");
 		cmd.add("tip");
-		cmd.addAll(List.of(networkMagicCmd));
-		String jsonString = runCommand(cmd.toArray(new String[0]));
+		cmd.addAll(List.of(networkMagicArgs));
+		String jsonString = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 		JSONObject jsonObject = new JSONObject(jsonString);
 		return jsonObject.getLong("slot");
 	}
@@ -83,7 +85,7 @@ public class CardanoCli {
 		cmd.add(key + ".vkey");
 		cmd.add("--signing-key-file");
 		cmd.add(key + ".skey");
-		runCommand(cmd.toArray(new String[0]));
+		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 		cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
@@ -93,8 +95,8 @@ public class CardanoCli {
 		cmd.add(key + ".vkey");
 		cmd.add("--out-file");
 		cmd.add(key + ".addr");
-		cmd.addAll(List.of(networkMagicCmd));
-		runCommand(cmd.toArray(new String[0]));
+		cmd.addAll(List.of(networkMagicArgs));
+		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 		cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
@@ -104,8 +106,8 @@ public class CardanoCli {
 		cmd.add(key + ".vkey");
 		cmd.add("--out-file");
 		cmd.add(key + ".addr");
-		cmd.addAll(List.of(networkMagicCmd));
-		runCommand(cmd.toArray(new String[0]));
+		cmd.addAll(List.of(networkMagicArgs));
+		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 		return key;
 	}
@@ -124,10 +126,10 @@ public class CardanoCli {
 		cmd.add("utxo");
 		cmd.add("--address");
 		cmd.add(address);
-		cmd.addAll(List.of(networkMagicCmd));
+		cmd.addAll(List.of(networkMagicArgs));
 		cmd.add("--out-file");
 		cmd.add(key + ".utxo");
-		runCommand(cmd.toArray(new String[0]));
+		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 		JSONObject readUtxo = readUtxo(key);
 
@@ -224,7 +226,7 @@ public class CardanoCli {
 		cmd.add("--invalid-hereafter");
 		cmd.add("" + dueSlot);
 
-		runCommand(cmd.toArray(new String[0]));
+		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 	}
 
 	private long calculateFee(@Pattern(regexp = AnnotationHelper.UUID_PATTERN, message = "TokenFormatError") String key, JSONObject utxo) throws Exception {
@@ -252,12 +254,12 @@ public class CardanoCli {
 		cmd.add("--witness-count");
 		cmd.add("1");
 
-		cmd.addAll(List.of(networkMagicCmd));
+		cmd.addAll(List.of(networkMagicArgs));
 
 		cmd.add("--protocol-params-file");
 		cmd.add("protocol.json");
 
-		String fee = runCommand(cmd.toArray(new String[0]));
+		String fee = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 		return Long.parseLong(fee.split(" ")[0]);
 	}
 
@@ -273,7 +275,7 @@ public class CardanoCli {
 		cmd.add("--script-file");
 		cmd.add(key + ".script");
 
-		cmd.addAll(List.of(networkMagicCmd));
+		cmd.addAll(List.of(networkMagicArgs));
 
 		cmd.add("--tx-body-file");
 		cmd.add(key + ".raw");
@@ -281,7 +283,7 @@ public class CardanoCli {
 		cmd.add("--out-file");
 		cmd.add(key + ".signed");
 
-		runCommand(cmd.toArray(new String[0]));
+		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 	}
 
 	private void submitTransaction(String key) throws Exception {
@@ -293,9 +295,9 @@ public class CardanoCli {
 		cmd.add("--tx-file");
 		cmd.add(key + ".signed");
 
-		cmd.addAll(List.of(networkMagicCmd));
+		cmd.addAll(List.of(networkMagicArgs));
 
-		runCommand(cmd.toArray(new String[0]));
+		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 	}
 
 	private long createPolicy(String key, long tip) throws Exception {
@@ -310,7 +312,7 @@ public class CardanoCli {
 		cmd.add("key-hash");
 		cmd.add("--payment-verification-key-file");
 		cmd.add(key + ".vkey");
-		String keyHash = runCommand(cmd.toArray(new String[0]));
+		String keyHash = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 		// @formatter:off
         JSONObject script = new JSONObject()
@@ -337,7 +339,7 @@ public class CardanoCli {
 		cmd.add("policyid");
 		cmd.add("--script-file");
 		cmd.add(key + ".script");
-		String policyId = runCommand(cmd.toArray(new String[0]));
+		String policyId = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 		return policyId;
 	}
 
@@ -357,17 +359,6 @@ public class CardanoCli {
 
 	private void writeFile(String filename, String content) throws Exception {
 		Files.writeString(Paths.get(workingDir, filename), content);
-	}
-
-	private String runCommand(String... cmd) throws Exception {
-		log.trace(StringUtils.join(Arrays.copyOfRange(cmd, cardanoCliCmd.length, cmd.length), " "));
-		Process process = Runtime.getRuntime().exec(cmd);
-		int returnCode = process.waitFor();
-		if (returnCode != 0) {
-			throw new Exception(new String(process.getErrorStream().readAllBytes()).trim());
-		} else {
-			return new String(process.getInputStream().readAllBytes()).trim();
-		}
 	}
 
 }
