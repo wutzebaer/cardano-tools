@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import de.peterspace.cardanominter.model.Address;
+import de.peterspace.cardanominter.repository.AddressRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CardanoCli {
 
 	private final CardanoNode cardanoNode;
+	private final AddressRepository addressRepository;
 
 	@Value("${working.dir}")
 	private String workingDir;
@@ -101,21 +104,23 @@ public class CardanoCli {
 		cmd.add("build");
 		cmd.add("--payment-verification-key-file");
 		cmd.add(key + ".vkey");
-		cmd.add("--out-file");
-		cmd.add(key + ".addr");
 		cmd.addAll(List.of(networkMagicArgs));
-		ProcessUtil.runCommand(cmd.toArray(new String[0]));
+		String addressLiteral = ProcessUtil.runCommand(cmd.toArray(new String[0]));
+
+		Address address = new Address(key, addressLiteral);
+		addressRepository.save(address);
 
 		return key;
 	}
 
 	public String getAddress(String key) throws Exception {
-		return readFile(key + ".addr");
+		Address address = addressRepository.findById(key).get();
+		return address.getAddress();
 	}
 
 	public JSONObject getUtxo(String key) throws Exception {
 
-		String address = readAddress(key);
+		String address = getAddress(key);
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
@@ -346,10 +351,6 @@ public class CardanoCli {
 		cmd.add(key + ".script");
 		String policyId = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 		return policyId;
-	}
-
-	private String readAddress(String key) throws Exception {
-		return readFile(key + ".addr");
 	}
 
 	private JSONObject readUtxo(String key) throws Exception {

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import javax.validation.ConstraintViolationException;
 
@@ -36,10 +37,10 @@ public class CardanoCliTests {
 
 	@Test
 	void getUtxoWithInvalidAccountKey() throws Exception {
-		Exception exception = assertThrows(ConstraintViolationException.class, () -> {
+		Exception exception = assertThrows(NoSuchElementException.class, () -> {
 			cardanoCli.getUtxo("c:\\");
 		});
-		String expectedMessage = "getUtxo.key: TokenFormatError";
+		String expectedMessage = "No value present";
 		String actualMessage = exception.getMessage();
 		assertEquals(expectedMessage, actualMessage);
 	}
@@ -55,7 +56,7 @@ public class CardanoCliTests {
 	@Test
 	void getBalanceWithDepositedAccountKey() throws Exception {
 		// https://developers.cardano.org/en/testnets/cardano/tools/faucet/
-		String key = "e6041580-513b-4402-9039-083300f31235";
+		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
 		JSONObject utxo = cardanoCli.getUtxo(key);
 		long balance = cardanoCli.calculateBalance(utxo);
 		assertThat(balance).isGreaterThan(1000000000 - 1);
@@ -64,7 +65,7 @@ public class CardanoCliTests {
 	@Test
 	void mintCoin() throws Exception {
 		// String key = cardanoCli.createAccount();
-		String key = "e6041580-513b-4402-9039-083300f31235";
+		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
 		// String key = "ddd6369b-e1aa-4cba-b9c6-ee0db3df40fc";
 		while (cardanoCli.calculateBalance(cardanoCli.getUtxo(key)) < 1) {
 			log.info("Please uploads funds with https://developers.cardano.org/en/testnets/cardano/tools/faucet/ to {}", cardanoCli.getAddress(key));
