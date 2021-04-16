@@ -19,6 +19,7 @@
 	</properties>
 	<dependencies>
 
+		<!-- starters -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
@@ -48,6 +49,7 @@
 			<optional>true</optional>
 		</dependency>
 
+		<!-- rate limit -->
 		<dependency>
 			<groupId>com.giffing.bucket4j.spring.boot.starter</groupId>
 			<artifactId>bucket4j-spring-boot-starter</artifactId>
@@ -62,12 +64,14 @@
 			<artifactId>ehcache</artifactId>
 		</dependency>
 
+		<!-- test -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 
+		<!-- misc -->
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>

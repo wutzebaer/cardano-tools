@@ -109,7 +109,7 @@ public class CardanoCli {
 		return key;
 	}
 
-	public Object getAddress(String key) throws Exception {
+	public String getAddress(String key) throws Exception {
 		return readFile(key + ".addr");
 	}
 
