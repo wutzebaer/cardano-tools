@@ -45,4 +45,9 @@ public class RestInterface {
 	public void mintCoin(@PathVariable("key") UUID key, @RequestBody MintCoinTask parameterObject) throws Exception {
 		cardanoCli.mintCoin(key.toString(), parameterObject.getReceiver(), parameterObject.getTokenName(), parameterObject.getTokenAmount(), parameterObject.getMetaData());
 	}
+
+	@PostMapping("mintFee/{key}")
+	public long mintFee(@PathVariable("key") UUID key, @RequestBody MintCoinTask parameterObject) throws Exception {
+		return cardanoCli.mintFee(key.toString(), parameterObject.getReceiver(), parameterObject.getTokenName(), parameterObject.getTokenAmount(), parameterObject.getMetaData());
+	}
 }

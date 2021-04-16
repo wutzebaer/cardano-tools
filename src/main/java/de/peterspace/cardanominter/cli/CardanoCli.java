@@ -155,6 +155,14 @@ public class CardanoCli {
 		submitTransaction(key);
 	}
 
+	public long mintFee(String key, String receiver, String tokenName, long tokenAmount, Map<String, String> metaData) throws Exception {
+		JSONObject utxo = getUtxo(key);
+		long tip = queryTip();
+		createMintTransaction(key, utxo, receiver, tokenName, tokenAmount, 0, tip, metaData);
+		long fee = calculateFee(key, utxo);
+		return fee;
+	}
+
 	private void createMintTransaction(String key, JSONObject utxo, String receiver, String tokenName, long tokenAmount, long fee, long tip, Map<String, String> metaData) throws Exception {
 		long balance = calculateBalance(utxo);
 		long dueSlot = createPolicy(key, tip);
