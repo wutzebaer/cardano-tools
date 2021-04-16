@@ -1,10 +1,13 @@
 package de.peterspace.cardanominter;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.UUID;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,9 +23,18 @@ public class IpfsCliTest {
 	IpfsCli ipfsCli;
 
 	@Test
-	void testSaveFile() throws Exception {
-		ByteArrayInputStream is = new ByteArrayInputStream(UUID.randomUUID().toString().getBytes());
+	void testSaveAndLoadFile() throws Exception {
+
+		String data = UUID.randomUUID().toString();
+
+		ByteArrayInputStream is = new ByteArrayInputStream(data.getBytes());
 		String ipfsHash = ipfsCli.saveFile(is);
 		assertThat(ipfsHash).hasSize(46);
+
+		InputStream is1 = ipfsCli.getFile(ipfsHash);
+		String loaded = IOUtils.toString(is1, "UTF-8");
+
+		assertEquals(data, loaded);
+
 	}
 }

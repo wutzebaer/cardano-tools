@@ -2,8 +2,8 @@ package de.peterspace.cardanominter.ipfs;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
@@ -27,9 +27,17 @@ public class IpfsCli {
 		try (OutputStream bos = new BufferedOutputStream(new FileOutputStream(tempFile))) {
 			IOUtils.copy(is, bos);
 		}
-
-		String result = ProcessUtil.runCommand(new String[] { "docker", "exec", "ipfs-node", "ipfs", "add", "-r", "/export/" + tempFile.getName() });
+		String result = ProcessUtil.runCommand(new String[] { "docker", "exec", "ipfs-node", "ipfs", "add", "/export/" + tempFile.getName() });
+		tempFile.delete();
 		return result.split(" ")[1];
+	}
+
+	public InputStream getFile(String ipfsHash) throws Exception {
+		File file = new File(workingDir + "/ipfs/export/" + ipfsHash);
+		if (!file.isFile()) {
+			ProcessUtil.runCommand(new String[] { "docker", "exec", "ipfs-node", "ipfs", "get", ipfsHash, "-o", "/export/" + ipfsHash });
+		}
+		return new FileInputStream(file);
 	}
 
 }
