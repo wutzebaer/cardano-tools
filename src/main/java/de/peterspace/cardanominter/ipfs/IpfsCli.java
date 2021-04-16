@@ -22,13 +22,17 @@ public class IpfsCli {
 	@Value("${working.dir}")
 	private String workingDir;
 
-	public String saveFile(InputStream is) throws Exception {
-		File tempFile = new File(workingDir + "/ipfs/export/" + UUID.randomUUID().toString());
-		try (OutputStream bos = new BufferedOutputStream(new FileOutputStream(tempFile))) {
+	public String stageFile(InputStream is) throws Exception {
+		File stageFile = new File(workingDir + "/ipfs/export/" + UUID.randomUUID().toString());
+		try (OutputStream bos = new BufferedOutputStream(new FileOutputStream(stageFile))) {
 			IOUtils.copy(is, bos);
 		}
-		String result = ProcessUtil.runCommand(new String[] { "docker", "exec", "ipfs-node", "ipfs", "add", "/export/" + tempFile.getName() });
-		tempFile.delete();
+		return stageFile.getName();
+	}
+
+	public String saveFile(String stageFile) throws Exception {
+		String result = ProcessUtil.runCommand(new String[] { "docker", "exec", "ipfs-node", "ipfs", "add", "/export/" + stageFile });
+		new File(workingDir + "/ipfs/export/" + stageFile).delete();
 		return result.split(" ")[1];
 	}
 

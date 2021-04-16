@@ -60,7 +60,7 @@ public class RestInterface {
 
 	@PostMapping(path = "addFile/{key}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public String handleFileUpload(@PathVariable("key") UUID key, @RequestPart MultipartFile file) throws Exception {
-		String ipfsHash = ipfsCli.saveFile(file.getInputStream());
-		return ipfsHash;
+		String stageFile = ipfsCli.stageFile(file.getInputStream());
+		return stageFile;
 	}
 }

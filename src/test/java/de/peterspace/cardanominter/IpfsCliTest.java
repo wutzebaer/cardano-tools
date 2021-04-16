@@ -28,7 +28,8 @@ public class IpfsCliTest {
 		String data = UUID.randomUUID().toString();
 
 		ByteArrayInputStream is = new ByteArrayInputStream(data.getBytes());
-		String ipfsHash = ipfsCli.saveFile(is);
+		String stageName = ipfsCli.stageFile(is);
+		String ipfsHash = ipfsCli.saveFile(stageName);
 		assertThat(ipfsHash).hasSize(46);
 
 		InputStream is1 = ipfsCli.getFile(ipfsHash);
