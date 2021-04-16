@@ -10,7 +10,7 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>de.peterspace</groupId>
-	<artifactId>cardano-minter</artifactId>
+	<artifactId>cardano-tools</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>cardano-minter</name>
 	<description>Webapp for minting native cardano coins</description>
