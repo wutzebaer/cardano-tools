@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -113,21 +115,20 @@ public class CardanoCli {
 		return key;
 	}
 
-	public String getAddress(String key) throws Exception {
-		Address address = addressRepository.findById(key).get();
-		return address.getAddress();
-	}
-
 	public JSONObject getUtxo(String key) throws Exception {
 
-		String address = getAddress(key);
+		Optional<Address> address = addressRepository.findById(key);
+
+		if (address.isEmpty()) {
+			throw new NoSuchElementException(key);
+		}
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
 		cmd.add("query");
 		cmd.add("utxo");
 		cmd.add("--address");
-		cmd.add(address);
+		cmd.add(address.get().getAddress());
 		cmd.addAll(List.of(networkMagicArgs));
 		cmd.add("--out-file");
 		cmd.add(key + ".utxo");
