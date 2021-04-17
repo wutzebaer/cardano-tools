@@ -1,4 +1,4 @@
-package de.peterspace.cardanominter;
+package de.peterspace.cardanotools;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

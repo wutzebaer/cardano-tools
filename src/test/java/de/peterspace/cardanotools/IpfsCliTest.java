@@ -1,4 +1,4 @@
-package de.peterspace.cardanominter;
+package de.peterspace.cardanotools;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import de.peterspace.cardanominter.ipfs.IpfsCli;
+import de.peterspace.cardanotools.ipfs.IpfsCli;
 import lombok.extern.slf4j.Slf4j;
 
 @SpringBootTest

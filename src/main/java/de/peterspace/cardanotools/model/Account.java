@@ -1,4 +1,4 @@
-package de.peterspace.cardanominter.model;
+package de.peterspace.cardanotools.model;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -12,9 +12,18 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Address {
+public class Account {
+
 	@Id
 	private String key;
+
 	@NotBlank
 	private String address;
+
+	@NotBlank
+	private String skey;
+
+	@NotBlank
+	private String vkey;
+
 }

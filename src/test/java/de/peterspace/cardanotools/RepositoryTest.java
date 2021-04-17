@@ -1,4 +1,4 @@
-package de.peterspace.cardanominter;
+package de.peterspace.cardanotools;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,8 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 
-import de.peterspace.cardanominter.model.Address;
-import de.peterspace.cardanominter.repository.AddressRepository;
+import de.peterspace.cardanotools.model.Account;
+import de.peterspace.cardanotools.repository.AccountRepository;
 import lombok.extern.slf4j.Slf4j;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -20,16 +20,16 @@ import lombok.extern.slf4j.Slf4j;
 public class RepositoryTest {
 
 	@Autowired
-	AddressRepository addressRepository;
+	AccountRepository addressRepository;
 
 	@Test
 	void testSaveAndLoadFile() throws Exception {
 		String id = UUID.randomUUID().toString();
 
-		Address address = new Address(id, "sdfdsfsd345324");
+		Account address = new Account(id, "sdfdsfsd345324", "a", "b");
 		addressRepository.save(address);
 
-		Optional<Address> loadedAddress = addressRepository.findById(id);
+		Optional<Account> loadedAddress = addressRepository.findById(id);
 		assertTrue(loadedAddress.isPresent());
 		assertEquals(loadedAddress.get().getAddress(), "sdfdsfsd345324");
 	}

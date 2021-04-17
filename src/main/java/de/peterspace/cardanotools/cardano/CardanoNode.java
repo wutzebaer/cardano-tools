@@ -1,4 +1,4 @@
-package de.peterspace.cardanominter.cli;
+package de.peterspace.cardanotools.cardano;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import de.peterspace.cardanotools.process.ProcessUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

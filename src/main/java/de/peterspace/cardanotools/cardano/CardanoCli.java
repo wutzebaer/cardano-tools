@@ -1,13 +1,11 @@
-package de.peterspace.cardanominter.cli;
+package de.peterspace.cardanotools.cardano;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -19,8 +17,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import de.peterspace.cardanominter.model.Address;
-import de.peterspace.cardanominter.repository.AddressRepository;
+import de.peterspace.cardanotools.model.Account;
+import de.peterspace.cardanotools.model.MintOrder;
+import de.peterspace.cardanotools.model.Token;
+import de.peterspace.cardanotools.process.ProcessUtil;
+import de.peterspace.cardanotools.repository.AccountRepository;
+import de.peterspace.cardanotools.repository.MintCoinOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,7 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 public class CardanoCli {
 
 	private final CardanoNode cardanoNode;
-	private final AddressRepository addressRepository;
+	private final AccountRepository accountRepository;
+	private final MintCoinOrderRepository mintOrderRepository;
 
 	@Value("${working.dir}")
 	private String workingDir;
@@ -109,32 +112,27 @@ public class CardanoCli {
 		cmd.addAll(List.of(networkMagicArgs));
 		String addressLiteral = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		Address address = new Address(key, addressLiteral);
-		addressRepository.save(address);
+		Account address = new Account(key, addressLiteral, readFile(key + ".skey"), readFile(key + ".vkey"));
+		accountRepository.save(address);
 
 		return key;
 	}
 
-	public JSONObject getUtxo(String key) throws Exception {
-
-		Optional<Address> address = addressRepository.findById(key);
-
-		if (address.isEmpty()) {
-			throw new NoSuchElementException(key);
-		}
+	public JSONObject getUtxo(Account account) throws Exception {
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
 		cmd.add("query");
 		cmd.add("utxo");
 		cmd.add("--address");
-		cmd.add(address.get().getAddress());
+		cmd.add(account.getAddress());
 		cmd.addAll(List.of(networkMagicArgs));
 		cmd.add("--out-file");
-		cmd.add(key + ".utxo");
+		cmd.add(account.getKey() + ".utxo");
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		JSONObject readUtxo = readUtxo(key);
+		String readString = consumeFile(account.getKey() + ".utxo");
+		JSONObject readUtxo = new JSONObject(readString);
 
 		return readUtxo;
 	}
@@ -151,31 +149,46 @@ public class CardanoCli {
 		return sum;
 	}
 
-	public void mintCoin(String key, String receiver, String tokenName, long tokenAmount, Map<String, String> metaData) throws Exception {
-		JSONObject utxo = getUtxo(key);
+	public long calculateTransactionFee(MintOrder mintOrder) throws Exception {
+		JSONObject utxo = getUtxo(mintOrder.getAccount());
 		long tip = queryTip();
-		createMintTransaction(key, utxo, receiver, tokenName, tokenAmount, 0, tip, metaData);
-		long fee = calculateFee(key, utxo);
-		createMintTransaction(key, utxo, receiver, tokenName, tokenAmount, fee, tip, metaData);
-		signTransaction(key);
-		submitTransaction(key);
-	}
-
-	public long mintFee(String key, String receiver, String tokenName, long tokenAmount, Map<String, String> metaData) throws Exception {
-		JSONObject utxo = getUtxo(key);
-		long tip = queryTip();
-		createMintTransaction(key, utxo, receiver, tokenName, tokenAmount, 0, tip, metaData);
-		long fee = calculateFee(key, utxo);
+		createMintTransaction(mintOrder, mintOrder.getAccount().getAddress(), utxo, 0, tip);
+		long fee = calculateFee(mintOrder.createFilePrefix(), utxo);
 		return fee;
 	}
 
-	private void createMintTransaction(String key, JSONObject utxo, String receiver, String tokenName, long tokenAmount, long fee, long tip, Map<String, String> metaData) throws Exception {
-		long balance = calculateBalance(utxo);
-		long dueSlot = createPolicy(key, tip);
-		String policyId = getPolicyId(key);
+	public void executeMintOrder(MintOrder mintOrder, String receiver) throws Exception {
+		writeFile(mintOrder.getAccount().getKey() + ".vkey", mintOrder.getAccount().getVkey());
+		writeFile(mintOrder.getAccount().getKey() + ".skey", mintOrder.getAccount().getSkey());
+		JSONObject utxo = getUtxo(mintOrder.getAccount());
+		long tip = queryTip();
+		createMintTransaction(mintOrder, receiver, utxo, 0, tip);
+		long fee = calculateFee(mintOrder.createFilePrefix(), utxo);
+		createMintTransaction(mintOrder, receiver, utxo, fee, tip);
+		signTransaction(mintOrder);
+		submitTransaction(mintOrder.createFilePrefix());
 
-		String metadataFilename = key + ".metadata";
-		writeFile(metadataFilename, new JSONObject().put("0", new JSONObject(metaData)).toString(3));
+		mintOrder.setPolicyScript(readFile(mintOrder.createFilePrefix() + ".script"));
+		mintOrderRepository.save(mintOrder);
+
+		removeFile(mintOrder.createFilePrefix() + ".script");
+		removeFile(mintOrder.getAccount().getKey() + ".vkey");
+		removeFile(mintOrder.getAccount().getKey() + ".skey");
+	}
+
+	private void createMintTransaction(MintOrder mintOrder, String receiver, JSONObject utxo, long fee, long tip) throws Exception {
+		long balance = calculateBalance(utxo);
+		long dueSlot = createPolicy(mintOrder, tip);
+		String policyId = getPolicyId(mintOrder);
+
+		String metadataFilename = mintOrder.createFilePrefix() + ".metadata";
+		JSONObject metadata = new JSONObject();
+		JSONObject policyMetadata = new JSONObject();
+		for (Token token : mintOrder.getTokens()) {
+			policyMetadata.put(token.getName(), new JSONObject(token.getMetaDataJson()));
+		}
+		metadata.put(policyId, policyMetadata);
+		writeFile(metadataFilename, new JSONObject().put("721", metadata).toString(3));
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
@@ -198,7 +211,9 @@ public class CardanoCli {
 		List<String> outputs = new ArrayList<String>();
 		outputs.add(receiver);
 		outputs.add("" + (balance - fee));
-		outputs.add(String.format("%d %s.%s", tokenAmount, policyId, tokenName));
+		for (Token token : mintOrder.getTokens()) {
+			outputs.add(String.format("%d %s.%s", token.getAmount(), policyId, token.getName()));
+		}
 
 		// the account might have other minted tokens, which also has to be sent
 		utxoKeys = utxo.keys();
@@ -224,7 +239,11 @@ public class CardanoCli {
 		cmd.add(StringUtils.join(outputs, "+"));
 
 		cmd.add("--mint");
-		cmd.add(String.format("%d %s.%s", tokenAmount, policyId, tokenName));
+		List<String> mints = new ArrayList<String>();
+		for (Token token : mintOrder.getTokens()) {
+			mints.add(String.format("%d %s.%s", token.getAmount(), policyId, token.getName()));
+		}
+		cmd.add(StringUtils.join(mints, "+"));
 
 		cmd.add("--json-metadata-no-schema");
 
@@ -232,7 +251,7 @@ public class CardanoCli {
 		cmd.add(metadataFilename);
 
 		cmd.add("--out-file");
-		cmd.add(key + ".raw");
+		cmd.add(mintOrder.createFilePrefix() + ".raw");
 
 		cmd.add("--invalid-hereafter");
 		cmd.add("" + dueSlot);
@@ -274,25 +293,25 @@ public class CardanoCli {
 		return Long.parseLong(fee.split(" ")[0]);
 	}
 
-	private void signTransaction(String key) throws Exception {
+	private void signTransaction(MintOrder mintOrder) throws Exception {
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
 		cmd.add("transaction");
 		cmd.add("sign");
 
 		cmd.add("--signing-key-file");
-		cmd.add(key + ".skey");
+		cmd.add(mintOrder.getAccount().getKey() + ".skey");
 
 		cmd.add("--script-file");
-		cmd.add(key + ".script");
+		cmd.add(mintOrder.createFilePrefix() + ".script");
 
 		cmd.addAll(List.of(networkMagicArgs));
 
 		cmd.add("--tx-body-file");
-		cmd.add(key + ".raw");
+		cmd.add(mintOrder.createFilePrefix() + ".raw");
 
 		cmd.add("--out-file");
-		cmd.add(key + ".signed");
+		cmd.add(mintOrder.createFilePrefix() + ".signed");
 
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 	}
@@ -311,7 +330,7 @@ public class CardanoCli {
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 	}
 
-	private long createPolicy(String key, long tip) throws Exception {
+	private long createPolicy(MintOrder mintOrder, long tip) throws Exception {
 
 		// slot
 		long dueSlot = tip + 60 * 10;
@@ -322,7 +341,7 @@ public class CardanoCli {
 		cmd.add("address");
 		cmd.add("key-hash");
 		cmd.add("--payment-verification-key-file");
-		cmd.add(key + ".vkey");
+		cmd.add(mintOrder.getAccount().getKey() + ".vkey");
 		String keyHash = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 		// @formatter:off
@@ -337,27 +356,28 @@ public class CardanoCli {
                                         .put("keyHash", keyHash)
                                         .put("type", "sig")));
         // @formatter:on
-		writeFile(key + ".script", script.toString(3));
+		writeFile(mintOrder.createFilePrefix() + ".script", script.toString(3));
 
 		return dueSlot;
 
 	}
 
-	private String getPolicyId(String key) throws Exception {
+	private String getPolicyId(MintOrder mintOrder) throws Exception {
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
 		cmd.add("transaction");
 		cmd.add("policyid");
 		cmd.add("--script-file");
-		cmd.add(key + ".script");
+		cmd.add(mintOrder.createFilePrefix() + ".script");
 		String policyId = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 		return policyId;
 	}
 
-	private JSONObject readUtxo(String key) throws Exception {
-		String readString = readFile(key + ".utxo");
-		JSONObject jsonObject = new JSONObject(readString);
-		return jsonObject;
+	private String consumeFile(String filename) throws Exception {
+		Path path = Paths.get(workingDir, filename);
+		String readString = Files.readString(path);
+		Files.delete(path);
+		return readString;
 	}
 
 	private String readFile(String filename) throws Exception {
@@ -366,6 +386,10 @@ public class CardanoCli {
 
 	private void writeFile(String filename, String content) throws Exception {
 		Files.writeString(Paths.get(workingDir, filename), content);
+	}
+
+	private void removeFile(String filename) throws Exception {
+		Files.delete(Paths.get(workingDir, filename));
 	}
 
 }

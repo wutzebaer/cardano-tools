@@ -1,4 +1,4 @@
-package de.peterspace.cardanominter.cli;
+package de.peterspace.cardanotools.process;
 
 import java.io.BufferedReader;
 import java.io.IOException;

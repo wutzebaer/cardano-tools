@@ -1,4 +1,4 @@
-package de.peterspace.cardanominter.ipfs;
+package de.peterspace.cardanotools.ipfs;
 
 import java.util.ArrayList;
 
@@ -7,7 +7,7 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import de.peterspace.cardanominter.cli.ProcessUtil;
+import de.peterspace.cardanotools.process.ProcessUtil;
 import lombok.extern.slf4j.Slf4j;
 
 @Component

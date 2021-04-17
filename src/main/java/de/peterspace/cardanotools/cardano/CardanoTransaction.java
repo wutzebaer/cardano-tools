@@ -1,4 +1,4 @@
-package de.peterspace.cardanominter.cli;
+package de.peterspace.cardanotools.cardano;
 
 import java.util.List;
 
