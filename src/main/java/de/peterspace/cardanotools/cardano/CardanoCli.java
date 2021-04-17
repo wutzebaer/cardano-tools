@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -98,22 +99,14 @@ public class CardanoCli {
 		cmd.add("build");
 		cmd.add("--payment-verification-key-file");
 		cmd.add(key + ".vkey");
-		cmd.add("--out-file");
-		cmd.add(key + ".addr");
-		cmd.addAll(List.of(networkMagicArgs));
-		ProcessUtil.runCommand(cmd.toArray(new String[0]));
-
-		cmd = new ArrayList<String>();
-		cmd.addAll(List.of(cardanoCliCmd));
-		cmd.add("address");
-		cmd.add("build");
-		cmd.add("--payment-verification-key-file");
-		cmd.add(key + ".vkey");
 		cmd.addAll(List.of(networkMagicArgs));
 		String addressLiteral = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		Account address = new Account(key, addressLiteral, readFile(key + ".skey"), readFile(key + ".vkey"));
+		Account address = new Account(key, new Date(), addressLiteral, readFile(key + ".skey"), readFile(key + ".vkey"));
 		accountRepository.save(address);
+
+		removeFile(key + ".skey");
+		removeFile(key + ".vkey");
 
 		return key;
 	}
@@ -160,6 +153,7 @@ public class CardanoCli {
 	public void executeMintOrder(MintOrder mintOrder, String receiver) throws Exception {
 		writeFile(mintOrder.getAccount().getKey() + ".vkey", mintOrder.getAccount().getVkey());
 		writeFile(mintOrder.getAccount().getKey() + ".skey", mintOrder.getAccount().getSkey());
+
 		JSONObject utxo = getUtxo(mintOrder.getAccount());
 		long tip = queryTip();
 		createMintTransaction(mintOrder, receiver, utxo, 0, tip);
@@ -169,11 +163,15 @@ public class CardanoCli {
 		submitTransaction(mintOrder.createFilePrefix());
 
 		mintOrder.setPolicyScript(readFile(mintOrder.createFilePrefix() + ".script"));
+		mintOrder.setTxid(getTxId(mintOrder));
 		mintOrderRepository.save(mintOrder);
 
-		removeFile(mintOrder.createFilePrefix() + ".script");
 		removeFile(mintOrder.getAccount().getKey() + ".vkey");
 		removeFile(mintOrder.getAccount().getKey() + ".skey");
+		removeFile(mintOrder.createFilePrefix() + ".script");
+		removeFile(mintOrder.createFilePrefix() + ".raw");
+		removeFile(mintOrder.createFilePrefix() + ".signed");
+		removeFile(mintOrder.createFilePrefix() + ".metadata");
 	}
 
 	private void createMintTransaction(MintOrder mintOrder, String receiver, JSONObject utxo, long fee, long tip) throws Exception {
@@ -371,6 +369,17 @@ public class CardanoCli {
 		cmd.add(mintOrder.createFilePrefix() + ".script");
 		String policyId = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 		return policyId;
+	}
+
+	private String getTxId(MintOrder mintOrder) throws Exception {
+		ArrayList<String> cmd = new ArrayList<String>();
+		cmd.addAll(List.of(cardanoCliCmd));
+		cmd.add("transaction");
+		cmd.add("txid");
+		cmd.add("--tx-body-file");
+		cmd.add(mintOrder.createFilePrefix() + ".raw");
+		String txId = ProcessUtil.runCommand(cmd.toArray(new String[0]));
+		return txId;
 	}
 
 	private String consumeFile(String filename) throws Exception {

@@ -1,5 +1,6 @@
 package de.peterspace.cardanotools.model;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -8,8 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-
-import com.sun.istack.NotNull;
+import javax.validation.constraints.NotNull;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,6 +26,9 @@ public class MintOrder {
 	@GeneratedValue
 	private Long id;
 
+	@NotNull
+	private Date createdAt;
+
 	@ManyToOne
 	@NotNull
 	private Account account;
@@ -33,6 +36,8 @@ public class MintOrder {
 	@OneToMany(mappedBy = "mintOrder", cascade = CascadeType.ALL)
 	@ToString.Exclude
 	private List<Token> tokens;
+
+	private String txid;
 
 	private String policyScript;
 
