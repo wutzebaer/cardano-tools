@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import de.peterspace.cardanotools.model.MintOrder;
 
 @Repository
-public interface MintCoinOrderRepository extends PagingAndSortingRepository<MintOrder, String> {
+public interface MintOrderRepository extends PagingAndSortingRepository<MintOrder, String> {
 
 }

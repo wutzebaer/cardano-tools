@@ -18,7 +18,7 @@ import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.MintOrder;
 import de.peterspace.cardanotools.model.Token;
 import de.peterspace.cardanotools.repository.AccountRepository;
-import de.peterspace.cardanotools.repository.MintCoinOrderRepository;
+import de.peterspace.cardanotools.repository.MintOrderRepository;
 import lombok.extern.slf4j.Slf4j;
 
 @SpringBootTest
@@ -32,7 +32,7 @@ public class CardanoCliTests {
 	AccountRepository accountRepository;
 
 	@Autowired
-	MintCoinOrderRepository mintCoinOrderRepository;
+	MintOrderRepository mintCoinOrderRepository;
 
 	@Test
 	void tipQuery() throws Exception {
@@ -98,13 +98,13 @@ public class CardanoCliTests {
 		Token token1 = new Token();
 		token1.setAmount(1000000l);
 		token1.setMetaDataJson("{'HAAH': 'HOHO'}");
-		token1.setName("AAAAA");
+		token1.setAssetName("AAAAA");
 		tokens.add(token1);
 
 		Token token2 = new Token();
 		token2.setAmount(1000000l);
 		token2.setMetaDataJson("{'HAAH': 'HOHO'}");
-		token2.setName("BBBB");
+		token2.setAssetName("BBBB");
 		tokens.add(token2);
 
 		mintOrder.setTokens(tokens);

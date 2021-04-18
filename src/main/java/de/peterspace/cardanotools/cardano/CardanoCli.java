@@ -23,7 +23,7 @@ import de.peterspace.cardanotools.model.MintOrder;
 import de.peterspace.cardanotools.model.Token;
 import de.peterspace.cardanotools.process.ProcessUtil;
 import de.peterspace.cardanotools.repository.AccountRepository;
-import de.peterspace.cardanotools.repository.MintCoinOrderRepository;
+import de.peterspace.cardanotools.repository.MintOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,7 +35,7 @@ public class CardanoCli {
 
 	private final CardanoNode cardanoNode;
 	private final AccountRepository accountRepository;
-	private final MintCoinOrderRepository mintOrderRepository;
+	private final MintOrderRepository mintOrderRepository;
 
 	@Value("${working.dir}")
 	private String workingDir;
@@ -183,7 +183,7 @@ public class CardanoCli {
 		JSONObject metadata = new JSONObject();
 		JSONObject policyMetadata = new JSONObject();
 		for (Token token : mintOrder.getTokens()) {
-			policyMetadata.put(token.getName(), new JSONObject(token.getMetaDataJson()));
+			policyMetadata.put(token.getAssetName(), new JSONObject(token.getMetaDataJson()));
 		}
 		metadata.put(policyId, policyMetadata);
 		writeFile(metadataFilename, new JSONObject().put("721", metadata).toString(3));
@@ -210,7 +210,7 @@ public class CardanoCli {
 		outputs.add(receiver);
 		outputs.add("" + (balance - fee));
 		for (Token token : mintOrder.getTokens()) {
-			outputs.add(String.format("%d %s.%s", token.getAmount(), policyId, token.getName()));
+			outputs.add(String.format("%d %s.%s", token.getAmount(), policyId, token.getAssetName()));
 		}
 
 		// the account might have other minted tokens, which also has to be sent
@@ -239,7 +239,7 @@ public class CardanoCli {
 		cmd.add("--mint");
 		List<String> mints = new ArrayList<String>();
 		for (Token token : mintOrder.getTokens()) {
-			mints.add(String.format("%d %s.%s", token.getAmount(), policyId, token.getName()));
+			mints.add(String.format("%d %s.%s", token.getAmount(), policyId, token.getAssetName()));
 		}
 		cmd.add(StringUtils.join(mints, "+"));
 
