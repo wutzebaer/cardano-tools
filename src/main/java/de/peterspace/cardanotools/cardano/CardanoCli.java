@@ -24,6 +24,7 @@ import de.peterspace.cardanotools.model.Token;
 import de.peterspace.cardanotools.process.ProcessUtil;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintOrderRepository;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,6 +43,7 @@ public class CardanoCli {
 
 	private String[] cardanoCliCmd;
 	private String[] networkMagicArgs;
+	private Account dummyAccount;
 
 	@PostConstruct
 	public void init() throws Exception {
@@ -55,7 +57,6 @@ public class CardanoCli {
                 "cardano-cli"
         };
         // @formatter:on
-
 		this.networkMagicArgs = cardanoNode.getNetworkMagicArgs();
 
 		ArrayList<String> cmd = new ArrayList<String>();
@@ -66,6 +67,8 @@ public class CardanoCli {
 		cmd.add("protocol.json");
 		cmd.addAll(List.of(networkMagicArgs));
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
+
+		dummyAccount = createAccount();
 	}
 
 	public long queryTip() throws Exception {
@@ -79,7 +82,7 @@ public class CardanoCli {
 		return jsonObject.getLong("slot");
 	}
 
-	public String createAccount() throws Exception {
+	public Account createAccount() throws Exception {
 
 		String key = UUID.randomUUID().toString();
 
@@ -102,13 +105,13 @@ public class CardanoCli {
 		cmd.addAll(List.of(networkMagicArgs));
 		String addressLiteral = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		Account address = new Account(key, new Date(), addressLiteral, readFile(key + ".skey"), readFile(key + ".vkey"));
-		accountRepository.save(address);
+		Account account = new Account(key, new Date(), addressLiteral, readFile(key + ".skey"), readFile(key + ".vkey"));
+		accountRepository.save(account);
 
 		removeFile(key + ".skey");
 		removeFile(key + ".vkey");
 
-		return key;
+		return account;
 	}
 
 	public JSONObject getUtxo(Account account) throws Exception {
@@ -143,10 +146,27 @@ public class CardanoCli {
 	}
 
 	public long calculateTransactionFee(MintOrder mintOrder) throws Exception {
-		JSONObject utxo = getUtxo(mintOrder.getAccount());
+
+		JSONObject utxo;
+		if (mintOrder.getAccount() != null) {
+			utxo = getUtxo(mintOrder.getAccount());
+		} else {
+			utxo = new JSONObject().put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("value", new JSONObject().put("lovelace", 1000000000l)));
+			mintOrder.setAccount(dummyAccount);
+		}
+
+		writeFile(mintOrder.getAccount().getKey() + ".vkey", mintOrder.getAccount().getVkey());
+		writeFile(mintOrder.getAccount().getKey() + ".skey", mintOrder.getAccount().getSkey());
+
 		long tip = queryTip();
 		createMintTransaction(mintOrder, mintOrder.getAccount().getAddress(), utxo, 0, tip);
 		long fee = calculateFee(mintOrder.createFilePrefix(), utxo);
+
+		if (mintOrder.getAccount() != null) {
+			removeFile(mintOrder.getAccount().getKey() + ".vkey");
+			removeFile(mintOrder.getAccount().getKey() + ".skey");
+		}
+
 		return fee;
 	}
 
@@ -183,7 +203,9 @@ public class CardanoCli {
 		JSONObject metadata = new JSONObject();
 		JSONObject policyMetadata = new JSONObject();
 		for (Token token : mintOrder.getTokens()) {
-			policyMetadata.put(token.getAssetName(), new JSONObject(token.getMetaDataJson()));
+			if (token.getMetaDataJson() != null) {
+				policyMetadata.put(token.getAssetName(), new JSONObject(token.getMetaDataJson()));
+			}
 		}
 		metadata.put(policyId, policyMetadata);
 		writeFile(metadataFilename, new JSONObject().put("721", metadata).toString(3));

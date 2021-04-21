@@ -1,8 +1,5 @@
 package de.peterspace.cardanotools.rest;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,11 +20,9 @@ import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.ipfs.IpfsCli;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.MintOrder;
-import de.peterspace.cardanotools.model.Token;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintOrderRepository;
 import de.peterspace.cardanotools.rest.dto.MintOrderSubmission;
-import de.peterspace.cardanotools.rest.dto.TokenSubmission;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -47,7 +42,7 @@ public class RestInterface {
 
 	@PostMapping("createAccount")
 	public String createAccount() throws Exception {
-		return cardanoCli.createAccount();
+		return cardanoCli.createAccount().getKey();
 	}
 
 	@GetMapping("getBalance/{key}")
@@ -78,15 +73,9 @@ public class RestInterface {
 		return stageFile;
 	}
 
-	@PostMapping("mintFee/{key}")
-	public ResponseEntity<Long> mintFee(@PathVariable("key") UUID key, @RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
-
-		Optional<Account> account = accountRepository.findById(key.toString());
-		if (!account.isPresent()) {
-			return new ResponseEntity<Long>(HttpStatus.NOT_FOUND);
-		}
-
-		MintOrder mintOrder = mintOrderSubmission.toMintOrder(account.get());
+	@PostMapping("mintFee")
+	public ResponseEntity<Long> mintFee(@RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
+		MintOrder mintOrder = mintOrderSubmission.toMintOrder(null);
 		long fee = cardanoCli.calculateTransactionFee(mintOrder);
 		return new ResponseEntity<Long>(fee, HttpStatus.OK);
 	}

@@ -6,8 +6,6 @@ import java.util.List;
 
 import javax.validation.constraints.NotEmpty;
 
-import org.json.JSONObject;
-
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.MintOrder;
 import de.peterspace.cardanotools.model.Token;

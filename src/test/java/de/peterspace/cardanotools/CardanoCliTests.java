@@ -48,7 +48,7 @@ public class CardanoCliTests {
 	@Test
 	void getUtxoWithInvalidAccountKey() throws Exception {
 		Exception exception = assertThrows(Exception.class, () -> {
-			String key = cardanoCli.createAccount();
+			String key = cardanoCli.createAccount().getKey();
 			Account account = accountRepository.findById(key).get();
 			account.setAddress("c:\\");
 			cardanoCli.getUtxo(account);
@@ -60,7 +60,7 @@ public class CardanoCliTests {
 
 	@Test
 	void getUtxoWithValidAccountKey() throws Exception {
-		String key = cardanoCli.createAccount();
+		String key = cardanoCli.createAccount().getKey();
 		Account account = accountRepository.findById(key).get();
 		JSONObject utxo = cardanoCli.getUtxo(account);
 		long balance = cardanoCli.calculateBalance(utxo);
@@ -76,6 +76,32 @@ public class CardanoCliTests {
 		JSONObject utxo = cardanoCli.getUtxo(account);
 		long balance = cardanoCli.calculateBalance(utxo);
 		assertThat(balance).isGreaterThan(1_000_000_000 - 100_000_000);
+	}
+
+	@Test
+	void calculateFee() throws Exception {
+		MintOrder mintOrder = new MintOrder();
+		mintOrder.setCreatedAt(new Date());
+		mintOrder.setAccount(null);
+
+		ArrayList<Token> tokens = new ArrayList<Token>();
+
+		Token token1 = new Token();
+		token1.setAmount(1000000l);
+		token1.setMetaDataJson("{'HAAH': 'HOHO'}");
+		token1.setAssetName("AAAAA");
+		tokens.add(token1);
+
+		Token token2 = new Token();
+		token2.setAmount(1000000l);
+		token2.setAssetName("BBBB");
+		tokens.add(token2);
+
+		mintOrder.setTokens(tokens);
+
+		long fee = cardanoCli.calculateTransactionFee(mintOrder);
+
+		assertEquals(180197, fee);
 	}
 
 	@Test
@@ -96,12 +122,14 @@ public class CardanoCliTests {
 		ArrayList<Token> tokens = new ArrayList<Token>();
 
 		Token token1 = new Token();
+		token1.setMintOrder(mintOrder);
 		token1.setAmount(1000000l);
 		token1.setMetaDataJson("{'HAAH': 'HOHO'}");
 		token1.setAssetName("AAAAA");
 		tokens.add(token1);
 
 		Token token2 = new Token();
+		token2.setMintOrder(mintOrder);
 		token2.setAmount(1000000l);
 		token2.setMetaDataJson("{'HAAH': 'HOHO'}");
 		token2.setAssetName("BBBB");
