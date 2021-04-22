@@ -30,8 +30,8 @@ public class IpfsCli {
 		return stageFile.getName();
 	}
 
-	public String saveFile(String stageFile) throws Exception {
-		String result = ProcessUtil.runCommand(new String[] { "docker", "exec", "ipfs-node", "ipfs", "add", "/export/" + stageFile });
+	public String saveFile(String stageFile, boolean pin) throws Exception {
+		String result = ProcessUtil.runCommand(new String[] { "docker", "exec", "ipfs-node", "ipfs", "add", "--pin=" + pin, "/export/" + stageFile });
 		new File(workingDir + "/ipfs/export/" + stageFile).delete();
 		return result.split(" ")[1];
 	}

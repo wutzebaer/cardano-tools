@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.json.JSONObject;
+import org.json.JSONStringer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +43,7 @@ public class RestInterface {
 
 	@PostMapping("createAccount")
 	public String createAccount() throws Exception {
-		return cardanoCli.createAccount().getKey();
+		return JSONStringer.valueToString(cardanoCli.createAccount().getKey());
 	}
 
 	@GetMapping("getBalance/{key}")
@@ -67,14 +68,14 @@ public class RestInterface {
 		}
 	}
 
-	@PostMapping(path = "addFile/{key}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public String handleFileUpload(@PathVariable("key") UUID key, @RequestPart MultipartFile file) throws Exception {
+	@PostMapping(path = "addFile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public String addFile(@RequestPart MultipartFile file) throws Exception {
 		String stageFile = ipfsCli.stageFile(file.getInputStream());
-		return stageFile;
+		return JSONStringer.valueToString(ipfsCli.saveFile(stageFile, true));
 	}
 
 	@PostMapping("mintFee")
-	public ResponseEntity<Long> mintFee(@RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
+	public ResponseEntity<Long> calculateFee(@RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
 		MintOrder mintOrder = mintOrderSubmission.toMintOrder(null);
 		long fee = cardanoCli.calculateTransactionFee(mintOrder);
 		return new ResponseEntity<Long>(fee, HttpStatus.OK);

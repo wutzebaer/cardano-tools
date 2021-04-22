@@ -29,7 +29,7 @@ public class IpfsCliTest {
 
 		ByteArrayInputStream is = new ByteArrayInputStream(data.getBytes());
 		String stageName = ipfsCli.stageFile(is);
-		String ipfsHash = ipfsCli.saveFile(stageName);
+		String ipfsHash = ipfsCli.saveFile(stageName, false);
 		assertThat(ipfsHash).hasSize(46);
 
 		InputStream is1 = ipfsCli.getFile(ipfsHash);
