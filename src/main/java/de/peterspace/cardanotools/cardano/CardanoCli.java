@@ -105,7 +105,7 @@ public class CardanoCli {
 		cmd.addAll(List.of(networkMagicArgs));
 		String addressLiteral = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		Account account = new Account(key, new Date(), addressLiteral, readFile(key + ".skey"), readFile(key + ".vkey"));
+		Account account = new Account(key, new Date(), addressLiteral, readFile(key + ".skey"), readFile(key + ".vkey"), 0l, 0l);
 		accountRepository.save(account);
 
 		removeFile(key + ".skey");

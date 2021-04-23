@@ -2,8 +2,10 @@ package de.peterspace.cardanotools.model;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
@@ -31,5 +33,13 @@ public class Account {
 
 	@NotBlank
 	private String vkey;
+
+	@NotNull
+	@Min(0)
+	private Long blanace;
+
+	@NotNull
+	@Column(columnDefinition = "bigint DEFAULT 0")
+	private Long lastUpdate;
 
 }

@@ -24,6 +24,7 @@ import de.peterspace.cardanotools.model.MintOrder;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintOrderRepository;
 import de.peterspace.cardanotools.rest.dto.MintOrderSubmission;
+import de.peterspace.cardanotools.rest.dto.TransferAccount;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -37,39 +38,34 @@ public class RestInterface {
 	private final AccountRepository accountRepository;
 
 	@GetMapping("tip")
-	public long tip() throws Exception {
+	public long getTip() throws Exception {
 		return cardanoCli.queryTip();
 	}
 
 	@PostMapping("createAccount")
-	public String createAccount() throws Exception {
-		return JSONStringer.valueToString(cardanoCli.createAccount().getKey());
+	public TransferAccount createAccount() throws Exception {
+		Account account = cardanoCli.createAccount();
+		return TransferAccount.from(account);
 	}
 
-	@GetMapping("getBalance/{key}")
-	public ResponseEntity<Long> getBalance(@PathVariable("key") UUID key) throws Exception {
-		Optional<Account> account = accountRepository.findById(key.toString());
-		if (account.isPresent()) {
-			JSONObject utxo = cardanoCli.getUtxo(account.get());
-			long blanace = cardanoCli.calculateBalance(utxo);
-			return new ResponseEntity<Long>(blanace, HttpStatus.OK);
+	@GetMapping("account/{key}")
+	public ResponseEntity<TransferAccount> getAccount(@PathVariable("key") UUID key) throws Exception {
+		Optional<Account> accountOptional = accountRepository.findById(key.toString());
+		if (accountOptional.isPresent()) {
+			Account account = accountOptional.get();
+			if (account.getLastUpdate() + 10000 < System.currentTimeMillis()) {
+				account.setBlanace(cardanoCli.calculateBalance(cardanoCli.getUtxo(account)));
+				account.setLastUpdate(System.currentTimeMillis());
+				accountRepository.save(account);
+			}
+			return new ResponseEntity<TransferAccount>(TransferAccount.from(accountOptional.get()), HttpStatus.OK);
 		} else {
-			return new ResponseEntity<Long>(HttpStatus.NOT_FOUND);
+			return new ResponseEntity<TransferAccount>(HttpStatus.NOT_FOUND);
 		}
 	}
 
-	@GetMapping("getAddress/{key}")
-	public ResponseEntity<String> getAddress(@PathVariable("key") UUID key) throws Exception {
-		Optional<Account> account = accountRepository.findById(key.toString());
-		if (account.isPresent()) {
-			return new ResponseEntity<String>(account.get().getAddress(), HttpStatus.OK);
-		} else {
-			return new ResponseEntity<String>(HttpStatus.NOT_FOUND);
-		}
-	}
-
-	@PostMapping(path = "addFile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public String addFile(@RequestPart MultipartFile file) throws Exception {
+	@PostMapping(path = "file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public String postFile(@RequestPart MultipartFile file) throws Exception {
 		String stageFile = ipfsCli.stageFile(file.getInputStream());
 		return JSONStringer.valueToString(ipfsCli.saveFile(stageFile, true));
 	}

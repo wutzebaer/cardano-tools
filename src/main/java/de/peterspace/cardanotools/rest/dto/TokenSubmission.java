@@ -1,7 +1,11 @@
 package de.peterspace.cardanotools.rest.dto;
 
+import java.util.Map;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+
+import org.json.JSONObject;
 
 import de.peterspace.cardanotools.model.Token;
 import lombok.AllArgsConstructor;
@@ -19,13 +23,14 @@ public class TokenSubmission {
 	@NotNull
 	private Long amount;
 
-	private String metaDataJson;
+	@NotNull
+	private Map<String, MetaValue> metaData;
 
 	public Token toToken() {
 		Token token = new Token();
 		token.setAssetName(getAssetName());
 		token.setAmount(getAmount());
-		token.setMetaDataJson(metaDataJson);
+		token.setMetaDataJson(new JSONObject(metaData).toString(3));
 		return token;
 	}
 

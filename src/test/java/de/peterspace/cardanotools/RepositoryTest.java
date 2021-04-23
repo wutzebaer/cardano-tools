@@ -27,7 +27,7 @@ public class RepositoryTest {
 	void testSaveAndLoadFile() throws Exception {
 		String id = UUID.randomUUID().toString();
 
-		Account address = new Account(id, new Date(), "sdfdsfsd345324", "a", "b");
+		Account address = new Account(id, new Date(), "sdfdsfsd345324", "a", "b", 0l, 0l);
 		addressRepository.save(address);
 
 		Optional<Account> loadedAddress = addressRepository.findById(id);
