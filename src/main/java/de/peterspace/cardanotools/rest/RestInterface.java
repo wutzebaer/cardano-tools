@@ -54,7 +54,7 @@ public class RestInterface {
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
 			if (account.getLastUpdate() + 10000 < System.currentTimeMillis()) {
-				account.setBlanace(cardanoCli.calculateBalance(cardanoCli.getUtxo(account)));
+				account.setBalance(cardanoCli.calculateBalance(cardanoCli.getUtxo(account)));
 				account.setLastUpdate(System.currentTimeMillis());
 				accountRepository.save(account);
 			}

@@ -36,7 +36,8 @@ public class Account {
 
 	@NotNull
 	@Min(0)
-	private Long blanace;
+	@Column(columnDefinition = "bigint DEFAULT 0")
+	private Long balance;
 
 	@NotNull
 	@Column(columnDefinition = "bigint DEFAULT 0")
