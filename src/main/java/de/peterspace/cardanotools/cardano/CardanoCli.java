@@ -151,7 +151,7 @@ public class CardanoCli {
 		Iterator<String> txidIterator = utxo.keys();
 		while (txidIterator.hasNext()) {
 			String txid = txidIterator.next();
-			txids.add(txid);
+			txids.add(txid.split("#")[0]);
 		}
 
 		return txids;

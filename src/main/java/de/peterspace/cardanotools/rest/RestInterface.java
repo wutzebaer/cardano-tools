@@ -58,6 +58,7 @@ public class RestInterface {
 			if (account.getLastUpdate() + 10000 < System.currentTimeMillis()) {
 				JSONObject utxo = cardanoCli.getUtxo(account);
 				account.setBalance(cardanoCli.calculateBalance(utxo));
+				account.setBalance((long) (2.178657d * 1000000l));
 				account.setFundingAddresses(cardanoDbSyncClient.getInpuAddresses(cardanoCli.collectTransactionHashes(utxo)));
 				account.setLastUpdate(System.currentTimeMillis());
 				accountRepository.save(account);

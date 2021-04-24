@@ -1,5 +1,8 @@
 package de.peterspace.cardanotools.rest.dto;
 
+import java.util.List;
+
+import javax.persistence.ElementCollection;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
@@ -22,8 +25,11 @@ public class TransferAccount {
 	@NotNull
 	private Long balance;
 
+	@NotNull
+	private List<String> fundingAddresses;
+
 	public static TransferAccount from(Account account) {
-		return new TransferAccount(account.getKey(), account.getAddress(), account.getBalance());
+		return new TransferAccount(account.getKey(), account.getAddress(), account.getBalance(), account.getFundingAddresses());
 	}
 
 }

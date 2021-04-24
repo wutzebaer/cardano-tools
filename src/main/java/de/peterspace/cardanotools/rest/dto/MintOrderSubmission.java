@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.MintOrder;
@@ -20,6 +22,12 @@ public class MintOrderSubmission {
 
 	@NotEmpty
 	private List<TokenSubmission> tokens;
+
+	@NotBlank
+	private String targetAddress;
+
+	@NotNull
+	private ChangeAction changeAction;
 
 	public MintOrder toMintOrder(Account account) {
 		MintOrder mintOrder = new MintOrder();
