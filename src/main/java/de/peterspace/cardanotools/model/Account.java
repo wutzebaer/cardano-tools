@@ -1,8 +1,10 @@
 package de.peterspace.cardanotools.model;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.validation.constraints.Min;
@@ -33,6 +35,10 @@ public class Account {
 
 	@NotBlank
 	private String vkey;
+
+	@NotNull
+	@ElementCollection
+	private List<String> fundingAddresses;
 
 	@NotNull
 	@Min(0)

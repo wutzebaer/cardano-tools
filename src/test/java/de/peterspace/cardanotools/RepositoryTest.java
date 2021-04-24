@@ -3,6 +3,7 @@ package de.peterspace.cardanotools;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,7 +28,7 @@ public class RepositoryTest {
 	void testSaveAndLoadFile() throws Exception {
 		String id = UUID.randomUUID().toString();
 
-		Account address = new Account(id, new Date(), "sdfdsfsd345324", "a", "b", 0l, 0l);
+		Account address = new Account(id, new Date(), "sdfdsfsd345324", "a", "b", new ArrayList<>(), 0l, 0l);
 		addressRepository.save(address);
 
 		Optional<Account> loadedAddress = addressRepository.findById(id);

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
+import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
 import de.peterspace.cardanotools.ipfs.IpfsCli;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.MintOrder;
@@ -36,6 +37,7 @@ public class RestInterface {
 	private final IpfsCli ipfsCli;
 	private final MintOrderRepository mintOrderRepository;
 	private final AccountRepository accountRepository;
+	private final CardanoDbSyncClient cardanoDbSyncClient;
 
 	@GetMapping("tip")
 	public long getTip() throws Exception {
@@ -54,7 +56,9 @@ public class RestInterface {
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
 			if (account.getLastUpdate() + 10000 < System.currentTimeMillis()) {
-				account.setBalance(cardanoCli.calculateBalance(cardanoCli.getUtxo(account)));
+				JSONObject utxo = cardanoCli.getUtxo(account);
+				account.setBalance(cardanoCli.calculateBalance(utxo));
+				account.setFundingAddresses(cardanoDbSyncClient.getInpuAddresses(cardanoCli.collectTransactionHashes(utxo)));
 				account.setLastUpdate(System.currentTimeMillis());
 				accountRepository.save(account);
 			}
