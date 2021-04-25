@@ -228,19 +228,16 @@ public class CardanoCli {
 			cmd.add(utxoKeys.next());
 		}
 
-		Map<String, Map<String, Long>> outputs = new HashMap<>();
+		TransactionOutputs transactionOutputs = new TransactionOutputs();
 
-		cmd.add("--tx-out");
 		// add ada change and new minted coins
-		List<String> outputs = new ArrayList<String>();
-		outputs.add(mintOrder.getTargetAddress());
 		if (mintOrder.getChangeAction() != ChangeAction.RETURN) {
-			outputs.add("" + minOutput);
+			transactionOutputs.add(mintOrder.getTargetAddress(), "", minOutput);
 		} else {
-			outputs.add("" + (balance - fee));
+			transactionOutputs.add(mintOrder.getTargetAddress(), "", balance - fee);
 		}
 		for (Token token : mintOrder.getTokens()) {
-			outputs.add(String.format("%d %s.%s", token.getAmount(), policyId, token.getAssetName()));
+			transactionOutputs.add(mintOrder.getTargetAddress(), policyId + "." + token.getAssetName(), token.getAmount());
 		}
 		// the account might have other minted tokens, which also has to be sent
 		utxoKeys = utxo.keys();
@@ -256,22 +253,24 @@ public class CardanoCli {
 					while (otherPolicyTokens.hasNext()) {
 						String otherPolicyToken = otherPolicyTokens.next();
 						long amount = otherPolicy.getLong(otherPolicyToken);
-						outputs.add(String.format("%d %s.%s", amount, otherPolicyId, otherPolicyToken));
+						transactionOutputs.add(mintOrder.getTargetAddress(), otherPolicyId + "." + otherPolicyToken, amount);
 					}
 				}
 			}
 		}
-		// combine all outputs
-		cmd.add(StringUtils.join(outputs, "+"));
 
 		if (mintOrder.getChangeAction() != ChangeAction.RETURN) {
 			long change = balance - minOutput - fee;
-			cmd.add("--tx-out");
 			if (mintOrder.getChangeAction() == ChangeAction.KEEP) {
-				cmd.add(mintOrder.getAccount().getAddress() + "+" + change);
+				transactionOutputs.add(mintOrder.getAccount().getAddress(), "", change);
 			} else if (mintOrder.getChangeAction() == ChangeAction.TIP) {
-				cmd.add(mintOrder.getAccount().getAddress() + "+" + change);
+				transactionOutputs.add(mintOrder.getAccount().getAddress(), "", change);
 			}
+		}
+
+		for (String a : transactionOutputs.toCliFormat()) {
+			cmd.add("--tx-out");
+			cmd.add(a);
 		}
 
 		cmd.add("--mint");
@@ -353,17 +352,26 @@ public class CardanoCli {
 	}
 
 	private void submitTransaction(String key) throws Exception {
-		ArrayList<String> cmd = new ArrayList<String>();
-		cmd.addAll(List.of(cardanoCliCmd));
-		cmd.add("transaction");
-		cmd.add("submit");
+		try {
 
-		cmd.add("--tx-file");
-		cmd.add(key + ".signed");
+			ArrayList<String> cmd = new ArrayList<String>();
+			cmd.addAll(List.of(cardanoCliCmd));
+			cmd.add("transaction");
+			cmd.add("submit");
 
-		cmd.addAll(List.of(networkMagicArgs));
+			cmd.add("--tx-file");
+			cmd.add(key + ".signed");
 
-		ProcessUtil.runCommand(cmd.toArray(new String[0]));
+			cmd.addAll(List.of(networkMagicArgs));
+
+			ProcessUtil.runCommand(cmd.toArray(new String[0]));
+		} catch (Exception e) {
+			if (e.getMessage().contains("BadInputsUTxO")) {
+				throw new Exception("You have unprocessed transactions, please wait a minute.");
+			} else {
+				throw e;
+			}
+		}
 	}
 
 	private long createPolicy(MintOrder mintOrder, long tip) throws Exception {
