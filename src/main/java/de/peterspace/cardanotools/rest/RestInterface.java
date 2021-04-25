@@ -21,11 +21,10 @@ import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
 import de.peterspace.cardanotools.ipfs.IpfsCli;
 import de.peterspace.cardanotools.model.Account;
-import de.peterspace.cardanotools.model.MintOrder;
+import de.peterspace.cardanotools.model.MintOrderSubmission;
+import de.peterspace.cardanotools.model.MintTransaction;
 import de.peterspace.cardanotools.repository.AccountRepository;
-import de.peterspace.cardanotools.repository.MintOrderRepository;
-import de.peterspace.cardanotools.rest.dto.ChangeAction;
-import de.peterspace.cardanotools.rest.dto.MintOrderSubmission;
+import de.peterspace.cardanotools.repository.MintTransactionRepository;
 import de.peterspace.cardanotools.rest.dto.TransferAccount;
 import lombok.RequiredArgsConstructor;
 
@@ -36,7 +35,7 @@ public class RestInterface {
 
 	private final CardanoCli cardanoCli;
 	private final IpfsCli ipfsCli;
-	private final MintOrderRepository mintOrderRepository;
+	private final MintTransactionRepository mintTransactionRepository;
 	private final AccountRepository accountRepository;
 	private final CardanoDbSyncClient cardanoDbSyncClient;
 
@@ -59,7 +58,7 @@ public class RestInterface {
 			if (account.getLastUpdate() + 10000 < System.currentTimeMillis()) {
 				JSONObject utxo = cardanoCli.getUtxo(account);
 				account.setBalance(cardanoCli.calculateBalance(utxo));
-				//account.setBalance((long) (2.181517 * 1000000l));
+				// account.setBalance((long) (2.181517 * 1000000l));
 				account.setFundingAddresses(cardanoDbSyncClient.getInpuAddresses(cardanoCli.collectTransactionHashes(utxo)));
 				account.setLastUpdate(System.currentTimeMillis());
 				accountRepository.save(account);
@@ -76,43 +75,32 @@ public class RestInterface {
 		return JSONStringer.valueToString(ipfsCli.saveFile(stageFile, true));
 	}
 
-	@PostMapping("mintFee/{key}")
-	public ResponseEntity<Long> calculateFee(@PathVariable("key") UUID key, @RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
-		// always calculate with the worst case
-		//mintOrderSubmission.setChangeAction(ChangeAction.KEEP);
+	@PostMapping("buildMintTransaction/{key}")
+	public ResponseEntity<MintTransaction> buildMintTransaction(@PathVariable("key") UUID key, @RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
+
 		Optional<Account> account = accountRepository.findById(key.toString());
 		if (!account.isPresent()) {
-			return new ResponseEntity<Long>(HttpStatus.NOT_FOUND);
+			return new ResponseEntity<MintTransaction>(HttpStatus.NOT_FOUND);
 		}
-		MintOrder mintOrder = mintOrderSubmission.toMintOrder(account.get());
-		long fee = cardanoCli.calculateTransactionFee(mintOrder);
-		return new ResponseEntity<Long>(fee, HttpStatus.OK);
+
+		if (!account.get().getFundingAddresses().contains(mintOrderSubmission.getTargetAddress())) {
+			throw new Exception("Invalid target address.");
+		}
+
+		MintTransaction mintTransaction = cardanoCli.buildMintTransaction(mintOrderSubmission, account.get());
+		return new ResponseEntity<MintTransaction>(mintTransaction, HttpStatus.OK);
 	}
 
-	@PostMapping("mintCoinOrder/{key}")
-	public ResponseEntity<Void> postMintCoinOrder(@PathVariable("key") UUID key, @RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
-
+	@PostMapping("submitMintTransaction/{key}")
+	public ResponseEntity<Void> submitMintTransaction(@PathVariable("key") UUID key, @RequestBody MintTransaction mintTransaction) throws Exception {
 		Optional<Account> account = accountRepository.findById(key.toString());
 		if (!account.isPresent()) {
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		}
-
-		MintOrder mintOrder = mintOrderSubmission.toMintOrder(account.get());
-		mintOrderRepository.save(mintOrder);
-
-		cardanoCli.executeMintOrder(mintOrder);
-
+		mintTransaction.setAccount(account.get());
+		cardanoCli.executeMintTransaction(mintTransaction);
+		mintTransactionRepository.save(mintTransaction);
 		return new ResponseEntity<Void>(HttpStatus.OK);
-	}
-
-	@GetMapping("mintCoinOrder/{key}")
-	public ResponseEntity<MintOrder> getMintCoinOrder(@PathVariable("key") UUID key) throws Exception {
-		Optional<MintOrder> mintCoinOrderOptional = mintOrderRepository.findById(key.toString());
-		if (mintCoinOrderOptional.isPresent()) {
-			return new ResponseEntity<MintOrder>(mintCoinOrderOptional.get(), HttpStatus.OK);
-		} else {
-			return new ResponseEntity<MintOrder>(HttpStatus.NOT_FOUND);
-		}
 	}
 
 }

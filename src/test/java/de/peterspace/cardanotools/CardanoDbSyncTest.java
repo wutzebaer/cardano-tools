@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
-import de.peterspace.cardanotools.repository.MintOrderRepository;
+import de.peterspace.cardanotools.repository.MintTransactionRepository;
 import lombok.extern.slf4j.Slf4j;
 
 @SpringBootTest

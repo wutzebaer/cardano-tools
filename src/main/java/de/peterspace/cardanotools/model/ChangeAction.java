@@ -1,4 +1,4 @@
-package de.peterspace.cardanotools.rest.dto;
+package de.peterspace.cardanotools.model;
 
 public enum ChangeAction {
 	RETURN,

@@ -7,6 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -15,11 +18,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.model.Account;
-import de.peterspace.cardanotools.model.MintOrder;
-import de.peterspace.cardanotools.model.Token;
+import de.peterspace.cardanotools.model.ChangeAction;
+import de.peterspace.cardanotools.model.MetaValue;
+import de.peterspace.cardanotools.model.MintOrderSubmission;
+import de.peterspace.cardanotools.model.MintTransaction;
+import de.peterspace.cardanotools.model.TokenSubmission;
 import de.peterspace.cardanotools.repository.AccountRepository;
-import de.peterspace.cardanotools.repository.MintOrderRepository;
-import de.peterspace.cardanotools.rest.dto.ChangeAction;
+import de.peterspace.cardanotools.repository.MintTransactionRepository;
 import lombok.extern.slf4j.Slf4j;
 
 @SpringBootTest
@@ -33,7 +38,7 @@ public class CardanoCliTests {
 	AccountRepository accountRepository;
 
 	@Autowired
-	MintOrderRepository mintCoinOrderRepository;
+	MintTransactionRepository mintTransactionRepository;
 
 	@Test
 	void tipQuery() throws Exception {
@@ -85,30 +90,31 @@ public class CardanoCliTests {
 		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), "addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x", "{\"type\": \"PaymentSigningKeyShelley_ed25519\", \"description\": \"Payment Signing Key\", \"cborHex\": \"5820a210dfed41a028bb2bf4b9a7569b23c4c19a354ab6c167f7604827e56d145a14\"}", "{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", new ArrayList<>(), 0l, 0l));
 		Account account = accountRepository.findById(key).get();
 
-		MintOrder mintOrder = new MintOrder();
-		mintOrder.setCreatedAt(new Date());
-		mintOrder.setAccount(account);
+		MintOrderSubmission mintOrder = new MintOrderSubmission();
 		mintOrder.setChangeAction(ChangeAction.RETURN);
 		mintOrder.setTargetAddress(account.getAddress());
 
-		ArrayList<Token> tokens = new ArrayList<Token>();
+		ArrayList<TokenSubmission> tokens = new ArrayList<TokenSubmission>();
 
-		Token token1 = new Token();
+		TokenSubmission token1 = new TokenSubmission();
 		token1.setAmount(1000000l);
-		token1.setMetaDataJson("{'HAAH': 'HOHO'}");
+		token1.setMetaData(Map.of(
+				"haha", new MetaValue(0l, "hoho", List.of()),
+				"hahalist", new MetaValue(0l, "", List.of("list1", "list2"))));
 		token1.setAssetName("AAAAA");
 		tokens.add(token1);
 
-		Token token2 = new Token();
+		TokenSubmission token2 = new TokenSubmission();
 		token2.setAmount(1000000l);
 		token2.setAssetName("BBBB");
+		token2.setMetaData(new HashMap<String, MetaValue>());
 		tokens.add(token2);
 
 		mintOrder.setTokens(tokens);
 
-		long fee = cardanoCli.calculateTransactionFee(mintOrder);
+		MintTransaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
 
-		assertThat(fee).isGreaterThan(225605l);
+		assertThat(mintTransaction.getFee()).isGreaterThan(225605l);
 	}
 
 	@Test
@@ -120,40 +126,41 @@ public class CardanoCliTests {
 			log.info("Please uploads funds with https://developers.cardano.org/en/testnets/cardano/tools/faucet/ to {}", account.getAddress());
 			Thread.sleep(1000);
 		}
-		String receiver = "addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x";
 
-		MintOrder mintOrder = new MintOrder();
-		mintOrder.setCreatedAt(new Date());
-		mintOrder.setAccount(account);
+		MintOrderSubmission mintOrder = new MintOrderSubmission();
+		mintOrder.setChangeAction(ChangeAction.RETURN);
+		mintOrder.setTargetAddress(account.getAddress());
 
-		ArrayList<Token> tokens = new ArrayList<Token>();
+		ArrayList<TokenSubmission> tokens = new ArrayList<TokenSubmission>();
 
-		Token token1 = new Token();
-		token1.setMintOrder(mintOrder);
+		TokenSubmission token1 = new TokenSubmission();
 		token1.setAmount(1000000l);
-		token1.setMetaDataJson("{'HAAH': 'HOHO'}");
+		token1.setMetaData(Map.of(
+				"haha", new MetaValue(null, "hoho", List.of()),
+				"hahalist", new MetaValue(null, "", List.of("list1", "list2"))));
 		token1.setAssetName("AAAAA");
 		tokens.add(token1);
 
-		Token token2 = new Token();
-		token2.setMintOrder(mintOrder);
+		TokenSubmission token2 = new TokenSubmission();
 		token2.setAmount(1000000l);
-		token2.setMetaDataJson("{'HAAH': 'HOHO'}");
 		token2.setAssetName("BBBB");
+		token2.setMetaData(new HashMap<String, MetaValue>());
 		tokens.add(token2);
 
 		mintOrder.setTokens(tokens);
 		mintOrder.setChangeAction(ChangeAction.RETURN);
 		mintOrder.setTargetAddress(account.getAddress());
 
-		mintCoinOrderRepository.save(mintOrder);
+		MintTransaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
 
+		mintTransaction.setAccount(account);
+
+		cardanoCli.executeMintTransaction(mintTransaction);
+
+		mintTransactionRepository.save(mintTransaction);
 		assertNotNull(token1.getId());
 		assertNotNull(token2.getId());
 
-		cardanoCli.executeMintOrder(mintOrder);
-
-		new JSONObject(mintOrder.getPolicyScript());
 	}
 
 }

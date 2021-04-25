@@ -5,10 +5,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -21,14 +19,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 import de.peterspace.cardanotools.model.Account;
-import de.peterspace.cardanotools.model.MintOrder;
+import de.peterspace.cardanotools.model.ChangeAction;
+import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.MintTransaction;
-import de.peterspace.cardanotools.model.Token;
+import de.peterspace.cardanotools.model.TokenSubmission;
 import de.peterspace.cardanotools.process.ProcessUtil;
 import de.peterspace.cardanotools.repository.AccountRepository;
-import de.peterspace.cardanotools.repository.MintOrderRepository;
-import de.peterspace.cardanotools.rest.dto.ChangeAction;
-import lombok.Getter;
+import de.peterspace.cardanotools.repository.MintTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +38,7 @@ public class CardanoCli {
 	private final long minOutput = 1000000l;
 	private final CardanoNode cardanoNode;
 	private final AccountRepository accountRepository;
-	private final MintOrderRepository mintOrderRepository;
+	private final MintTransactionRepository mintOrderRepository;
 
 	@Value("${working.dir}")
 	private String workingDir;
@@ -160,56 +157,49 @@ public class CardanoCli {
 		return txids;
 	}
 
-	public long calculateTransactionFee(MintOrder mintOrder) throws Exception {
-		JSONObject utxo = getUtxo(mintOrder.getAccount());
-		writeFile(mintOrder.getAccount().getKey() + ".vkey", mintOrder.getAccount().getVkey());
-		writeFile(mintOrder.getAccount().getKey() + ".skey", mintOrder.getAccount().getSkey());
-		long tip = queryTip();
-		createMintTransaction(mintOrder, utxo, 0, tip);
-		long fee = calculateFee(mintOrder.createFilePrefix(), utxo);
-		removeFile(mintOrder.getAccount().getKey() + ".vkey");
-		removeFile(mintOrder.getAccount().getKey() + ".skey");
-		return fee;
+	public MintTransaction buildMintTransaction(MintOrderSubmission mintOrderSubmission, Account account) throws Exception {
+		JSONObject utxo = getUtxo(account);
+		writeFile(account.getKey() + ".vkey", account.getVkey());
+		writeFile(account.getKey() + ".skey", account.getSkey());
+		MintTransaction mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, 0);
+		long fee = calculateFee(mintTransaction, utxo);
+		mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, fee);
+		removeFile(account.getKey() + ".vkey");
+		removeFile(account.getKey() + ".skey");
+		return mintTransaction;
 	}
 
-	public void executeMintOrder(MintOrder mintOrder) throws Exception {
-		writeFile(mintOrder.getAccount().getKey() + ".vkey", mintOrder.getAccount().getVkey());
-		writeFile(mintOrder.getAccount().getKey() + ".skey", mintOrder.getAccount().getSkey());
+	public void executeMintTransaction(MintTransaction mintTransaction) throws Exception {
+		Account account = mintTransaction.getAccount();
 
-		JSONObject utxo = getUtxo(mintOrder.getAccount());
-		long tip = queryTip();
-		createMintTransaction(mintOrder, utxo, 0, tip);
-		long fee = calculateFee(mintOrder.createFilePrefix(), utxo);
-		createMintTransaction(mintOrder, utxo, fee, tip);
-		signTransaction(mintOrder);
-		submitTransaction(mintOrder.createFilePrefix());
+		writeFile(account.getKey() + ".vkey", account.getVkey());
+		writeFile(account.getKey() + ".skey", account.getSkey());
 
-		mintOrder.setPolicyScript(readFile(mintOrder.createFilePrefix() + ".script"));
-		mintOrder.setTxid(getTxId(mintOrder));
-		mintOrderRepository.save(mintOrder);
+		signTransaction(mintTransaction, account);
+		submitTransaction(mintTransaction);
 
-		removeFile(mintOrder.getAccount().getKey() + ".vkey");
-		removeFile(mintOrder.getAccount().getKey() + ".skey");
-		removeFile(mintOrder.createFilePrefix() + ".signed");
+		removeFile(account.getKey() + ".vkey");
+		removeFile(account.getKey() + ".skey");
 	}
 
-	private MintTransaction createMintTransaction(MintOrder mintOrder, JSONObject utxo, long fee, long tip) throws Exception {
+	private MintTransaction createMintTransaction(MintOrderSubmission mintOrderSubmission, Account account, JSONObject utxo, long fee) throws Exception {
 
+		long tip = queryTip();
 		long balance = calculateBalance(utxo);
-		long dueSlot = createPolicy(mintOrder, tip);
-		String policyId = getPolicyId(mintOrder);
-		String policyScript = readFile(mintOrder.createFilePrefix() + ".script");
+		JSONObject policyScript = createPolicy(mintOrderSubmission, account, tip);
+		String policyId = getPolicyId(policyScript);
 
-		String metadataFilename = mintOrder.createFilePrefix() + ".metadata";
+		String metadataFilename = mintOrderSubmission.createFilePrefix() + ".metadata";
 		JSONObject metadata = new JSONObject();
 		JSONObject policyMetadata = new JSONObject();
-		for (Token token : mintOrder.getTokens()) {
-			if (token.getMetaDataJson() != null) {
-				policyMetadata.put(token.getAssetName(), new JSONObject(token.getMetaDataJson()));
+		for (TokenSubmission token : mintOrderSubmission.getTokens()) {
+			JSONObject cleanedMetadata = token.getCleanedMetadata();
+			if (cleanedMetadata != null) {
+				policyMetadata.put(token.getAssetName(), cleanedMetadata);
 			}
 		}
 		metadata.put(policyId, policyMetadata);
-		metadata.put("scripts", new JSONObject().put(policyId, new JSONObject(policyScript)));
+		metadata.put("scripts", new JSONObject().put(policyId, policyScript));
 		String metadataJson = new JSONObject().put("721", metadata).toString(3);
 		writeFile(metadataFilename, metadataJson);
 
@@ -231,13 +221,13 @@ public class CardanoCli {
 		TransactionOutputs transactionOutputs = new TransactionOutputs();
 
 		// add ada change and new minted coins
-		if (mintOrder.getChangeAction() != ChangeAction.RETURN) {
-			transactionOutputs.add(mintOrder.getTargetAddress(), "", minOutput);
+		if (mintOrderSubmission.getChangeAction() != ChangeAction.RETURN) {
+			transactionOutputs.add(mintOrderSubmission.getTargetAddress(), "", minOutput);
 		} else {
-			transactionOutputs.add(mintOrder.getTargetAddress(), "", balance - fee);
+			transactionOutputs.add(mintOrderSubmission.getTargetAddress(), "", balance - fee);
 		}
-		for (Token token : mintOrder.getTokens()) {
-			transactionOutputs.add(mintOrder.getTargetAddress(), policyId + "." + token.getAssetName(), token.getAmount());
+		for (TokenSubmission token : mintOrderSubmission.getTokens()) {
+			transactionOutputs.add(mintOrderSubmission.getTargetAddress(), policyId + "." + token.getAssetName(), token.getAmount());
 		}
 		// the account might have other minted tokens, which also has to be sent
 		utxoKeys = utxo.keys();
@@ -253,17 +243,17 @@ public class CardanoCli {
 					while (otherPolicyTokens.hasNext()) {
 						String otherPolicyToken = otherPolicyTokens.next();
 						long amount = otherPolicy.getLong(otherPolicyToken);
-						transactionOutputs.add(mintOrder.getTargetAddress(), otherPolicyId + "." + otherPolicyToken, amount);
+						transactionOutputs.add(mintOrderSubmission.getTargetAddress(), otherPolicyId + "." + otherPolicyToken, amount);
 					}
 				}
 			}
 		}
 
-		if (mintOrder.getChangeAction() != ChangeAction.RETURN) {
+		if (mintOrderSubmission.getChangeAction() != ChangeAction.RETURN) {
 			long change = balance - minOutput - fee;
-			if (mintOrder.getChangeAction() == ChangeAction.KEEP) {
-				transactionOutputs.add(mintOrder.getAccount().getAddress(), "", change);
-			} else if (mintOrder.getChangeAction() == ChangeAction.TIP) {
+			if (mintOrderSubmission.getChangeAction() == ChangeAction.KEEP) {
+				transactionOutputs.add(account.getAddress(), "", change);
+			} else if (mintOrderSubmission.getChangeAction() == ChangeAction.TIP) {
 				transactionOutputs.add("addr1qx6pnsm9n3lrvtwx24kq7a0mfwq2txum2tvtaevnpkn4mpyghzw2ukr33p5k45j42w62pqysdkf65p34mrvl4yu4n72s7yfgkq", "", change);
 			}
 		}
@@ -275,7 +265,7 @@ public class CardanoCli {
 
 		cmd.add("--mint");
 		List<String> mints = new ArrayList<String>();
-		for (Token token : mintOrder.getTokens()) {
+		for (TokenSubmission token : mintOrderSubmission.getTokens()) {
 			mints.add(String.format("%d %s.%s", token.getAmount(), policyId, token.getAssetName()));
 		}
 		cmd.add(StringUtils.join(mints, "+"));
@@ -285,33 +275,36 @@ public class CardanoCli {
 		cmd.add(metadataFilename);
 
 		cmd.add("--out-file");
-		cmd.add(mintOrder.createFilePrefix() + ".raw");
+		cmd.add(mintOrderSubmission.createFilePrefix() + ".raw");
 
 		cmd.add("--invalid-hereafter");
-		cmd.add("" + dueSlot);
+		cmd.add("" + policyScript.getJSONArray("scripts").getJSONObject(0).getLong("slot"));
 
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		String txId = getTxId(mintOrder);
-
 		MintTransaction mintTransaction = new MintTransaction();
-		mintTransaction.setTxId(txId);
 		mintTransaction.setFee(fee);
 		mintTransaction.setInputs(utxo.toString(3));
-		mintTransaction.setOutputs(new JSONObject(transactionOutputs).toString(3));
-		mintTransaction.setPolicy(policyScript);
+		mintTransaction.setOutputs(new JSONObject(transactionOutputs.getOutputs()).toString(3));
+		mintTransaction.setPolicy(policyScript.toString(3));
 		mintTransaction.setPolicyId(policyId);
 		mintTransaction.setMetaDataJson(metadataJson);
-		mintTransaction.setRawData(readFile(mintOrder.createFilePrefix() + ".raw"));
+		mintTransaction.setRawData(readFile(mintOrderSubmission.createFilePrefix() + ".raw"));
+		mintTransaction.setMintOrderSubmission(mintOrderSubmission);
 
-		removeFile(mintOrder.createFilePrefix() + ".script");
-		removeFile(mintOrder.createFilePrefix() + ".metadata");
-		removeFile(mintOrder.createFilePrefix() + ".raw");
+		String txId = getTxId(mintTransaction);
+		mintTransaction.setTxId(txId);
+
+		removeFile(mintOrderSubmission.createFilePrefix() + ".metadata");
+		removeFile(mintOrderSubmission.createFilePrefix() + ".raw");
 
 		return mintTransaction;
 	}
 
-	private long calculateFee(String key, JSONObject utxo) throws Exception {
+	private long calculateFee(MintTransaction mintTransaction, JSONObject utxo) throws Exception {
+		String filename = UUID.randomUUID().toString() + ".raw";
+		writeFile(filename, mintTransaction.getRawData());
+
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
 
@@ -319,7 +312,7 @@ public class CardanoCli {
 		cmd.add("calculate-min-fee");
 
 		cmd.add("--tx-body-file");
-		cmd.add(key + ".raw");
+		cmd.add(filename);
 
 		cmd.add("--tx-in-count");
 		int count = 0;
@@ -331,7 +324,7 @@ public class CardanoCli {
 		cmd.add("" + count);
 
 		cmd.add("--tx-out-count");
-		cmd.add("1");
+		cmd.add(new JSONObject(mintTransaction.getOutputs()).length() + "");
 
 		cmd.add("--witness-count");
 		cmd.add("1");
@@ -341,35 +334,53 @@ public class CardanoCli {
 		cmd.add("--protocol-params-file");
 		cmd.add("protocol.json");
 
-		String fee = ProcessUtil.runCommand(cmd.toArray(new String[0]));
-		return Long.parseLong(fee.split(" ")[0]);
+		String feeString = ProcessUtil.runCommand(cmd.toArray(new String[0]));
+		long fee = Long.valueOf(feeString.split(" ")[0]);
+
+		removeFile(filename);
+
+		return fee;
 	}
 
-	private void signTransaction(MintOrder mintOrder) throws Exception {
+	private void signTransaction(MintTransaction mintTransaction, Account account) throws Exception {
+
+		String filePrefix = UUID.randomUUID().toString();
+
+		writeFile(filePrefix + ".script", mintTransaction.getPolicy());
+		writeFile(filePrefix + ".raw", mintTransaction.getRawData());
+
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
 		cmd.add("transaction");
 		cmd.add("sign");
 
 		cmd.add("--signing-key-file");
-		cmd.add(mintOrder.getAccount().getKey() + ".skey");
+		cmd.add(account.getKey() + ".skey");
 
 		cmd.add("--script-file");
-		cmd.add(mintOrder.createFilePrefix() + ".script");
+		cmd.add(filePrefix + ".script");
 
 		cmd.addAll(List.of(networkMagicArgs));
 
 		cmd.add("--tx-body-file");
-		cmd.add(mintOrder.createFilePrefix() + ".raw");
+		cmd.add(filePrefix + ".raw");
 
 		cmd.add("--out-file");
-		cmd.add(mintOrder.createFilePrefix() + ".signed");
+		cmd.add(filePrefix + ".signed");
 
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
+
+		mintTransaction.setSignedData(consumeFile(filePrefix + ".signed"));
+		removeFile(filePrefix + ".script");
+		removeFile(filePrefix + ".raw");
 	}
 
-	private void submitTransaction(String key) throws Exception {
+	private void submitTransaction(MintTransaction mintTransaction) throws Exception {
 		try {
+
+			String filename = UUID.randomUUID().toString() + ".signed";
+
+			writeFile(filename, mintTransaction.getSignedData());
 
 			ArrayList<String> cmd = new ArrayList<String>();
 			cmd.addAll(List.of(cardanoCliCmd));
@@ -377,11 +388,14 @@ public class CardanoCli {
 			cmd.add("submit");
 
 			cmd.add("--tx-file");
-			cmd.add(key + ".signed");
+			cmd.add(filename);
 
 			cmd.addAll(List.of(networkMagicArgs));
 
 			ProcessUtil.runCommand(cmd.toArray(new String[0]));
+
+			removeFile(filename);
+
 		} catch (Exception e) {
 			if (e.getMessage().contains("BadInputsUTxO")) {
 				throw new Exception("You have unprocessed transactions, please wait a minute.");
@@ -391,7 +405,7 @@ public class CardanoCli {
 		}
 	}
 
-	private long createPolicy(MintOrder mintOrder, long tip) throws Exception {
+	private JSONObject createPolicy(MintOrderSubmission mintOrderSubmission, Account account, long tip) throws Exception {
 
 		// slot
 		long dueSlot = tip + 60 * 10;
@@ -402,7 +416,7 @@ public class CardanoCli {
 		cmd.add("address");
 		cmd.add("key-hash");
 		cmd.add("--payment-verification-key-file");
-		cmd.add(mintOrder.getAccount().getKey() + ".vkey");
+		cmd.add(account.getKey() + ".vkey");
 		String keyHash = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 		// @formatter:off
@@ -417,31 +431,43 @@ public class CardanoCli {
                                         .put("keyHash", keyHash)
                                         .put("type", "sig")));
         // @formatter:on
-		writeFile(mintOrder.createFilePrefix() + ".script", script.toString(3));
 
-		return dueSlot;
+		return script;
 
 	}
 
-	private String getPolicyId(MintOrder mintOrder) throws Exception {
+	private String getPolicyId(JSONObject policy) throws Exception {
+		String filename = UUID.randomUUID().toString() + ".script";
+		writeFile(filename, policy.toString(3));
+
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
 		cmd.add("transaction");
 		cmd.add("policyid");
 		cmd.add("--script-file");
-		cmd.add(mintOrder.createFilePrefix() + ".script");
+		cmd.add(filename);
 		String policyId = ProcessUtil.runCommand(cmd.toArray(new String[0]));
+
+		removeFile(filename);
+
 		return policyId;
 	}
 
-	private String getTxId(MintOrder mintOrder) throws Exception {
+	private String getTxId(MintTransaction mintTransaction) throws Exception {
+
+		String filename = UUID.randomUUID().toString() + ".raw";
+		writeFile(filename, mintTransaction.getRawData());
+
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
 		cmd.add("transaction");
 		cmd.add("txid");
 		cmd.add("--tx-body-file");
-		cmd.add(mintOrder.createFilePrefix() + ".raw");
+		cmd.add(filename);
 		String txId = ProcessUtil.runCommand(cmd.toArray(new String[0]));
+
+		removeFile(filename);
+
 		return txId;
 	}
 
