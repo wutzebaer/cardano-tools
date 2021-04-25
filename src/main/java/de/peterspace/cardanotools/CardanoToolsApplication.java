@@ -6,10 +6,10 @@ import org.springframework.cache.annotation.EnableCaching;
 
 @SpringBootApplication
 @EnableCaching
-public class CardanoMinterApplication {
+public class CardanoToolsApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(CardanoMinterApplication.class, args);
+		SpringApplication.run(CardanoToolsApplication.class, args);
 	}
 
 }

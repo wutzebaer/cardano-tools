@@ -34,19 +34,20 @@ public class TokenSubmission {
 		token.setAssetName(getAssetName());
 		token.setAmount(getAmount());
 
-		JSONObject jsonObject = new JSONObject(metaData);
-		if (jsonObject.length() > 0) {
-			Iterator<String> keyIterator = jsonObject.keys();
+		JSONObject sourceObject = new JSONObject(metaData);
+		JSONObject targetObject = new JSONObject();
+		if (sourceObject.length() > 0) {
+			Iterator<String> keyIterator = sourceObject.keys();
 			while (keyIterator.hasNext()) {
 				String key = keyIterator.next();
-				JSONObject valueObject = jsonObject.getJSONObject(key);
+				JSONObject valueObject = sourceObject.getJSONObject(key);
 				if (!valueObject.getJSONArray("listValue").isEmpty()) {
-					jsonObject.put(key.toLowerCase(), valueObject.getJSONArray("listValue"));
+					targetObject.put(key.toLowerCase(), valueObject.getJSONArray("listValue"));
 				} else {
-					jsonObject.put(key.toLowerCase(), valueObject.get("value"));
+					targetObject.put(key.toLowerCase(), valueObject.get("value"));
 				}
 			}
-			token.setMetaDataJson(jsonObject.toString(3));
+			token.setMetaDataJson(targetObject.toString(3));
 		}
 
 		token.setMintOrder(mintOrder);

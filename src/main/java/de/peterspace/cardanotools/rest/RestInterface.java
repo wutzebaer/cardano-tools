@@ -79,7 +79,7 @@ public class RestInterface {
 	@PostMapping("mintFee/{key}")
 	public ResponseEntity<Long> calculateFee(@PathVariable("key") UUID key, @RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
 		// always calculate with the worst case
-		mintOrderSubmission.setChangeAction(ChangeAction.KEEP);
+		//mintOrderSubmission.setChangeAction(ChangeAction.KEEP);
 		Optional<Account> account = accountRepository.findById(key.toString());
 		if (!account.isPresent()) {
 			return new ResponseEntity<Long>(HttpStatus.NOT_FOUND);
