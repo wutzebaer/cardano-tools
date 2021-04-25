@@ -264,7 +264,7 @@ public class CardanoCli {
 			if (mintOrder.getChangeAction() == ChangeAction.KEEP) {
 				transactionOutputs.add(mintOrder.getAccount().getAddress(), "", change);
 			} else if (mintOrder.getChangeAction() == ChangeAction.TIP) {
-				transactionOutputs.add(mintOrder.getAccount().getAddress(), "", change);
+				transactionOutputs.add("addr1qx6pnsm9n3lrvtwx24kq7a0mfwq2txum2tvtaevnpkn4mpyghzw2ukr33p5k45j42w62pqysdkf65p34mrvl4yu4n72s7yfgkq", "", change);
 			}
 		}
 
