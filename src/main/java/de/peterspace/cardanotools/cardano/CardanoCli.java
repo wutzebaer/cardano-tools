@@ -166,10 +166,11 @@ public class CardanoCli {
 		long tip = queryTip();
 		createMintTransaction(mintOrder, utxo, 0, tip);
 		long fee = calculateFee(mintOrder.createFilePrefix(), utxo);
-		if (mintOrder.getAccount() != null) {
-			removeFile(mintOrder.getAccount().getKey() + ".vkey");
-			removeFile(mintOrder.getAccount().getKey() + ".skey");
-		}
+		removeFile(mintOrder.getAccount().getKey() + ".vkey");
+		removeFile(mintOrder.getAccount().getKey() + ".skey");
+		removeFile(mintOrder.createFilePrefix() + ".script");
+		removeFile(mintOrder.createFilePrefix() + ".metadata");
+		removeFile(mintOrder.createFilePrefix() + ".raw");
 		return fee;
 	}
 
@@ -192,9 +193,9 @@ public class CardanoCli {
 		removeFile(mintOrder.getAccount().getKey() + ".vkey");
 		removeFile(mintOrder.getAccount().getKey() + ".skey");
 		removeFile(mintOrder.createFilePrefix() + ".script");
+		removeFile(mintOrder.createFilePrefix() + ".metadata");
 		removeFile(mintOrder.createFilePrefix() + ".raw");
 		removeFile(mintOrder.createFilePrefix() + ".signed");
-		removeFile(mintOrder.createFilePrefix() + ".metadata");
 	}
 
 	private void createMintTransaction(MintOrder mintOrder, JSONObject utxo, long fee, long tip) throws Exception {
@@ -280,10 +281,11 @@ public class CardanoCli {
 		}
 		cmd.add(StringUtils.join(mints, "+"));
 
-		cmd.add("--json-metadata-no-schema");
-
-		cmd.add("--metadata-json-file");
-		cmd.add(metadataFilename);
+		if (policyMetadata.length() > 0) {
+			cmd.add("--json-metadata-no-schema");
+			cmd.add("--metadata-json-file");
+			cmd.add(metadataFilename);
+		}
 
 		cmd.add("--out-file");
 		cmd.add(mintOrder.createFilePrefix() + ".raw");
