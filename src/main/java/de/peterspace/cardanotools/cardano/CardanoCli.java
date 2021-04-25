@@ -5,8 +5,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -24,6 +26,7 @@ import de.peterspace.cardanotools.model.Token;
 import de.peterspace.cardanotools.process.ProcessUtil;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintOrderRepository;
+import de.peterspace.cardanotools.rest.dto.ChangeAction;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CardanoCli {
 
+	private final long minOutput = 1000000l;
 	private final CardanoNode cardanoNode;
 	private final AccountRepository accountRepository;
 	private final MintOrderRepository mintOrderRepository;
@@ -43,7 +47,6 @@ public class CardanoCli {
 
 	private String[] cardanoCliCmd;
 	private String[] networkMagicArgs;
-	private Account dummyAccount;
 
 	@PostConstruct
 	public void init() throws Exception {
@@ -68,7 +71,6 @@ public class CardanoCli {
 		cmd.addAll(List.of(networkMagicArgs));
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		dummyAccount = createAccount();
 	}
 
 	public long queryTip() throws Exception {
@@ -158,39 +160,28 @@ public class CardanoCli {
 	}
 
 	public long calculateTransactionFee(MintOrder mintOrder) throws Exception {
-
-		JSONObject utxo;
-		if (mintOrder.getAccount() != null) {
-			utxo = getUtxo(mintOrder.getAccount());
-		} else {
-			utxo = new JSONObject().put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("value", new JSONObject().put("lovelace", 1000000000l)));
-			mintOrder.setAccount(dummyAccount);
-		}
-
+		JSONObject utxo = getUtxo(mintOrder.getAccount());
 		writeFile(mintOrder.getAccount().getKey() + ".vkey", mintOrder.getAccount().getVkey());
 		writeFile(mintOrder.getAccount().getKey() + ".skey", mintOrder.getAccount().getSkey());
-
 		long tip = queryTip();
-		createMintTransaction(mintOrder, mintOrder.getAccount().getAddress(), utxo, 0, tip);
+		createMintTransaction(mintOrder, utxo, 0, tip);
 		long fee = calculateFee(mintOrder.createFilePrefix(), utxo);
-
 		if (mintOrder.getAccount() != null) {
 			removeFile(mintOrder.getAccount().getKey() + ".vkey");
 			removeFile(mintOrder.getAccount().getKey() + ".skey");
 		}
-
 		return fee;
 	}
 
-	public void executeMintOrder(MintOrder mintOrder, String receiver) throws Exception {
+	public void executeMintOrder(MintOrder mintOrder) throws Exception {
 		writeFile(mintOrder.getAccount().getKey() + ".vkey", mintOrder.getAccount().getVkey());
 		writeFile(mintOrder.getAccount().getKey() + ".skey", mintOrder.getAccount().getSkey());
 
 		JSONObject utxo = getUtxo(mintOrder.getAccount());
 		long tip = queryTip();
-		createMintTransaction(mintOrder, receiver, utxo, 0, tip);
+		createMintTransaction(mintOrder, utxo, 0, tip);
 		long fee = calculateFee(mintOrder.createFilePrefix(), utxo);
-		createMintTransaction(mintOrder, receiver, utxo, fee, tip);
+		createMintTransaction(mintOrder, utxo, fee, tip);
 		signTransaction(mintOrder);
 		submitTransaction(mintOrder.createFilePrefix());
 
@@ -206,7 +197,7 @@ public class CardanoCli {
 		removeFile(mintOrder.createFilePrefix() + ".metadata");
 	}
 
-	private void createMintTransaction(MintOrder mintOrder, String receiver, JSONObject utxo, long fee, long tip) throws Exception {
+	private void createMintTransaction(MintOrder mintOrder, JSONObject utxo, long fee, long tip) throws Exception {
 		long balance = calculateBalance(utxo);
 		long dueSlot = createPolicy(mintOrder, tip);
 		String policyId = getPolicyId(mintOrder);
@@ -237,16 +228,20 @@ public class CardanoCli {
 			cmd.add(utxoKeys.next());
 		}
 
-		cmd.add("--tx-out");
+		Map<String, Map<String, Long>> outputs = new HashMap<>();
 
+		cmd.add("--tx-out");
 		// add ada change and new minted coins
 		List<String> outputs = new ArrayList<String>();
-		outputs.add(receiver);
-		outputs.add("" + (balance - fee));
+		outputs.add(mintOrder.getTargetAddress());
+		if (mintOrder.getChangeAction() != ChangeAction.RETURN) {
+			outputs.add("" + minOutput);
+		} else {
+			outputs.add("" + (balance - fee));
+		}
 		for (Token token : mintOrder.getTokens()) {
 			outputs.add(String.format("%d %s.%s", token.getAmount(), policyId, token.getAssetName()));
 		}
-
 		// the account might have other minted tokens, which also has to be sent
 		utxoKeys = utxo.keys();
 		while (utxoKeys.hasNext()) {
@@ -266,9 +261,18 @@ public class CardanoCli {
 				}
 			}
 		}
-
 		// combine all outputs
 		cmd.add(StringUtils.join(outputs, "+"));
+
+		if (mintOrder.getChangeAction() != ChangeAction.RETURN) {
+			long change = balance - minOutput - fee;
+			cmd.add("--tx-out");
+			if (mintOrder.getChangeAction() == ChangeAction.KEEP) {
+				cmd.add(mintOrder.getAccount().getAddress() + "+" + change);
+			} else if (mintOrder.getChangeAction() == ChangeAction.TIP) {
+				cmd.add(mintOrder.getAccount().getAddress() + "+" + change);
+			}
+		}
 
 		cmd.add("--mint");
 		List<String> mints = new ArrayList<String>();

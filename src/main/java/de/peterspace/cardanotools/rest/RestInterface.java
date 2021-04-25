@@ -24,6 +24,7 @@ import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.MintOrder;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintOrderRepository;
+import de.peterspace.cardanotools.rest.dto.ChangeAction;
 import de.peterspace.cardanotools.rest.dto.MintOrderSubmission;
 import de.peterspace.cardanotools.rest.dto.TransferAccount;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +59,7 @@ public class RestInterface {
 			if (account.getLastUpdate() + 10000 < System.currentTimeMillis()) {
 				JSONObject utxo = cardanoCli.getUtxo(account);
 				account.setBalance(cardanoCli.calculateBalance(utxo));
-				account.setBalance((long) (2.178657d * 1000000l));
+				//account.setBalance((long) (2.181517 * 1000000l));
 				account.setFundingAddresses(cardanoDbSyncClient.getInpuAddresses(cardanoCli.collectTransactionHashes(utxo)));
 				account.setLastUpdate(System.currentTimeMillis());
 				accountRepository.save(account);
@@ -75,9 +76,15 @@ public class RestInterface {
 		return JSONStringer.valueToString(ipfsCli.saveFile(stageFile, true));
 	}
 
-	@PostMapping("mintFee")
-	public ResponseEntity<Long> calculateFee(@RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
-		MintOrder mintOrder = mintOrderSubmission.toMintOrder(null);
+	@PostMapping("mintFee/{key}")
+	public ResponseEntity<Long> calculateFee(@PathVariable("key") UUID key, @RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
+		// always calculate with the worst case
+		mintOrderSubmission.setChangeAction(ChangeAction.KEEP);
+		Optional<Account> account = accountRepository.findById(key.toString());
+		if (!account.isPresent()) {
+			return new ResponseEntity<Long>(HttpStatus.NOT_FOUND);
+		}
+		MintOrder mintOrder = mintOrderSubmission.toMintOrder(account.get());
 		long fee = cardanoCli.calculateTransactionFee(mintOrder);
 		return new ResponseEntity<Long>(fee, HttpStatus.OK);
 	}
@@ -92,6 +99,8 @@ public class RestInterface {
 
 		MintOrder mintOrder = mintOrderSubmission.toMintOrder(account.get());
 		mintOrderRepository.save(mintOrder);
+
+		cardanoCli.executeMintOrder(mintOrder);
 
 		return new ResponseEntity<Void>(HttpStatus.OK);
 	}

@@ -29,6 +29,9 @@ public class MintOrderSubmission {
 	@NotNull
 	private ChangeAction changeAction;
 
+	@NotNull
+	private Long fee;
+
 	public MintOrder toMintOrder(Account account) {
 		MintOrder mintOrder = new MintOrder();
 		mintOrder.setAccount(account);
@@ -36,9 +39,11 @@ public class MintOrderSubmission {
 
 		List<Token> tokens = new ArrayList<>();
 		for (TokenSubmission tokenSubmission : getTokens()) {
-			tokens.add(tokenSubmission.toToken());
+			tokens.add(tokenSubmission.toToken(mintOrder));
 		}
 		mintOrder.setTokens(tokens);
+		mintOrder.setTargetAddress(getTargetAddress());
+		mintOrder.setChangeAction(getChangeAction());
 		return mintOrder;
 	}
 

@@ -7,6 +7,7 @@ import javax.validation.constraints.NotNull;
 
 import org.json.JSONObject;
 
+import de.peterspace.cardanotools.model.MintOrder;
 import de.peterspace.cardanotools.model.Token;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,11 +27,12 @@ public class TokenSubmission {
 	@NotNull
 	private Map<String, MetaValue> metaData;
 
-	public Token toToken() {
+	public Token toToken(MintOrder mintOrder) {
 		Token token = new Token();
 		token.setAssetName(getAssetName());
 		token.setAmount(getAmount());
 		token.setMetaDataJson(new JSONObject(metaData).toString(3));
+		token.setMintOrder(mintOrder);
 		return token;
 	}
 

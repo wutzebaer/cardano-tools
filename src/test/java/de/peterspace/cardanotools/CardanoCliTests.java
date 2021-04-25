@@ -19,6 +19,7 @@ import de.peterspace.cardanotools.model.MintOrder;
 import de.peterspace.cardanotools.model.Token;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintOrderRepository;
+import de.peterspace.cardanotools.rest.dto.ChangeAction;
 import lombok.extern.slf4j.Slf4j;
 
 @SpringBootTest
@@ -80,9 +81,15 @@ public class CardanoCliTests {
 
 	@Test
 	void calculateFee() throws Exception {
+		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
+		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), "addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x", "{\"type\": \"PaymentSigningKeyShelley_ed25519\", \"description\": \"Payment Signing Key\", \"cborHex\": \"5820a210dfed41a028bb2bf4b9a7569b23c4c19a354ab6c167f7604827e56d145a14\"}", "{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", new ArrayList<>(), 0l, 0l));
+		Account account = accountRepository.findById(key).get();
+
 		MintOrder mintOrder = new MintOrder();
 		mintOrder.setCreatedAt(new Date());
-		mintOrder.setAccount(null);
+		mintOrder.setAccount(account);
+		mintOrder.setChangeAction(ChangeAction.RETURN);
+		mintOrder.setTargetAddress(account.getAddress());
 
 		ArrayList<Token> tokens = new ArrayList<Token>();
 
@@ -101,7 +108,7 @@ public class CardanoCliTests {
 
 		long fee = cardanoCli.calculateTransactionFee(mintOrder);
 
-		assertEquals(180197, fee);
+		assertThat(fee).isGreaterThan(225605l);
 	}
 
 	@Test
@@ -136,13 +143,15 @@ public class CardanoCliTests {
 		tokens.add(token2);
 
 		mintOrder.setTokens(tokens);
+		mintOrder.setChangeAction(ChangeAction.RETURN);
+		mintOrder.setTargetAddress(account.getAddress());
 
 		mintCoinOrderRepository.save(mintOrder);
 
 		assertNotNull(token1.getId());
 		assertNotNull(token2.getId());
 
-		cardanoCli.executeMintOrder(mintOrder, receiver);
+		cardanoCli.executeMintOrder(mintOrder);
 
 		new JSONObject(mintOrder.getPolicyScript());
 	}

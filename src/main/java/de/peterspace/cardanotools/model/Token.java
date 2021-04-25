@@ -1,5 +1,6 @@
 package de.peterspace.cardanotools.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -34,6 +35,7 @@ public class Token {
 	@NotNull
 	private Long amount;
 
+	@Column(columnDefinition = "TEXT")
 	private String metaDataJson;
 
 }

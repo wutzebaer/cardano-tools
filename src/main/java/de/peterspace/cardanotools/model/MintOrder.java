@@ -4,15 +4,20 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import de.peterspace.cardanotools.rest.dto.ChangeAction;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -39,10 +44,16 @@ public class MintOrder {
 	@ToString.Exclude
 	private List<Token> tokens;
 
-	@JsonIgnore
+	@NotBlank
+	private String targetAddress;
+
+	@NotNull
+	@Enumerated(EnumType.STRING)
+	@Column(columnDefinition = "varchar(255) DEFAULT 'RETURN'")
+	private ChangeAction changeAction;
+
 	private String txid;
 
-	@JsonIgnore
 	private String policyScript;
 
 	public String createFilePrefix() {
