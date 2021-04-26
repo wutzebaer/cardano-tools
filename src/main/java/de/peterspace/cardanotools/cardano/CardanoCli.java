@@ -34,6 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CardanoCli {
 
+	@Value("${pledge-address}")
+	private String pledgeAddress;
 	private final long minOutput = 1000000l;
 	private final CardanoNode cardanoNode;
 	private final AccountRepository accountRepository;
@@ -266,7 +268,7 @@ public class CardanoCli {
 			if (mintOrderSubmission.getChangeAction() == ChangeAction.KEEP) {
 				transactionOutputs.add(account.getAddress(), "", change);
 			} else if (mintOrderSubmission.getChangeAction() == ChangeAction.TIP) {
-				transactionOutputs.add("addr1qx6pnsm9n3lrvtwx24kq7a0mfwq2txum2tvtaevnpkn4mpyghzw2ukr33p5k45j42w62pqysdkf65p34mrvl4yu4n72s7yfgkq", "", change);
+				transactionOutputs.add(pledgeAddress, "", change);
 			}
 		}
 
