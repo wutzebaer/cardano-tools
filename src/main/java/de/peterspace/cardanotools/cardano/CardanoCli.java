@@ -25,7 +25,6 @@ import de.peterspace.cardanotools.model.MintTransaction;
 import de.peterspace.cardanotools.model.TokenSubmission;
 import de.peterspace.cardanotools.process.ProcessUtil;
 import de.peterspace.cardanotools.repository.AccountRepository;
-import de.peterspace.cardanotools.repository.MintTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,13 +37,13 @@ public class CardanoCli {
 	private final long minOutput = 1000000l;
 	private final CardanoNode cardanoNode;
 	private final AccountRepository accountRepository;
-	private final MintTransactionRepository mintOrderRepository;
 
 	@Value("${working.dir}")
 	private String workingDir;
 
 	private String[] cardanoCliCmd;
 	private String[] networkMagicArgs;
+	private Account dummyAccount;
 
 	@PostConstruct
 	public void init() throws Exception {
@@ -68,6 +67,8 @@ public class CardanoCli {
 		cmd.add("protocol.json");
 		cmd.addAll(List.of(networkMagicArgs));
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
+
+		dummyAccount = createAccount();
 
 	}
 
@@ -165,7 +166,7 @@ public class CardanoCli {
 			utxo = new JSONObject().put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("value", new JSONObject().put("lovelace", 1000000000l)));
 		}
 		if (mintOrderSubmission.getTargetAddress() == null) {
-			mintOrderSubmission.setTargetAddress(account.getAddress());
+			mintOrderSubmission.setTargetAddress(dummyAccount.getAddress());
 		}
 
 		writeFile(account.getKey() + ".vkey", account.getVkey());
