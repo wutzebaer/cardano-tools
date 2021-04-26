@@ -72,7 +72,8 @@ public class RestInterface {
 	@PostMapping(path = "file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public String postFile(@RequestPart MultipartFile file) throws Exception {
 		String stageFile = ipfsCli.stageFile(file.getInputStream());
-		return JSONStringer.valueToString(ipfsCli.saveFile(stageFile, true));
+		String ipfsData = ipfsCli.saveFile(stageFile, true);
+		return JSONStringer.valueToString(ipfsData);
 	}
 
 	@PostMapping("buildMintTransaction/{key}")
@@ -83,7 +84,7 @@ public class RestInterface {
 			return new ResponseEntity<MintTransaction>(HttpStatus.NOT_FOUND);
 		}
 
-		if (!account.get().getFundingAddresses().contains(mintOrderSubmission.getTargetAddress())) {
+		if (account.get().getBalance() > 0 && !account.get().getFundingAddresses().contains(mintOrderSubmission.getTargetAddress())) {
 			throw new Exception("Invalid target address.");
 		}
 

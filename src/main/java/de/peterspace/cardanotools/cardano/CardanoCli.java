@@ -159,6 +159,15 @@ public class CardanoCli {
 
 	public MintTransaction buildMintTransaction(MintOrderSubmission mintOrderSubmission, Account account) throws Exception {
 		JSONObject utxo = getUtxo(account);
+
+		// fake if account is not funded
+		if (utxo.length() == 0) {
+			utxo = new JSONObject().put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("value", new JSONObject().put("lovelace", 1000000000l)));
+		}
+		if (mintOrderSubmission.getTargetAddress() == null) {
+			mintOrderSubmission.setTargetAddress(account.getAddress());
+		}
+
 		writeFile(account.getKey() + ".vkey", account.getVkey());
 		writeFile(account.getKey() + ".skey", account.getSkey());
 		MintTransaction mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, 0);
@@ -198,7 +207,9 @@ public class CardanoCli {
 				policyMetadata.put(token.getAssetName(), cleanedMetadata);
 			}
 		}
-		metadata.put(policyId, policyMetadata);
+		if (policyMetadata.length() > 0) {
+			metadata.put(policyId, policyMetadata);
+		}
 		metadata.put("scripts", new JSONObject().put(policyId, policyScript));
 		String metadataJson = new JSONObject().put("721", metadata).toString(3);
 		writeFile(metadataFilename, metadataJson);
