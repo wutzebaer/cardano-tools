@@ -36,7 +36,7 @@ public class CardanoCli {
 
 	@Value("${pledge-address}")
 	private String pledgeAddress;
-	private final long minOutput = 1000000l;
+	private final long minOutput = 2000000l;
 	private final CardanoNode cardanoNode;
 	private final AccountRepository accountRepository;
 
@@ -390,9 +390,8 @@ public class CardanoCli {
 	}
 
 	private void submitTransaction(MintTransaction mintTransaction) throws Exception {
+		String filename = UUID.randomUUID().toString() + ".signed";
 		try {
-
-			String filename = UUID.randomUUID().toString() + ".signed";
 
 			writeFile(filename, mintTransaction.getSignedData());
 
@@ -408,14 +407,16 @@ public class CardanoCli {
 
 			ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-			removeFile(filename);
-
 		} catch (Exception e) {
 			if (e.getMessage().contains("BadInputsUTxO")) {
 				throw new Exception("You have unprocessed transactions, please wait a minute.");
+			} else if (e.getMessage().contains("OutsideValidityIntervalUTxO")) {
+				throw new Exception("You policy has expired. Confirm to generate a new one.");
 			} else {
 				throw e;
 			}
+		} finally {
+			removeFile(filename);
 		}
 	}
 

@@ -55,14 +55,13 @@ public class RestInterface {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-			if (account.getLastUpdate() + 10000 < System.currentTimeMillis()) {
-				JSONObject utxo = cardanoCli.getUtxo(account);
-				account.setBalance(cardanoCli.calculateBalance(utxo));
-				// account.setBalance((long) (2.181517 * 1000000l));
-				account.setFundingAddresses(cardanoDbSyncClient.getInpuAddresses(cardanoCli.collectTransactionHashes(utxo)));
-				account.setLastUpdate(System.currentTimeMillis());
-				accountRepository.save(account);
-			}
+
+			JSONObject utxo = cardanoCli.getUtxo(account);
+			account.setBalance(cardanoCli.calculateBalance(utxo));
+			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress()));
+			account.setLastUpdate(System.currentTimeMillis());
+			accountRepository.save(account);
+
 			return new ResponseEntity<TransferAccount>(TransferAccount.from(accountOptional.get()), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<TransferAccount>(HttpStatus.NOT_FOUND);

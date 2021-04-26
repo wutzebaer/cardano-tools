@@ -28,6 +28,14 @@ public class CardanoDbSyncClient {
 			+ "inner join tx on tx.id = tx_in.tx_in_id and tx_in.tx_out_index = tx_out.index "
 			+ "where tx.hash = ? ;";
 
+	private static final String getAddressFundingQuery = "select distinct tx_out.address \r\n"
+			+ "	from tx_out\r\n"
+			+ "	inner join tx_in on tx_out.tx_id = tx_in.tx_out_id\r\n"
+			+ "	inner join tx on tx.id = tx_in.tx_in_id and tx_in.tx_out_index = tx_out.index\r\n"
+			+ "	inner join tx_out tx_out2 on tx_out2.tx_id = tx.id\r\n"
+			+ "	where tx_out2.address = ? and tx_out.address != ?";
+
+
 	@Value("${cardano-db-sync.url}")
 	String url;
 
@@ -65,6 +73,22 @@ public class CardanoDbSyncClient {
 			PreparedStatement getTxInput = connection.prepareStatement(getTxInputQuery);
 			byte[] bytes = Hex.decodeHex(txid);
 			getTxInput.setBytes(1, bytes);
+			ResultSet result = getTxInput.executeQuery();
+			while (result.next()) {
+				addresses.add(result.getString(1));
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return addresses;
+	}
+
+	public List<String> getFundingAddresses(String address) {
+		List<String> addresses = new ArrayList<>();
+		try (Connection connection = hds.getConnection()) {
+			PreparedStatement getTxInput = connection.prepareStatement(getAddressFundingQuery);
+			getTxInput.setString(1, address);
+			getTxInput.setString(2, address);
 			ResultSet result = getTxInput.executeQuery();
 			while (result.next()) {
 				addresses.add(result.getString(1));
