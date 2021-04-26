@@ -81,7 +81,7 @@ public class CardanoCliTests {
 		Account account = accountRepository.findById(key).get();
 		JSONObject utxo = cardanoCli.getUtxo(account);
 		long balance = cardanoCli.calculateBalance(utxo);
-		assertThat(balance).isGreaterThan(1_000_000_000 - 100_000_000);
+		assertThat(balance).isGreaterThan(100_000_000);
 	}
 
 	@Test
@@ -91,7 +91,7 @@ public class CardanoCliTests {
 		Account account = accountRepository.findById(key).get();
 
 		MintOrderSubmission mintOrder = new MintOrderSubmission();
-		mintOrder.setChangeAction(ChangeAction.RETURN);
+		mintOrder.setTip(false);
 		mintOrder.setTargetAddress(account.getAddress());
 
 		ArrayList<TokenSubmission> tokens = new ArrayList<TokenSubmission>();
@@ -114,7 +114,7 @@ public class CardanoCliTests {
 
 		MintTransaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
 
-		assertThat(mintTransaction.getFee()).isGreaterThan(225605l);
+		assertThat(mintTransaction.getFee()).isGreaterThan(189000);
 	}
 
 	@Test
@@ -122,13 +122,9 @@ public class CardanoCliTests {
 		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
 		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), "addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x", "{\"type\": \"PaymentSigningKeyShelley_ed25519\", \"description\": \"Payment Signing Key\", \"cborHex\": \"5820a210dfed41a028bb2bf4b9a7569b23c4c19a354ab6c167f7604827e56d145a14\"}", "{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", new ArrayList<>(), 0l, 0l));
 		Account account = accountRepository.findById(key).get();
-		while (cardanoCli.calculateBalance(cardanoCli.getUtxo(account)) < 1) {
-			log.info("Please uploads funds with https://developers.cardano.org/en/testnets/cardano/tools/faucet/ to {}", account.getAddress());
-			Thread.sleep(1000);
-		}
 
 		MintOrderSubmission mintOrder = new MintOrderSubmission();
-		mintOrder.setChangeAction(ChangeAction.RETURN);
+		mintOrder.setTip(false);
 		mintOrder.setTargetAddress(account.getAddress());
 
 		ArrayList<TokenSubmission> tokens = new ArrayList<TokenSubmission>();
@@ -148,7 +144,7 @@ public class CardanoCliTests {
 		tokens.add(token2);
 
 		mintOrder.setTokens(tokens);
-		mintOrder.setChangeAction(ChangeAction.RETURN);
+		mintOrder.setTip(false);
 		mintOrder.setTargetAddress(account.getAddress());
 
 		MintTransaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);

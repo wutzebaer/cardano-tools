@@ -40,7 +40,7 @@ public class MintOrderSubmission {
 	private String targetAddress;
 
 	@NotNull
-	private ChangeAction changeAction;
+	private Boolean tip;
 
 	public String createFilePrefix() {
 		return temporaryFilePrefix + "_mintorder";

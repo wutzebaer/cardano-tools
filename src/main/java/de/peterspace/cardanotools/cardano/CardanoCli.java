@@ -235,7 +235,7 @@ public class CardanoCli {
 		TransactionOutputs transactionOutputs = new TransactionOutputs();
 
 		// add ada change and new minted coins
-		if (mintOrderSubmission.getChangeAction() != ChangeAction.RETURN) {
+		if (mintOrderSubmission.getTip()) {
 			transactionOutputs.add(mintOrderSubmission.getTargetAddress(), "", minOutput);
 		} else {
 			transactionOutputs.add(mintOrderSubmission.getTargetAddress(), "", balance - fee);
@@ -263,13 +263,9 @@ public class CardanoCli {
 			}
 		}
 
-		if (mintOrderSubmission.getChangeAction() != ChangeAction.RETURN) {
+		if (mintOrderSubmission.getTip()) {
 			long change = balance - minOutput - fee;
-			if (mintOrderSubmission.getChangeAction() == ChangeAction.KEEP) {
-				transactionOutputs.add(account.getAddress(), "", change);
-			} else if (mintOrderSubmission.getChangeAction() == ChangeAction.TIP) {
-				transactionOutputs.add(pledgeAddress, "", change);
-			}
+			transactionOutputs.add(pledgeAddress, "", change);
 		}
 
 		for (String a : transactionOutputs.toCliFormat()) {
