@@ -19,7 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
-import de.peterspace.cardanotools.ipfs.IpfsCli;
+import de.peterspace.cardanotools.ipfs.IpfsClient;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.MintTransaction;
@@ -34,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class RestInterface {
 
 	private final CardanoCli cardanoCli;
-	private final IpfsCli ipfsCli;
+	private final IpfsClient ipfsClient;
 	private final MintTransactionRepository mintTransactionRepository;
 	private final AccountRepository accountRepository;
 	private final CardanoDbSyncClient cardanoDbSyncClient;
@@ -70,8 +70,7 @@ public class RestInterface {
 
 	@PostMapping(path = "file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public String postFile(@RequestPart MultipartFile file) throws Exception {
-		String stageFile = ipfsCli.stageFile(file.getInputStream());
-		String ipfsData = ipfsCli.saveFile(stageFile, true);
+		String ipfsData = ipfsClient.addFile(file.getInputStream());
 		return JSONStringer.valueToString(ipfsData);
 	}
 
