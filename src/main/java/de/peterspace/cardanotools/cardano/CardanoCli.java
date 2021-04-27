@@ -196,12 +196,14 @@ public class CardanoCli {
 
 	private MintTransaction createMintTransaction(MintOrderSubmission mintOrderSubmission, Account account, JSONObject utxo, long fee) throws Exception {
 
+		String temporaryFilePrefix = UUID.randomUUID().toString();
+
 		long tip = queryTip();
 		long balance = calculateBalance(utxo);
 		JSONObject policyScript = createPolicy(mintOrderSubmission, account, tip);
 		String policyId = getPolicyId(policyScript);
 
-		String metadataFilename = mintOrderSubmission.createFilePrefix() + ".metadata";
+		String metadataFilename = temporaryFilePrefix + ".metadata";
 		JSONObject metadata = new JSONObject();
 		JSONObject policyMetadata = new JSONObject();
 		for (TokenSubmission token : mintOrderSubmission.getTokens()) {
@@ -285,7 +287,7 @@ public class CardanoCli {
 		cmd.add(metadataFilename);
 
 		cmd.add("--out-file");
-		cmd.add(mintOrderSubmission.createFilePrefix() + ".raw");
+		cmd.add(temporaryFilePrefix + ".raw");
 
 		cmd.add("--invalid-hereafter");
 		cmd.add("" + policyScript.getJSONArray("scripts").getJSONObject(0).getLong("slot"));
@@ -299,14 +301,14 @@ public class CardanoCli {
 		mintTransaction.setPolicy(policyScript.toString(3));
 		mintTransaction.setPolicyId(policyId);
 		mintTransaction.setMetaDataJson(metadataJson);
-		mintTransaction.setRawData(readFile(mintOrderSubmission.createFilePrefix() + ".raw"));
+		mintTransaction.setRawData(readFile(temporaryFilePrefix + ".raw"));
 		mintTransaction.setMintOrderSubmission(mintOrderSubmission);
 
 		String txId = getTxId(mintTransaction);
 		mintTransaction.setTxId(txId);
 
-		removeFile(mintOrderSubmission.createFilePrefix() + ".metadata");
-		removeFile(mintOrderSubmission.createFilePrefix() + ".raw");
+		removeFile(temporaryFilePrefix + ".metadata");
+		removeFile(temporaryFilePrefix + ".raw");
 
 		return mintTransaction;
 	}

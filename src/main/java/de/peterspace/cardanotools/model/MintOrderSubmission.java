@@ -24,9 +24,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MintOrderSubmission {
 
-	@JsonIgnore
-	private final String temporaryFilePrefix = UUID.randomUUID().toString();
-
 	@Id
 	@GeneratedValue
 	@JsonIgnore
@@ -41,9 +38,5 @@ public class MintOrderSubmission {
 
 	@NotNull
 	private Boolean tip;
-
-	public String createFilePrefix() {
-		return temporaryFilePrefix + "_mintorder";
-	}
 
 }

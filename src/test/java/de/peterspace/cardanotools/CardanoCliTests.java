@@ -81,7 +81,7 @@ public class CardanoCliTests {
 		Account account = accountRepository.findById(key).get();
 		JSONObject utxo = cardanoCli.getUtxo(account);
 		long balance = cardanoCli.calculateBalance(utxo);
-		assertThat(balance).isGreaterThan(100_000_000);
+		assertThat(balance).isGreaterThan(1_000_000);
 	}
 
 	@Test
