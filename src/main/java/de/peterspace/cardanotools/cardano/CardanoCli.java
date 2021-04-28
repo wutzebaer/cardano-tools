@@ -164,7 +164,8 @@ public class CardanoCli {
 
 		// fake if account is not funded
 		if (utxo.length() == 0) {
-			utxo = new JSONObject().put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("value", new JSONObject().put("lovelace", 1000000000l)));
+			utxo = new JSONObject()
+					.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAccount.getAddress()).put("value", new JSONObject().put("lovelace", 1000000000l)));
 		}
 		if (mintOrderSubmission.getTargetAddress() == null) {
 			mintOrderSubmission.setTargetAddress(dummyAccount.getAddress());
@@ -173,7 +174,16 @@ public class CardanoCli {
 		writeFile(account.getKey() + ".vkey", account.getVkey());
 		writeFile(account.getKey() + ".skey", account.getSkey());
 		MintTransaction mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, 0);
+
 		long fee = calculateFee(mintTransaction, utxo);
+		long neededBalance = mintTransaction.getMinOutput() + fee + (mintOrderSubmission.getTip() ? 1000000 : 0);
+		if (!utxo.has("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0") && account.getBalance() < neededBalance) {
+			// simulate a further input, because the user has to make another utxo
+			utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAccount.getAddress()).put("value", new JSONObject().put("lovelace", 1000000000l)));
+			mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, 0);
+			fee = calculateFee(mintTransaction, utxo);
+		}
+
 		mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, fee);
 		removeFile(account.getKey() + ".vkey");
 		removeFile(account.getKey() + ".skey");
@@ -267,7 +277,7 @@ public class CardanoCli {
 
 		if (mintOrderSubmission.getTip()) {
 			long change = balance - minOutput - fee;
-			transactionOutputs.add(pledgeAddress, "", change);
+			transactionOutputs.add(pledgeAddress, "", Math.max(change, 0));
 		}
 
 		for (String a : transactionOutputs.toCliFormat()) {

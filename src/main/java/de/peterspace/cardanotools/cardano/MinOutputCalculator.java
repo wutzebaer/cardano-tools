@@ -3,9 +3,7 @@ package de.peterspace.cardanotools.cardano;
 import java.util.List;
 
 import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 
-import de.peterspace.cardanotools.model.MintTransaction;
 import de.peterspace.cardanotools.model.TokenSubmission;
 
 /**
