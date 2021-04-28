@@ -36,7 +36,6 @@ public class CardanoCli {
 
 	@Value("${pledge-address}")
 	private String pledgeAddress;
-	private final long minOutput = 2000000l;
 	private final CardanoNode cardanoNode;
 	private final AccountRepository accountRepository;
 
@@ -234,6 +233,7 @@ public class CardanoCli {
 			cmd.add(utxoKeys.next());
 		}
 
+		long minOutput = MinOutputCalculator.calculate(mintOrderSubmission.getTokens());
 		TransactionOutputs transactionOutputs = new TransactionOutputs();
 
 		// add ada change and new minted coins
@@ -303,6 +303,7 @@ public class CardanoCli {
 		mintTransaction.setMetaDataJson(metadataJson);
 		mintTransaction.setRawData(readFile(temporaryFilePrefix + ".raw"));
 		mintTransaction.setMintOrderSubmission(mintOrderSubmission);
+		mintTransaction.setMinOutput(minOutput);
 
 		String txId = getTxId(mintTransaction);
 		mintTransaction.setTxId(txId);
@@ -352,6 +353,11 @@ public class CardanoCli {
 		removeFile(filename);
 
 		return fee;
+	}
+
+	public long calculateMinOutputSize(MintTransaction mintTransaction) throws Exception {
+		long minUTxOValue = 1000000;
+		return 0;
 	}
 
 	private void signTransaction(MintTransaction mintTransaction, Account account) throws Exception {

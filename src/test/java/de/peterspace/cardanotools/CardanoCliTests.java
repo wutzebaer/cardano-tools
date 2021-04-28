@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
+import de.peterspace.cardanotools.cardano.MinOutputCalculator;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.ChangeAction;
 import de.peterspace.cardanotools.model.MetaValue;

@@ -47,6 +47,9 @@ public class MintTransaction {
 	@NotNull
 	private Long fee;
 
+	@NotNull
+	private Long minOutput;
+
 	@NotBlank
 	private String policyId;
 
