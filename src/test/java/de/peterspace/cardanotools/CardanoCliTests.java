@@ -148,6 +148,10 @@ public class CardanoCliTests {
 		mintOrder.setTip(false);
 		mintOrder.setTargetAddress(account.getAddress());
 
+
+		JSONObject utxo = cardanoCli.getUtxo(account);
+		account.setBalance(cardanoCli.calculateBalance(utxo));
+
 		MintTransaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
 
 		mintTransaction.setAccount(account);
