@@ -3,6 +3,8 @@ package de.peterspace.cardanotools.cardano;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -37,6 +39,9 @@ public class CardanoCli {
 
 	private static final Map<Integer, Object> locks = new ConcurrentHashMap<>();
 
+	@Value("${network}")
+	private String network;
+
 	@Value("${pledge-address}")
 	private String pledgeAddress;
 	private final CardanoNode cardanoNode;
@@ -47,7 +52,7 @@ public class CardanoCli {
 
 	private String[] cardanoCliCmd;
 	private String[] networkMagicArgs;
-	private Account dummyAccount;
+	private String dummyAddress;
 
 	@PostConstruct
 	public void init() throws Exception {
@@ -72,7 +77,14 @@ public class CardanoCli {
 		cmd.addAll(List.of(networkMagicArgs));
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		dummyAccount = createAccount();
+		if (network.equals("testnet")) {
+			dummyAddress = "addr_test1qpqxjsh6jx0mumxgw5nc5jeu5xy07k35v6h2zutyka72yua578p0hapx37mcflefvvwyhwtwn4kt83nkf7wqwx9tvsdsv8p9ac";
+		} else if (network.equals("mainnet")) {
+			dummyAddress = "addr1q9h7988xmmpz2y50rg2n9fw6jd5rq95t8q84k4q6ne403nxahea9slntm5n8f06nlsynyf4m6sa0qd05agra0qgk09nq96rqh9";
+		} else {
+			throw new RuntimeException("Network must be testnet or mainnet");
+		}
+
 
 	}
 
@@ -168,10 +180,10 @@ public class CardanoCli {
 
 			// fake if account is not funded
 			if (utxo.length() == 0) {
-				utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAccount.getAddress()).put("value", new JSONObject().put("lovelace", 1000000000l)));
+				utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAddress).put("value", new JSONObject().put("lovelace", 1000000000l)));
 			}
 			if (mintOrderSubmission.getTargetAddress() == null) {
-				mintOrderSubmission.setTargetAddress(dummyAccount.getAddress());
+				mintOrderSubmission.setTargetAddress(dummyAddress);
 			}
 
 			writeFile(account.getKey() + ".vkey", account.getVkey());
@@ -182,7 +194,7 @@ public class CardanoCli {
 			long neededBalance = mintTransaction.getMinOutput() + fee + (mintOrderSubmission.getTip() ? 1000000 : 0);
 			if (!utxo.has("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0") && account.getBalance() < neededBalance) {
 				// simulate a further input, because the user has to make another utxo
-				utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAccount.getAddress()).put("value", new JSONObject().put("lovelace", 1000000000l)));
+				utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAddress).put("value", new JSONObject().put("lovelace", 1000000000l)));
 				mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, 0);
 				fee = calculateFee(mintTransaction, utxo);
 			}
