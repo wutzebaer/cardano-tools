@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 
@@ -19,7 +21,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 import de.peterspace.cardanotools.model.Account;
-import de.peterspace.cardanotools.model.ChangeAction;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.MintTransaction;
 import de.peterspace.cardanotools.model.TokenSubmission;
@@ -33,6 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class CardanoCli {
+
+	private static final Map<Integer, Object> locks = new ConcurrentHashMap<>();
 
 	@Value("${pledge-address}")
 	private String pledgeAddress;
@@ -160,47 +163,50 @@ public class CardanoCli {
 	}
 
 	public MintTransaction buildMintTransaction(MintOrderSubmission mintOrderSubmission, Account account) throws Exception {
-		JSONObject utxo = getUtxo(account);
+		synchronized (locks.computeIfAbsent(account.getKey().hashCode(), k -> new Object())) {
+			JSONObject utxo = getUtxo(account);
 
-		// fake if account is not funded
-		if (utxo.length() == 0) {
-			utxo = new JSONObject()
-					.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAccount.getAddress()).put("value", new JSONObject().put("lovelace", 1000000000l)));
+			// fake if account is not funded
+			if (utxo.length() == 0) {
+				utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAccount.getAddress()).put("value", new JSONObject().put("lovelace", 1000000000l)));
+			}
+			if (mintOrderSubmission.getTargetAddress() == null) {
+				mintOrderSubmission.setTargetAddress(dummyAccount.getAddress());
+			}
+
+			writeFile(account.getKey() + ".vkey", account.getVkey());
+			writeFile(account.getKey() + ".skey", account.getSkey());
+			MintTransaction mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, 0);
+
+			long fee = calculateFee(mintTransaction, utxo);
+			long neededBalance = mintTransaction.getMinOutput() + fee + (mintOrderSubmission.getTip() ? 1000000 : 0);
+			if (!utxo.has("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0") && account.getBalance() < neededBalance) {
+				// simulate a further input, because the user has to make another utxo
+				utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAccount.getAddress()).put("value", new JSONObject().put("lovelace", 1000000000l)));
+				mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, 0);
+				fee = calculateFee(mintTransaction, utxo);
+			}
+
+			mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, fee);
+			removeFile(account.getKey() + ".vkey");
+			removeFile(account.getKey() + ".skey");
+			return mintTransaction;
 		}
-		if (mintOrderSubmission.getTargetAddress() == null) {
-			mintOrderSubmission.setTargetAddress(dummyAccount.getAddress());
-		}
-
-		writeFile(account.getKey() + ".vkey", account.getVkey());
-		writeFile(account.getKey() + ".skey", account.getSkey());
-		MintTransaction mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, 0);
-
-		long fee = calculateFee(mintTransaction, utxo);
-		long neededBalance = mintTransaction.getMinOutput() + fee + (mintOrderSubmission.getTip() ? 1000000 : 0);
-		if (!utxo.has("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0") && account.getBalance() < neededBalance) {
-			// simulate a further input, because the user has to make another utxo
-			utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAccount.getAddress()).put("value", new JSONObject().put("lovelace", 1000000000l)));
-			mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, 0);
-			fee = calculateFee(mintTransaction, utxo);
-		}
-
-		mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, fee);
-		removeFile(account.getKey() + ".vkey");
-		removeFile(account.getKey() + ".skey");
-		return mintTransaction;
 	}
 
 	public void executeMintTransaction(MintTransaction mintTransaction) throws Exception {
-		Account account = mintTransaction.getAccount();
+		synchronized (locks.computeIfAbsent(mintTransaction.getTxId().hashCode(), k -> new Object())) {
+			Account account = mintTransaction.getAccount();
 
-		writeFile(account.getKey() + ".vkey", account.getVkey());
-		writeFile(account.getKey() + ".skey", account.getSkey());
+			writeFile(account.getKey() + ".vkey", account.getVkey());
+			writeFile(account.getKey() + ".skey", account.getSkey());
 
-		signTransaction(mintTransaction, account);
-		submitTransaction(mintTransaction);
+			signTransaction(mintTransaction, account);
+			submitTransaction(mintTransaction);
 
-		removeFile(account.getKey() + ".vkey");
-		removeFile(account.getKey() + ".skey");
+			removeFile(account.getKey() + ".vkey");
+			removeFile(account.getKey() + ".skey");
+		}
 	}
 
 	private MintTransaction createMintTransaction(MintOrderSubmission mintOrderSubmission, Account account, JSONObject utxo, long fee) throws Exception {
