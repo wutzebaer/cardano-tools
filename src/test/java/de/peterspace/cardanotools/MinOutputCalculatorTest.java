@@ -24,7 +24,7 @@ public class MinOutputCalculatorTest {
 
 		long calculateMinOutputSize = MinOutputCalculator.calculate(tokens);
 
-		assertEquals(1448244, calculateMinOutputSize);
+		assertEquals(1555554, calculateMinOutputSize);
 	}
 
 	@Test
@@ -42,7 +42,7 @@ public class MinOutputCalculatorTest {
 
 		long calculateMinOutputSize = MinOutputCalculator.calculate(tokens);
 
-		assertEquals(1655136, calculateMinOutputSize);
+		assertEquals(1777776, calculateMinOutputSize);
 	}
 
 	@Test
@@ -60,7 +60,7 @@ public class MinOutputCalculatorTest {
 
 		long calculateMinOutputSize = MinOutputCalculator.calculate(tokens);
 
-		assertEquals(1379280, calculateMinOutputSize);
+		assertEquals(1481480, calculateMinOutputSize);
 	}
 
 }

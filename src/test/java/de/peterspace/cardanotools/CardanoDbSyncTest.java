@@ -39,7 +39,7 @@ public class CardanoDbSyncTest {
 	@Test
 	void funding() throws Exception {
 		List<String> inpuAddresses = cardanoDbSyncClient.getFundingAddresses("addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x");
-		assertThat(inpuAddresses).hasSize(2);
+		assertThat(inpuAddresses).hasSize(4);
 		assertThat(inpuAddresses).contains("addr_test1qqypqe4g9kw9aeuuxp94lcuk0v6k0z79n2f8de8nnm7uwwsxu2hyfhlkwuxupa9d5085eunq2qywy7hvmvej456flknsymw6pl");
 		assertThat(inpuAddresses).contains("addr_test1qz98ehykjvsrn34puupda75xm3vyaddh45ygsvaqgmv7fecxu2hyfhlkwuxupa9d5085eunq2qywy7hvmvej456flknsa9zz20");
 	}
