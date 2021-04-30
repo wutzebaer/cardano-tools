@@ -182,7 +182,8 @@ public class CardanoCli {
 			if (utxo.length() == 0) {
 				utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAddress).put("value", new JSONObject().put("lovelace", 1000000000l)));
 			}
-			if (mintOrderSubmission.getTargetAddress() == null) {
+
+			if(StringUtils.isBlank(mintOrderSubmission.getTargetAddress())) {
 				mintOrderSubmission.setTargetAddress(dummyAddress);
 			}
 

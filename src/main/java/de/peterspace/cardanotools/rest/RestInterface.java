@@ -3,6 +3,7 @@ package de.peterspace.cardanotools.rest;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 import org.springframework.http.HttpStatus;
@@ -82,7 +83,7 @@ public class RestInterface {
 			return new ResponseEntity<MintTransaction>(HttpStatus.NOT_FOUND);
 		}
 
-		if (account.get().getBalance() > 0 && !account.get().getFundingAddresses().contains(mintOrderSubmission.getTargetAddress())) {
+		if (account.get().getBalance() > 0 && !StringUtils.isBlank(mintOrderSubmission.getTargetAddress()) && !account.get().getFundingAddresses().contains(mintOrderSubmission.getTargetAddress())) {
 			throw new Exception("Invalid target address.");
 		}
 
