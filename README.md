@@ -7,7 +7,7 @@ docker build -t wutzebaer/cardano-tools:latest .
 docker push wutzebaer/cardano-tools:latest
 ```
 
-##Compose file
+## Compose file
 ```
 version: '3'
 
