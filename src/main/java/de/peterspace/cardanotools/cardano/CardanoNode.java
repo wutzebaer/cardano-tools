@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,7 @@ public class CardanoNode {
 	private String[] networkMagicArgs;
 
 	@Getter
+	@Value("${cardano-node.container-name}")
 	private String containerName;
 
 	@PostConstruct
@@ -48,7 +50,9 @@ public class CardanoNode {
 		}
 
 		// determine container name
-		this.containerName = network + "-node";
+		if (StringUtils.isBlank(containerName)) {
+			this.containerName = network + "-node";
+		}
 
 		String runningContainers = ProcessUtil.runCommand(new String[] { "docker", "ps" });
 
@@ -108,9 +112,6 @@ public class CardanoNode {
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.add("docker");
 		cmd.add("run");
-
-		cmd.add("--restart");
-		cmd.add("always");
 
 		cmd.add("--name");
 		cmd.add(containerName);
