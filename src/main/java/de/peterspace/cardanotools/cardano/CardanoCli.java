@@ -85,7 +85,6 @@ public class CardanoCli {
 			throw new RuntimeException("Network must be testnet or mainnet");
 		}
 
-
 	}
 
 	public long queryTip() throws Exception {
@@ -132,22 +131,23 @@ public class CardanoCli {
 	}
 
 	public JSONObject getUtxo(Account account) throws Exception {
+		synchronized (locks.computeIfAbsent(account.getKey().hashCode(), k -> new Object())) {
+			ArrayList<String> cmd = new ArrayList<String>();
+			cmd.addAll(List.of(cardanoCliCmd));
+			cmd.add("query");
+			cmd.add("utxo");
+			cmd.add("--address");
+			cmd.add(account.getAddress());
+			cmd.addAll(List.of(networkMagicArgs));
+			cmd.add("--out-file");
+			cmd.add(account.getKey() + ".utxo");
+			ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		ArrayList<String> cmd = new ArrayList<String>();
-		cmd.addAll(List.of(cardanoCliCmd));
-		cmd.add("query");
-		cmd.add("utxo");
-		cmd.add("--address");
-		cmd.add(account.getAddress());
-		cmd.addAll(List.of(networkMagicArgs));
-		cmd.add("--out-file");
-		cmd.add(account.getKey() + ".utxo");
-		ProcessUtil.runCommand(cmd.toArray(new String[0]));
+			String readString = consumeFile(account.getKey() + ".utxo");
+			JSONObject readUtxo = new JSONObject(readString);
 
-		String readString = consumeFile(account.getKey() + ".utxo");
-		JSONObject readUtxo = new JSONObject(readString);
-
-		return readUtxo;
+			return readUtxo;
+		}
 	}
 
 	public long calculateBalance(JSONObject utxo) throws Exception {
@@ -183,7 +183,7 @@ public class CardanoCli {
 				utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAddress).put("value", new JSONObject().put("lovelace", 1000000000l)));
 			}
 
-			if(StringUtils.isBlank(mintOrderSubmission.getTargetAddress())) {
+			if (StringUtils.isBlank(mintOrderSubmission.getTargetAddress())) {
 				mintOrderSubmission.setTargetAddress(dummyAddress);
 			}
 
