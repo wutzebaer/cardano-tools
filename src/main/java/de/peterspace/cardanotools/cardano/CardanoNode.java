@@ -109,6 +109,9 @@ public class CardanoNode {
 		cmd.add("docker");
 		cmd.add("run");
 
+		cmd.add("--restart");
+		cmd.add("always");
+
 		cmd.add("--name");
 		cmd.add(containerName);
 
