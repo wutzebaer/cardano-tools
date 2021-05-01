@@ -120,7 +120,7 @@ public class CardanoNode {
 		cmd.add("-d");
 
 		cmd.add("-v");
-		cmd.add(workingDir + ":/workdir");
+		cmd.add(workingDir + ":/work");
 
 		cmd.add("-v");
 		cmd.add(network + "-data:/data");

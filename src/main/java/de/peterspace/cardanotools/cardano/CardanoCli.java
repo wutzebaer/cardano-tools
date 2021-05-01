@@ -60,7 +60,7 @@ public class CardanoCli {
 		// @formatter:off
         cardanoCliCmd = new String[] {
                 "docker", "exec",
-                "-w", workingDir,
+                "-w", "/work",
                 "-e", "CARDANO_NODE_SOCKET_PATH=/ipc/node.socket",
                 cardanoNode.getContainerName(),
                 "cardano-cli"
