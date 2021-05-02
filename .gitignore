@@ -35,3 +35,4 @@ build/
 bak/
 cardano-minter-workdir/
 /application.properties
+/*.db
