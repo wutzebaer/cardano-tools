@@ -50,6 +50,10 @@ public class MintTransaction {
 	@NotNull
 	private Long minOutput;
 
+	@NotNull
+	@Column(columnDefinition = "bigint DEFAULT 0")
+	private Long txSize;
+
 	@NotBlank
 	private String policyId;
 

@@ -1,10 +1,5 @@
 package de.peterspace.cardanotools.cardano;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -46,6 +41,7 @@ public class CardanoCli {
 	private String pledgeAddress;
 	private final CardanoNode cardanoNode;
 	private final AccountRepository accountRepository;
+	private final FileUtil fileUtil;
 
 	@Value("${working.dir}")
 	private String workingDir;
@@ -121,11 +117,11 @@ public class CardanoCli {
 		cmd.addAll(List.of(networkMagicArgs));
 		String addressLiteral = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		Account account = new Account(key, new Date(), addressLiteral, readFile(key + ".skey"), readFile(key + ".vkey"), new ArrayList<>(), 0l, 0l);
+		Account account = new Account(key, new Date(), addressLiteral, fileUtil.readFile(key + ".skey"), fileUtil.readFile(key + ".vkey"), new ArrayList<>(), 0l, 0l);
 		accountRepository.save(account);
 
-		removeFile(key + ".skey");
-		removeFile(key + ".vkey");
+		fileUtil.removeFile(key + ".skey");
+		fileUtil.removeFile(key + ".vkey");
 
 		return account;
 	}
@@ -143,7 +139,7 @@ public class CardanoCli {
 			cmd.add(account.getKey() + ".utxo");
 			ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-			String readString = consumeFile(account.getKey() + ".utxo");
+			String readString = fileUtil.consumeFile(account.getKey() + ".utxo");
 			JSONObject readUtxo = new JSONObject(readString);
 
 			return readUtxo;
@@ -187,8 +183,8 @@ public class CardanoCli {
 				mintOrderSubmission.setTargetAddress(dummyAddress);
 			}
 
-			writeFile(account.getKey() + ".vkey", account.getVkey());
-			writeFile(account.getKey() + ".skey", account.getSkey());
+			fileUtil.writeFile(account.getKey() + ".vkey", account.getVkey());
+			fileUtil.writeFile(account.getKey() + ".skey", account.getSkey());
 			MintTransaction mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, 0);
 
 			long fee = calculateFee(mintTransaction, utxo);
@@ -201,8 +197,10 @@ public class CardanoCli {
 			}
 
 			mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, fee);
-			removeFile(account.getKey() + ".vkey");
-			removeFile(account.getKey() + ".skey");
+			signTransaction(mintTransaction, account);
+
+			fileUtil.removeFile(account.getKey() + ".vkey");
+			fileUtil.removeFile(account.getKey() + ".skey");
 			return mintTransaction;
 		}
 	}
@@ -211,14 +209,14 @@ public class CardanoCli {
 		synchronized (locks.computeIfAbsent(mintTransaction.getTxId().hashCode(), k -> new Object())) {
 			Account account = mintTransaction.getAccount();
 
-			writeFile(account.getKey() + ".vkey", account.getVkey());
-			writeFile(account.getKey() + ".skey", account.getSkey());
+			fileUtil.writeFile(account.getKey() + ".vkey", account.getVkey());
+			fileUtil.writeFile(account.getKey() + ".skey", account.getSkey());
 
 			signTransaction(mintTransaction, account);
 			submitTransaction(mintTransaction);
 
-			removeFile(account.getKey() + ".vkey");
-			removeFile(account.getKey() + ".skey");
+			fileUtil.removeFile(account.getKey() + ".vkey");
+			fileUtil.removeFile(account.getKey() + ".skey");
 		}
 	}
 
@@ -245,7 +243,7 @@ public class CardanoCli {
 		}
 		metadata.put("scripts", new JSONObject().put(policyId, policyScript));
 		String metadataJson = new JSONObject().put("721", metadata).toString(3);
-		writeFile(metadataFilename, metadataJson);
+		fileUtil.writeFile(metadataFilename, metadataJson);
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
@@ -330,22 +328,22 @@ public class CardanoCli {
 		mintTransaction.setPolicy(policyScript.toString(3));
 		mintTransaction.setPolicyId(policyId);
 		mintTransaction.setMetaDataJson(metadataJson);
-		mintTransaction.setRawData(readFile(temporaryFilePrefix + ".raw"));
+		mintTransaction.setRawData(fileUtil.readFile(temporaryFilePrefix + ".raw"));
 		mintTransaction.setMintOrderSubmission(mintOrderSubmission);
 		mintTransaction.setMinOutput(minOutput);
 
 		String txId = getTxId(mintTransaction);
 		mintTransaction.setTxId(txId);
 
-		removeFile(temporaryFilePrefix + ".metadata");
-		removeFile(temporaryFilePrefix + ".raw");
+		fileUtil.removeFile(temporaryFilePrefix + ".metadata");
+		fileUtil.removeFile(temporaryFilePrefix + ".raw");
 
 		return mintTransaction;
 	}
 
 	private long calculateFee(MintTransaction mintTransaction, JSONObject utxo) throws Exception {
 		String filename = UUID.randomUUID().toString() + ".raw";
-		writeFile(filename, mintTransaction.getRawData());
+		fileUtil.writeFile(filename, mintTransaction.getRawData());
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
@@ -379,7 +377,7 @@ public class CardanoCli {
 		String feeString = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 		long fee = Long.valueOf(feeString.split(" ")[0]);
 
-		removeFile(filename);
+		fileUtil.removeFile(filename);
 
 		return fee;
 	}
@@ -393,8 +391,8 @@ public class CardanoCli {
 
 		String filePrefix = UUID.randomUUID().toString();
 
-		writeFile(filePrefix + ".script", mintTransaction.getPolicy());
-		writeFile(filePrefix + ".raw", mintTransaction.getRawData());
+		fileUtil.writeFile(filePrefix + ".script", mintTransaction.getPolicy());
+		fileUtil.writeFile(filePrefix + ".raw", mintTransaction.getRawData());
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
@@ -417,16 +415,20 @@ public class CardanoCli {
 
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		mintTransaction.setSignedData(consumeFile(filePrefix + ".signed"));
-		removeFile(filePrefix + ".script");
-		removeFile(filePrefix + ".raw");
+		mintTransaction.setSignedData(fileUtil.consumeFile(filePrefix + ".signed"));
+
+		String cborHex = new JSONObject(mintTransaction.getSignedData()).getString("cborHex");
+		mintTransaction.setTxSize((long) (cborHex.length() / 2));
+
+		fileUtil.removeFile(filePrefix + ".script");
+		fileUtil.removeFile(filePrefix + ".raw");
 	}
 
 	private void submitTransaction(MintTransaction mintTransaction) throws Exception {
 		String filename = UUID.randomUUID().toString() + ".signed";
 		try {
 
-			writeFile(filename, mintTransaction.getSignedData());
+			fileUtil.writeFile(filename, mintTransaction.getSignedData());
 
 			ArrayList<String> cmd = new ArrayList<String>();
 			cmd.addAll(List.of(cardanoCliCmd));
@@ -449,7 +451,7 @@ public class CardanoCli {
 				throw e;
 			}
 		} finally {
-			removeFile(filename);
+			fileUtil.removeFile(filename);
 		}
 	}
 
@@ -486,7 +488,7 @@ public class CardanoCli {
 
 	private String getPolicyId(JSONObject policy) throws Exception {
 		String filename = UUID.randomUUID().toString() + ".script";
-		writeFile(filename, policy.toString(3));
+		fileUtil.writeFile(filename, policy.toString(3));
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
@@ -496,7 +498,7 @@ public class CardanoCli {
 		cmd.add(filename);
 		String policyId = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		removeFile(filename);
+		fileUtil.removeFile(filename);
 
 		return policyId;
 	}
@@ -504,7 +506,7 @@ public class CardanoCli {
 	private String getTxId(MintTransaction mintTransaction) throws Exception {
 
 		String filename = UUID.randomUUID().toString() + ".raw";
-		writeFile(filename, mintTransaction.getRawData());
+		fileUtil.writeFile(filename, mintTransaction.getRawData());
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
@@ -514,28 +516,9 @@ public class CardanoCli {
 		cmd.add(filename);
 		String txId = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		removeFile(filename);
+		fileUtil.removeFile(filename);
 
 		return txId;
-	}
-
-	private String consumeFile(String filename) throws Exception {
-		Path path = Paths.get(workingDir, filename);
-		String readString = Files.readString(path);
-		Files.delete(path);
-		return readString;
-	}
-
-	private String readFile(String filename) throws Exception {
-		return Files.readString(Paths.get(workingDir, filename));
-	}
-
-	private void writeFile(String filename, String content) throws Exception {
-		Files.writeString(Paths.get(workingDir, filename), content);
-	}
-
-	private void removeFile(String filename) throws Exception {
-		Files.delete(Paths.get(workingDir, filename));
 	}
 
 }
