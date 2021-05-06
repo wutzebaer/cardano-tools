@@ -8,4 +8,6 @@ import de.peterspace.cardanotools.model.MintTransaction;
 @Repository
 public interface MintTransactionRepository extends PagingAndSortingRepository<MintTransaction, Long> {
 
+	MintTransaction findFirstByAccountKeyOrderByIdDesc(String key);
+
 }

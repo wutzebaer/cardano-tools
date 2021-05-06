@@ -35,6 +35,10 @@ public class FileUtil {
 		Files.writeString(Paths.get(workingDir, filename), content);
 	}
 
+	public void writeFile(String filename, byte[] content) throws Exception {
+		Files.write(Paths.get(workingDir, filename), content);
+	}
+
 	public void removeFile(String filename) throws Exception {
 		Files.delete(Paths.get(workingDir, filename));
 	}

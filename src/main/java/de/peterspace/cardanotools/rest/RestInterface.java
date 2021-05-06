@@ -1,11 +1,17 @@
 package de.peterspace.cardanotools.rest;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.imageio.ImageIO;
+
 import org.apache.commons.lang3.StringUtils;
+import org.imgscalr.Scalr;
 import org.json.JSONObject;
 import org.json.JSONStringer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,14 +24,19 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import de.peterspace.cardanotools.cardano.CardanoCli;
+import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
 import de.peterspace.cardanotools.ipfs.IpfsClient;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.MintTransaction;
+import de.peterspace.cardanotools.model.RegistrationMetadata;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintTransactionRepository;
+import de.peterspace.cardanotools.rest.dto.TokenRegistration;
 import de.peterspace.cardanotools.rest.dto.TransferAccount;
 import lombok.RequiredArgsConstructor;
 
@@ -39,6 +50,7 @@ public class RestInterface {
 	private final MintTransactionRepository mintTransactionRepository;
 	private final AccountRepository accountRepository;
 	private final CardanoDbSyncClient cardanoDbSyncClient;
+	private final TokenRegistry tokenRegistry;
 
 	@GetMapping("tip")
 	public long getTip() throws Exception {
@@ -101,6 +113,41 @@ public class RestInterface {
 		cardanoCli.executeMintTransaction(mintTransaction);
 		mintTransactionRepository.save(mintTransaction);
 		return new ResponseEntity<Void>(HttpStatus.OK);
+	}
+
+	@GetMapping("getRegistrationMetadata/{key}")
+	public ResponseEntity<RegistrationMetadata> getRegistrationMetadata(@PathVariable("key") UUID key) throws Exception {
+		MintTransaction mintTransaction = mintTransactionRepository.findFirstByAccountKeyOrderByIdDesc(key.toString());
+		RegistrationMetadata registrationMetadata = new RegistrationMetadata();
+
+		registrationMetadata.setAssetName(mintTransaction.getMintOrderSubmission().getTokens().get(0).getAssetName());
+
+		if (mintTransaction.getMintOrderSubmission().getTokens().get(0).getMetaData().containsKey("Name"))
+			registrationMetadata.setName(mintTransaction.getMintOrderSubmission().getTokens().get(0).getMetaData().get("Name").getValue());
+
+		registrationMetadata.setPolicyId(mintTransaction.getPolicyId());
+		registrationMetadata.setPolicy(mintTransaction.getPolicy());
+		registrationMetadata.setPolicySkey(mintTransaction.getAccount().getSkey());
+
+		return new ResponseEntity<RegistrationMetadata>(registrationMetadata, HttpStatus.OK);
+	}
+
+	@PostMapping(path = "generateTokenRegistration", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<TokenRegistration> generateTokenRegistration(@RequestPart String registrationMetadataString, @RequestPart(required = false) MultipartFile file) throws Exception {
+
+		RegistrationMetadata registrationMetadata = new ObjectMapper().readValue(registrationMetadataString, RegistrationMetadata.class);
+
+		if (file != null) {
+			BufferedImage image = ImageIO.read(file.getInputStream());
+			BufferedImage resized = Scalr.resize(image, Scalr.Mode.AUTOMATIC, 150, 150);
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			ImageIO.write(resized, "png", bos);
+			registrationMetadata.setLogo(bos.toByteArray());
+		}
+
+		TokenRegistration createTokenRegistration = tokenRegistry.createTokenRegistration(registrationMetadata);
+
+		return new ResponseEntity<TokenRegistration>(createTokenRegistration, HttpStatus.OK);
 	}
 
 }

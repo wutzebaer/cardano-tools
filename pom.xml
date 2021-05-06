@@ -119,6 +119,11 @@
 			<artifactId>java-ipfs-http-client</artifactId>
 			<version>v1.3.3</version>
 		</dependency>
+		<dependency>
+			<groupId>org.imgscalr</groupId>
+			<artifactId>imgscalr-lib</artifactId>
+			<version>4.2</version>
+		</dependency>
 
 	</dependencies>
 

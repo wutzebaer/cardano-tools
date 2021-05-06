@@ -5,6 +5,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import org.hibernate.validator.constraints.URL;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -43,9 +46,12 @@ public class RegistrationMetadata {
 
 	String ticker;
 
+	@URL
 	String url;
 
 	// kleiner als 64kb und png
-	String logo;
+	@Size(max = 52428800)
+	@JsonIgnore
+	byte[] logo;
 
 }

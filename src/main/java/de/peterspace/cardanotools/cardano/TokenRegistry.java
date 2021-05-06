@@ -11,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 
 import de.peterspace.cardanotools.model.RegistrationMetadata;
 import de.peterspace.cardanotools.process.ProcessUtil;
+import de.peterspace.cardanotools.rest.dto.TokenRegistration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,13 +26,14 @@ public class TokenRegistry {
 
 	private final FileUtil fileUtil;
 
-	public void registerToken(RegistrationMetadata registrationMetadata) throws Exception {
+	public TokenRegistration createTokenRegistration(RegistrationMetadata registrationMetadata) throws Exception {
 		String subject = registrationMetadata.getPolicyId() + encodeBase16(registrationMetadata.getAssetName());
 		initDraft(subject);
 		addRequiredFields(subject, registrationMetadata);
 		addOptionalFields(subject, registrationMetadata);
 		sign(subject, registrationMetadata);
 		finalize(subject, registrationMetadata);
+		return new TokenRegistration(subject + ".json", fileUtil.consumeFile(subject + ".json"));
 	}
 
 	private void initDraft(String subject) throws Exception {
@@ -125,14 +127,18 @@ public class TokenRegistry {
 			cmd.add(registrationMetadata.getUrl());
 		}
 
-		if (!StringUtils.isBlank(registrationMetadata.getLogo())) {
+		if (registrationMetadata.getLogo() != null) {
+			fileUtil.writeFile(temporaryFilePrefix + ".png", registrationMetadata.getLogo());
 			cmd.add("--logo");
-			cmd.add(registrationMetadata.getLogo());
+			cmd.add(temporaryFilePrefix + ".png");
 		}
 
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 		fileUtil.removeFile(temporaryFilePrefix + ".script");
+		if (registrationMetadata.getLogo() != null) {
+			fileUtil.removeFile(temporaryFilePrefix + ".png");
+		}
 	}
 
 	private void sign(String subject, RegistrationMetadata registrationMetadata) throws Exception {

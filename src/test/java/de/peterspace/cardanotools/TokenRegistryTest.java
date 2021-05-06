@@ -64,7 +64,7 @@ public class TokenRegistryTest {
 		MintTransaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
 		mintTransaction.setAccount(account);
 
-		tokenRegistry.registerToken(new RegistrationMetadata(null, "AAAAA", mintTransaction.getPolicyId(), mintTransaction.getPolicy(), mintTransaction.getAccount().getSkey(), "AAANAME", "AAADESC", "AAATI", null, "are_you_fucking_kidding_me_clean.png"));
+		tokenRegistry.createTokenRegistration(new RegistrationMetadata(null, "AAAAA", mintTransaction.getPolicyId(), mintTransaction.getPolicy(), mintTransaction.getAccount().getSkey(), "AAANAME", "AAADESC", "AAATI", null, new byte[100]));
 
 	}
 
