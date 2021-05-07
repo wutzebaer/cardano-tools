@@ -2,6 +2,7 @@ package de.peterspace.cardanotools.rest;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.imgscalr.Scalr;
 import org.json.JSONObject;
 import org.json.JSONStringer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
+import de.peterspace.cardanotools.dbsync.TokenData;
 import de.peterspace.cardanotools.ipfs.IpfsClient;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
@@ -130,6 +132,18 @@ public class RestInterface {
 		registrationMetadata.setPolicySkey(mintTransaction.getAccount().getSkey());
 
 		return new ResponseEntity<RegistrationMetadata>(registrationMetadata, HttpStatus.OK);
+	}
+
+	@GetMapping("findTokens")
+	public ResponseEntity<List<TokenData>> findTokens(@RequestParam String string) throws Exception {
+		List<TokenData> findTokens = cardanoDbSyncClient.findTokens(string);
+		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
+	}
+
+	@GetMapping("latestTokens")
+	public ResponseEntity<List<TokenData>> latestTokens() throws Exception {
+		List<TokenData> findTokens = cardanoDbSyncClient.latestTokens();
+		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
 	}
 
 	@PostMapping(path = "generateTokenRegistration", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
