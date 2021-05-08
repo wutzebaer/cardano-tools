@@ -138,7 +138,7 @@ public class CardanoDbSyncClient {
 				findTokenQuery += "or mtm.policy=? ";
 			}
 			findTokenQuery += "order by t.id asc ";
-			findTokenQuery += "limit 1000 ";
+			findTokenQuery += "limit 10 ";
 
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
 
@@ -163,7 +163,7 @@ public class CardanoDbSyncClient {
 		try (Connection connection = hds.getConnection()) {
 			String findTokenQuery = tokenQuery;
 			findTokenQuery += "order by t.id desc ";
-			findTokenQuery += "limit 1000 ";
+			findTokenQuery += "limit 10 ";
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
 			ResultSet result = getTxInput.executeQuery();
 			List<TokenData> tokenDatas = parseTokenResultset(result);
