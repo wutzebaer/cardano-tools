@@ -50,20 +50,16 @@ public class TokenSubmission {
 
 	@JsonIgnore
 	public JSONObject getCleanedMetadata() {
-		if (metaData.size() > 0) {
-			JSONObject targetObject = new JSONObject();
-			for (Entry<String, MetaValue> metaEntry : metaData.entrySet()) {
-				MetaValue valueObject = metaEntry.getValue();
-				if (!valueObject.getListValue().isEmpty()) {
-					targetObject.put(metaEntry.getKey().toLowerCase(), new JSONArray(valueObject.getListValue()));
-				} else {
-					targetObject.put(metaEntry.getKey().toLowerCase(), valueObject.getValue());
-				}
+		JSONObject targetObject = new JSONObject();
+		for (Entry<String, MetaValue> metaEntry : metaData.entrySet()) {
+			MetaValue valueObject = metaEntry.getValue();
+			if (!valueObject.getListValue().isEmpty()) {
+				targetObject.put(metaEntry.getKey().toLowerCase(), new JSONArray(valueObject.getListValue()));
+			} else {
+				targetObject.put(metaEntry.getKey().toLowerCase(), valueObject.getValue());
 			}
-			return targetObject;
-		} else {
-			return null;
 		}
+		return targetObject;
 	}
 
 }

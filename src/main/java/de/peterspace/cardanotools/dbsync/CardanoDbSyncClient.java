@@ -24,8 +24,10 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import de.peterspace.cardanotools.TrackExecutionTime;
 import io.swagger.v3.oas.annotations.Parameter;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 public class CardanoDbSyncClient {
 
 	private static final String getTxInputQuery = "select distinct address from tx_out "
@@ -42,7 +44,7 @@ public class CardanoDbSyncClient {
 
 	private static final String tokenQuery = "select\r\n"
 			+ "encode(mtm.policy::bytea, 'hex') policyId,\r\n"
-			+ "encode(mtm.name::bytea, 'escape'),\r\n"
+			+ "encode(mtm.name::bytea, 'escape') tokenName,\r\n"
 			+ "mtm.quantity,\r\n"
 			+ "encode(t.hash ::bytea, 'hex') txId,\r\n"
 			+ "tm.json,\r\n"
@@ -54,7 +56,7 @@ public class CardanoDbSyncClient {
 			+ "t.id tid \r\n"
 			+ "from ma_tx_mint mtm\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
-			+ "join tx_metadata tm on tm.tx_id = t.id \r\n"
+			+ "left join tx_metadata tm on tm.tx_id = t.id \r\n"
 			+ "join block b on b.id = t.block_id ";
 
 	@Value("${cardano-db-sync.url}")
@@ -69,7 +71,7 @@ public class CardanoDbSyncClient {
 	private HikariDataSource hds;
 
 	@PostConstruct
-	public void init() {
+	public void init() throws SQLException {
 		hds = new HikariDataSource();
 		hds.setInitializationFailTimeout(60000l);
 		hds.setJdbcUrl(url);
@@ -77,6 +79,13 @@ public class CardanoDbSyncClient {
 		hds.setPassword(password);
 		hds.setMaximumPoolSize(30);
 		hds.setAutoCommit(false);
+
+		try (Connection connection = hds.getConnection()) {
+			log.debug("Create json index");
+			connection.createStatement().executeUpdate("CREATE INDEX if not exists jsonmetadata_fts ON tx_metadata USING gin (( to_tsvector('english',json) ));");
+			connection.createStatement().executeUpdate("CREATE INDEX if not exists tokenname_fts ON ma_tx_mint USING gin (( to_tsvector('english',encode(name::bytea, 'escape')) ));");
+		}
+
 	}
 
 	@PreDestroy
@@ -135,20 +144,35 @@ public class CardanoDbSyncClient {
 
 			String findTokenQuery = tokenQuery;
 			findTokenQuery += "WHERE ";
-			findTokenQuery += "encode(mtm.name::bytea, 'escape') ilike CONCAT( '%',?,'%') ";
+			findTokenQuery += "to_tsvector('english',encode(mtm.name::bytea, 'escape')) @@ to_tsquery(?) ";
+
+			findTokenQuery += "UNION ";
+			findTokenQuery += tokenQuery;
+			findTokenQuery += "WHERE ";
+			findTokenQuery += "to_tsvector('english',json) @@ to_tsquery(?) ";
 
 			if (bytes != null) {
-				findTokenQuery += "or mtm.policy=? ";
+				findTokenQuery += "UNION ";
+				findTokenQuery += tokenQuery;
+				findTokenQuery += "WHERE ";
+				findTokenQuery += "mtm.policy=? ";
+
+				findTokenQuery += "UNION ";
+				findTokenQuery += tokenQuery;
+				findTokenQuery += "WHERE ";
+				findTokenQuery += "t.hash=? ";
 			}
-			findTokenQuery += "order by t.id asc ";
+			findTokenQuery += "order by tid, tokenName  ";
 			findTokenQuery += "limit 10 ";
 
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
 
-			getTxInput.setString(1, string);
+			getTxInput.setString(1, string.trim().replace(" ", " | "));
+			getTxInput.setString(2, string.trim().replace(" ", " | "));
 
 			if (bytes != null) {
-				getTxInput.setBytes(2, bytes);
+				getTxInput.setBytes(3, bytes);
+				getTxInput.setBytes(4, bytes);
 			}
 
 			ResultSet result = getTxInput.executeQuery();
@@ -167,7 +191,7 @@ public class CardanoDbSyncClient {
 			if (fromTid != null)
 				findTokenQuery += "WHERE t.id < ?";
 			findTokenQuery += "order by t.id desc ";
-			findTokenQuery += "limit 10 ";
+			findTokenQuery += "limit 25 ";
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
 			if (fromTid != null)
 				getTxInput.setLong(1, fromTid);
