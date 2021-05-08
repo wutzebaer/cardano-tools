@@ -135,8 +135,8 @@ public class RestInterface {
 	}
 
 	@GetMapping("findTokens")
-	public ResponseEntity<List<TokenData>> findTokens(@RequestParam String string) throws Exception {
-		List<TokenData> findTokens = cardanoDbSyncClient.findTokens(string);
+	public ResponseEntity<List<TokenData>> findTokens(@RequestParam String string, @RequestParam(required = false) Long fromTid) throws Exception {
+		List<TokenData> findTokens = cardanoDbSyncClient.findTokens(string, fromTid);
 		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
 	}
 

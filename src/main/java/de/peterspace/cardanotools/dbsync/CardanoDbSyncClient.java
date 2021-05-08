@@ -131,7 +131,7 @@ public class CardanoDbSyncClient {
 
 	@TrackExecutionTime
 	@Cacheable("findTokens")
-	public List<TokenData> findTokens(String string) throws DecoderException {
+	public List<TokenData> findTokens(String string, Long fromTid) throws DecoderException {
 
 		byte[] bytes = null;
 
@@ -142,9 +142,15 @@ public class CardanoDbSyncClient {
 
 		try (Connection connection = hds.getConnection()) {
 
-			String findTokenQuery = tokenQuery;
+			String findTokenQuery = "SELECT * FROM (";
+			findTokenQuery += tokenQuery;
 			findTokenQuery += "WHERE ";
 			findTokenQuery += "to_tsvector('english',encode(mtm.name::bytea, 'escape')) @@ to_tsquery(?) ";
+
+			findTokenQuery += "UNION ";
+			findTokenQuery += tokenQuery;
+			findTokenQuery += "WHERE ";
+			findTokenQuery += "encode(mtm.name::bytea, 'escape') ilike concat('%', ? ,'%') ";
 
 			findTokenQuery += "UNION ";
 			findTokenQuery += tokenQuery;
@@ -162,17 +168,28 @@ public class CardanoDbSyncClient {
 				findTokenQuery += "WHERE ";
 				findTokenQuery += "t.hash=? ";
 			}
+			findTokenQuery += ") AS U ";
+
+			if (fromTid != null)
+				findTokenQuery += "where tid > ? ";
+
 			findTokenQuery += "order by tid, tokenName  ";
-			findTokenQuery += "limit 10 ";
+			findTokenQuery += "limit 25 ";
 
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
 
 			getTxInput.setString(1, string.trim().replace(" ", " | "));
 			getTxInput.setString(2, string.trim().replace(" ", " | "));
+			getTxInput.setString(3, string.trim().replace(" ", " | "));
 
 			if (bytes != null) {
-				getTxInput.setBytes(3, bytes);
 				getTxInput.setBytes(4, bytes);
+				getTxInput.setBytes(5, bytes);
+				if (fromTid != null)
+					getTxInput.setLong(6, fromTid);
+			} else {
+				if (fromTid != null)
+					getTxInput.setLong(4, fromTid);
 			}
 
 			ResultSet result = getTxInput.executeQuery();

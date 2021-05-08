@@ -48,7 +48,7 @@ public class CardanoDbSyncTest {
 
 	@Test
 	void getPeterTokenByPolicy() throws DecoderException, JSONException {
-		List<TokenData> tokenData = cardanoDbSyncClient.findTokens("b6dec630be794bccc2864538318ccead47bb7fe1a72da5908a9529aa");
+		List<TokenData> tokenData = cardanoDbSyncClient.findTokens("b6dec630be794bccc2864538318ccead47bb7fe1a72da5908a9529aa", 0l);
 		String policyId = "b6dec630be794bccc2864538318ccead47bb7fe1a72da5908a9529aa";
 		assertEquals(policyId, tokenData.get(0).getPolicyId());
 		assertEquals("Peter", tokenData.get(0).getName());
@@ -64,7 +64,7 @@ public class CardanoDbSyncTest {
 
 	@Test
 	void getPeterTokenByName() throws DecoderException, JSONException {
-		List<TokenData> tokenData = cardanoDbSyncClient.findTokens("peter");
+		List<TokenData> tokenData = cardanoDbSyncClient.findTokens("peter", 0l);
 		String policyId = "b6dec630be794bccc2864538318ccead47bb7fe1a72da5908a9529aa";
 		assertEquals(policyId, tokenData.get(0).getPolicyId());
 		assertEquals("Peter", tokenData.get(0).getName());
@@ -76,9 +76,9 @@ public class CardanoDbSyncTest {
 		assertEquals(5684470, tokenData.get(0).getBlock_no());
 		assertEquals(264, tokenData.get(0).getEpoch_no());
 		assertEquals(86698, tokenData.get(0).getEpoch_slot_no());
-		cardanoDbSyncClient.findTokens("peter");
-		cardanoDbSyncClient.findTokens("peter");
-		cardanoDbSyncClient.findTokens("peter");
+		cardanoDbSyncClient.findTokens("peter", 0l);
+		cardanoDbSyncClient.findTokens("peter", 0l);
+		cardanoDbSyncClient.findTokens("peter", 0l);
 	}
 
 	@Test
