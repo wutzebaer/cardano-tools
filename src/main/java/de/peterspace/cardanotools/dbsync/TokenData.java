@@ -35,4 +35,7 @@ public class TokenData {
 
 	@NotNull
 	private Long epoch_slot_no;
+
+	@NotNull
+	private Long tid;
 }

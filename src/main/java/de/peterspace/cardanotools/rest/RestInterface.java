@@ -141,8 +141,8 @@ public class RestInterface {
 	}
 
 	@GetMapping("latestTokens")
-	public ResponseEntity<List<TokenData>> latestTokens() throws Exception {
-		List<TokenData> findTokens = cardanoDbSyncClient.latestTokens();
+	public ResponseEntity<List<TokenData>> latestTokens(@RequestParam(required = false) Long fromTid) throws Exception {
+		List<TokenData> findTokens = cardanoDbSyncClient.latestTokens(fromTid);
 		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
 	}
 

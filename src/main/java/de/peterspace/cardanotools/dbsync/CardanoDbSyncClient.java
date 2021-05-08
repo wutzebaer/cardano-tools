@@ -18,10 +18,12 @@ import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.zaxxer.hikari.HikariDataSource;
 
 import de.peterspace.cardanotools.TrackExecutionTime;
+import io.swagger.v3.oas.annotations.Parameter;
 
 @Component
 public class CardanoDbSyncClient {
@@ -48,7 +50,8 @@ public class CardanoDbSyncClient {
 			+ "t.invalid_hereafter,\r\n"
 			+ "b.block_no,\r\n"
 			+ "b.epoch_no,\r\n"
-			+ "b.epoch_slot_no \r\n"
+			+ "b.epoch_slot_no, \r\n"
+			+ "t.id tid \r\n"
 			+ "from ma_tx_mint mtm\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
 			+ "join tx_metadata tm on tm.tx_id = t.id \r\n"
@@ -148,7 +151,6 @@ public class CardanoDbSyncClient {
 				getTxInput.setBytes(2, bytes);
 			}
 
-
 			ResultSet result = getTxInput.executeQuery();
 			List<TokenData> tokenDatas = parseTokenResultset(result);
 			return tokenDatas;
@@ -159,12 +161,16 @@ public class CardanoDbSyncClient {
 
 	@TrackExecutionTime
 	@Cacheable("latestTokens")
-	public List<TokenData> latestTokens() throws DecoderException {
+	public List<TokenData> latestTokens(Long fromTid) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
 			String findTokenQuery = tokenQuery;
+			if (fromTid != null)
+				findTokenQuery += "WHERE t.id < ?";
 			findTokenQuery += "order by t.id desc ";
 			findTokenQuery += "limit 10 ";
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
+			if (fromTid != null)
+				getTxInput.setLong(1, fromTid);
 			ResultSet result = getTxInput.executeQuery();
 			List<TokenData> tokenDatas = parseTokenResultset(result);
 			return tokenDatas;
@@ -193,6 +199,7 @@ public class CardanoDbSyncClient {
 			tokenData.setBlock_no(result.getLong(8));
 			tokenData.setEpoch_no(result.getLong(9));
 			tokenData.setEpoch_slot_no(result.getLong(10));
+			tokenData.setTid(result.getLong(11));
 			tokenDatas.add(tokenData);
 		}
 

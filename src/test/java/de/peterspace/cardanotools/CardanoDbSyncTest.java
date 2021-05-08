@@ -83,12 +83,12 @@ public class CardanoDbSyncTest {
 
 	@Test
 	void getLatestTokens() throws DecoderException, JSONException {
-		List<TokenData> tokenData = cardanoDbSyncClient.latestTokens();
+		List<TokenData> tokenData = cardanoDbSyncClient.latestTokens(null);
 		assertEquals(1000, tokenData.size());
-		cardanoDbSyncClient.latestTokens();
-		cardanoDbSyncClient.latestTokens();
-		cardanoDbSyncClient.latestTokens();
-		cardanoDbSyncClient.latestTokens();
+		cardanoDbSyncClient.latestTokens(null);
+		cardanoDbSyncClient.latestTokens(null);
+		cardanoDbSyncClient.latestTokens(null);
+		cardanoDbSyncClient.latestTokens(null);
 	}
 
 }
