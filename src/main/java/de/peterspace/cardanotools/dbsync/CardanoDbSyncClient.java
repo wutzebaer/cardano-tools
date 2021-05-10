@@ -173,7 +173,7 @@ public class CardanoDbSyncClient {
 			if (fromTid != null)
 				findTokenQuery += "where tid > ? ";
 
-			findTokenQuery += "order by tid, tokenName  ";
+			findTokenQuery += "order by tid ";
 			findTokenQuery += "limit 36 ";
 
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
@@ -237,9 +237,9 @@ public class CardanoDbSyncClient {
 			if (result.wasNull()) {
 				tokenData.setInvalid_hereafter(null);
 			}
-			tokenData.setBlock_no(result.getLong(8));
-			tokenData.setEpoch_no(result.getLong(9));
-			tokenData.setEpoch_slot_no(result.getLong(10));
+			tokenData.setBlockNo(result.getLong(8));
+			tokenData.setEpochNo(result.getLong(9));
+			tokenData.setEpochSlotNo(result.getLong(10));
 			tokenData.setTid(result.getLong(11));
 			tokenDatas.add(tokenData);
 		}

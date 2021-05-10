@@ -28,13 +28,13 @@ public class TokenData {
 	private Long invalid_hereafter;
 
 	@NotNull
-	private Long block_no;
+	private Long blockNo;
 
 	@NotNull
-	private Long epoch_no;
+	private Long epochNo;
 
 	@NotNull
-	private Long epoch_slot_no;
+	private Long epochSlotNo;
 
 	@NotNull
 	private Long tid;

@@ -57,9 +57,9 @@ public class CardanoDbSyncTest {
 		assertEquals("ipfs://QmSvVdL11AXHQzvX9QozV9CZ9j4o8QNwJyJGKkbsiRJHcm", new JSONObject(tokenData.get(0).getJson()).getJSONObject(policyId).getJSONObject("Peter").getString("image"));
 		assertEquals(null, tokenData.get(0).getInvalid_before());
 		assertEquals(28772044l, tokenData.get(0).getInvalid_hereafter());
-		assertEquals(5684470, tokenData.get(0).getBlock_no());
-		assertEquals(264, tokenData.get(0).getEpoch_no());
-		assertEquals(86698, tokenData.get(0).getEpoch_slot_no());
+		assertEquals(5684470, tokenData.get(0).getBlockNo());
+		assertEquals(264, tokenData.get(0).getEpochNo());
+		assertEquals(86698, tokenData.get(0).getEpochSlotNo());
 	}
 
 	@Test
@@ -73,9 +73,9 @@ public class CardanoDbSyncTest {
 		assertEquals("ipfs://QmSvVdL11AXHQzvX9QozV9CZ9j4o8QNwJyJGKkbsiRJHcm", new JSONObject(tokenData.get(0).getJson()).getJSONObject(policyId).getJSONObject("Peter").getString("image"));
 		assertEquals(null, tokenData.get(0).getInvalid_before());
 		assertEquals(28772044l, tokenData.get(0).getInvalid_hereafter());
-		assertEquals(5684470, tokenData.get(0).getBlock_no());
-		assertEquals(264, tokenData.get(0).getEpoch_no());
-		assertEquals(86698, tokenData.get(0).getEpoch_slot_no());
+		assertEquals(5684470, tokenData.get(0).getBlockNo());
+		assertEquals(264, tokenData.get(0).getEpochNo());
+		assertEquals(86698, tokenData.get(0).getEpochSlotNo());
 		cardanoDbSyncClient.findTokens("peter", 0l);
 		cardanoDbSyncClient.findTokens("peter", 0l);
 		cardanoDbSyncClient.findTokens("peter", 0l);
