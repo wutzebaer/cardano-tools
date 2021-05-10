@@ -174,7 +174,7 @@ public class CardanoDbSyncClient {
 				findTokenQuery += "where tid > ? ";
 
 			findTokenQuery += "order by tid ";
-			findTokenQuery += "limit 36 ";
+			findTokenQuery += "limit 100 ";
 
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
 
@@ -208,7 +208,7 @@ public class CardanoDbSyncClient {
 			if (fromTid != null)
 				findTokenQuery += "WHERE t.id < ?";
 			findTokenQuery += "order by t.id desc ";
-			findTokenQuery += "limit 36 ";
+			findTokenQuery += "limit 100 ";
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
 			if (fromTid != null)
 				getTxInput.setLong(1, fromTid);
