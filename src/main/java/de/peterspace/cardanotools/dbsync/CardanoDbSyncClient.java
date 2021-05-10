@@ -59,6 +59,26 @@ public class CardanoDbSyncClient {
 			+ "left join tx_metadata tm on tm.tx_id = t.id \r\n"
 			+ "join block b on b.id = t.block_id ";
 
+	private static final String delegatorsQuery = "with \r\n"
+			+ "delegates as (\r\n"
+			+ "	select stake_address, pool_address, stake_address_id  from (\r\n"
+			+ "		select row_number() over(PARTITION BY d.addr_id order by d.addr_id, d.id desc) row_number, sa.\"view\" stake_address, ph.\"view\" pool_address, d.addr_id stake_address_id\r\n"
+			+ "		from delegation d \r\n"
+			+ "		join pool_hash ph on ph.id = d.pool_hash_id\r\n"
+			+ "		join stake_address sa on sa.id = d.addr_id \r\n"
+			+ "		join delegation alldelegations on alldelegations.addr_id=d.addr_id\r\n"
+			+ "		where \r\n"
+			+ "		ph.view='pool180fejev4xgwe2y53ky0pxvgxr3wcvkweu6feq5mdljfzcsmtg6u'\r\n"
+			+ "	) inner_query\r\n"
+			+ "	where row_number=1 and pool_address='pool180fejev4xgwe2y53ky0pxvgxr3wcvkweu6feq5mdljfzcsmtg6u'\r\n"
+			+ "),\r\n"
+			+ "delegator_addresses as (\r\n"
+			+ "	select row_number() over(PARTITION BY txo.stake_address_id order by txo.stake_address_id, txo.tx_id desc) row_number, encode(tx.hash, 'hex') tx_hash_view,  stake_address, txo.address , pool_address, txo.stake_address_id, txo.value from delegates\r\n"
+			+ "	join tx_out txo on txo.stake_address_id = delegates.stake_address_id\r\n"
+			+ "	join tx on tx.id =txo.tx_id\r\n"
+			+ ")\r\n"
+			+ "select stake_address,address,(select sum(value) from utxo_view uv where uv.stake_address_id = delegator_addresses.stake_address_id) pledge from delegator_addresses where row_number = 1";
+
 	@Value("${cardano-db-sync.url}")
 	String url;
 
