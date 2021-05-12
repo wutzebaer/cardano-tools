@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 public class Account {
 
 	@Id
+	@NotNull
 	private String key;
 
 	@NotNull

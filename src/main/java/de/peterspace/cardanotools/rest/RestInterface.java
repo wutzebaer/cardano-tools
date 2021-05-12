@@ -10,7 +10,6 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.lang3.StringUtils;
 import org.imgscalr.Scalr;
-import org.json.JSONObject;
 import org.json.JSONStringer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -39,7 +38,6 @@ import de.peterspace.cardanotools.model.RegistrationMetadata;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintTransactionRepository;
 import de.peterspace.cardanotools.rest.dto.TokenRegistration;
-import de.peterspace.cardanotools.rest.dto.TransferAccount;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -59,14 +57,14 @@ public class RestInterface {
 		return cardanoCli.queryTip();
 	}
 
-	@PostMapping("createAccount")
-	public TransferAccount createAccount() throws Exception {
+	@PostMapping("Account")
+	public Account createAccount() throws Exception {
 		Account account = cardanoCli.createAccount();
-		return TransferAccount.from(account);
+		return account;
 	}
 
 	@GetMapping("account/{key}")
-	public ResponseEntity<TransferAccount> getAccount(@PathVariable("key") UUID key) throws Exception {
+	public ResponseEntity<Account> getAccount(@PathVariable("key") UUID key) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
@@ -76,9 +74,9 @@ public class RestInterface {
 			account.setLastUpdate(System.currentTimeMillis());
 			accountRepository.save(account);
 
-			return new ResponseEntity<TransferAccount>(TransferAccount.from(accountOptional.get()), HttpStatus.OK);
+			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {
-			return new ResponseEntity<TransferAccount>(HttpStatus.NOT_FOUND);
+			return new ResponseEntity<Account>(HttpStatus.NOT_FOUND);
 		}
 	}
 
