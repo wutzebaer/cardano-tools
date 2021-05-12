@@ -117,6 +117,23 @@ public class CardanoDbSyncClient {
 		return txids.stream().flatMap(txid -> getInpuAddresses(txid).stream()).collect(Collectors.toList());
 	}
 
+	@TrackExecutionTime
+	public long getBalance(String address) {
+		List<String> addresses = new ArrayList<>();
+		try (Connection connection = hds.getConnection()) {
+			PreparedStatement getBalance = connection.prepareStatement("select sum(value) from utxo_view uv where uv.address = ?");
+			getBalance.setString(1, address);
+			ResultSet result = getBalance.executeQuery();
+			while (result.next()) {
+				return result.getLong(1);
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return 0;
+	}
+
+	@TrackExecutionTime
 	public List<String> getInpuAddresses(String txid) {
 		List<String> addresses = new ArrayList<>();
 		try (Connection connection = hds.getConnection()) {
@@ -133,6 +150,7 @@ public class CardanoDbSyncClient {
 		return addresses;
 	}
 
+	@TrackExecutionTime
 	public List<String> getFundingAddresses(String address) {
 		List<String> addresses = new ArrayList<>();
 		try (Connection connection = hds.getConnection()) {

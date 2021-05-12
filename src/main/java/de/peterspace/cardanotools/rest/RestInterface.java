@@ -71,8 +71,7 @@ public class RestInterface {
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
 
-			JSONObject utxo = cardanoCli.getUtxo(account);
-			account.setBalance(cardanoCli.calculateBalance(utxo));
+			account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress()));
 			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress()));
 			account.setLastUpdate(System.currentTimeMillis());
 			accountRepository.save(account);
