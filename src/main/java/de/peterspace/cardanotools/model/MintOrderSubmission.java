@@ -14,6 +14,7 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -38,5 +39,8 @@ public class MintOrderSubmission {
 
 	@NotNull
 	private Boolean tip;
+
+	@Parameter(required = false)
+	private Long policyTimeframe;
 
 }
