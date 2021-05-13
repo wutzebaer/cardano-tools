@@ -228,6 +228,7 @@ public class CardanoCli {
 		long balance = calculateBalance(utxo);
 		JSONObject policyScript = createPolicy(mintOrderSubmission, account, tip);
 		String policyId = getPolicyId(policyScript);
+		fileUtil.writeFile(temporaryFilePrefix + ".script", policyScript.toString(3));
 
 		String metadataFilename = temporaryFilePrefix + ".metadata";
 		JSONObject metadata = new JSONObject();
@@ -310,6 +311,9 @@ public class CardanoCli {
 		}
 		cmd.add(StringUtils.join(mints, "+"));
 
+		cmd.add("--minting-script-file");
+		cmd.add(temporaryFilePrefix + ".script");
+
 		cmd.add("--json-metadata-no-schema");
 		cmd.add("--metadata-json-file");
 		cmd.add(metadataFilename);
@@ -338,6 +342,7 @@ public class CardanoCli {
 
 		fileUtil.removeFile(temporaryFilePrefix + ".metadata");
 		fileUtil.removeFile(temporaryFilePrefix + ".raw");
+		fileUtil.removeFile(temporaryFilePrefix + ".script");
 
 		return mintTransaction;
 	}
@@ -392,7 +397,6 @@ public class CardanoCli {
 
 		String filePrefix = UUID.randomUUID().toString();
 
-		fileUtil.writeFile(filePrefix + ".script", mintTransaction.getPolicy());
 		fileUtil.writeFile(filePrefix + ".raw", mintTransaction.getRawData());
 
 		ArrayList<String> cmd = new ArrayList<String>();
@@ -402,9 +406,6 @@ public class CardanoCli {
 
 		cmd.add("--signing-key-file");
 		cmd.add(account.getKey() + ".skey");
-
-		cmd.add("--script-file");
-		cmd.add(filePrefix + ".script");
 
 		cmd.addAll(List.of(networkMagicArgs));
 
@@ -421,7 +422,6 @@ public class CardanoCli {
 		String cborHex = new JSONObject(mintTransaction.getSignedData()).getString("cborHex");
 		mintTransaction.setTxSize((long) (cborHex.length() / 2));
 
-		fileUtil.removeFile(filePrefix + ".script");
 		fileUtil.removeFile(filePrefix + ".raw");
 	}
 
