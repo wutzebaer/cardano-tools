@@ -40,7 +40,4 @@ public class MintOrderSubmission {
 	@NotNull
 	private Boolean tip;
 
-	@Parameter(required = false)
-	private Long policyTimeframe;
-
 }

@@ -70,7 +70,7 @@ public class RestInterface {
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
 
-			if (account.getPolicyDueDate() == null) {
+			if (account.getPolicyDueDate() == null || System.currentTimeMillis() > account.getPolicyDueDate().getTime()) {
 				Policy policy = cardanoCli.createPolicy(account.getVkey(), cardanoCli.queryTip());
 				account.setPolicy(policy.getPolicy());
 				account.setPolicyId(policy.getPolicyId());
