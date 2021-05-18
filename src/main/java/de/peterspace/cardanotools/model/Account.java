@@ -58,5 +58,6 @@ public class Account {
 	private String policyId;
 
 	@NotNull
+	@Column(columnDefinition = "timestamp default '1970-01-01'")
 	private Date policyDueDate;
 }
