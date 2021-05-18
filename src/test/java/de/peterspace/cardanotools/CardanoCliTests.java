@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.cardano.MinOutputCalculator;
+import de.peterspace.cardanotools.cardano.Policy;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.ChangeAction;
 import de.peterspace.cardanotools.model.MetaValue;
@@ -76,9 +77,10 @@ public class CardanoCliTests {
 
 	@Test
 	void getBalanceWithDepositedAccountKey() throws Exception {
+		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip());
 		// https://developers.cardano.org/en/testnets/cardano/tools/faucet/
 		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
-		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), "addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x", "{\"type\": \"PaymentSigningKeyShelley_ed25519\", \"description\": \"Payment Signing Key\", \"cborHex\": \"5820a210dfed41a028bb2bf4b9a7569b23c4c19a354ab6c167f7604827e56d145a14\"}", "{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", new ArrayList<>(), 0l, 0l));
+		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), "addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x", "{\"type\": \"PaymentSigningKeyShelley_ed25519\", \"description\": \"Payment Signing Key\", \"cborHex\": \"5820a210dfed41a028bb2bf4b9a7569b23c4c19a354ab6c167f7604827e56d145a14\"}", "{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", new ArrayList<>(), 0l, 0l, policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate()));
 		Account account = accountRepository.findById(key).get();
 		JSONObject utxo = cardanoCli.getUtxo(account);
 		long balance = cardanoCli.calculateBalance(utxo);
@@ -87,8 +89,10 @@ public class CardanoCliTests {
 
 	@Test
 	void calculateFee() throws Exception {
+		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip());
+
 		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
-		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), "addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x", "{\"type\": \"PaymentSigningKeyShelley_ed25519\", \"description\": \"Payment Signing Key\", \"cborHex\": \"5820a210dfed41a028bb2bf4b9a7569b23c4c19a354ab6c167f7604827e56d145a14\"}", "{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", new ArrayList<>(), 0l, 0l));
+		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), "addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x", "{\"type\": \"PaymentSigningKeyShelley_ed25519\", \"description\": \"Payment Signing Key\", \"cborHex\": \"5820a210dfed41a028bb2bf4b9a7569b23c4c19a354ab6c167f7604827e56d145a14\"}", "{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", new ArrayList<>(), 0l, 0l, policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate()));
 		Account account = accountRepository.findById(key).get();
 
 		MintOrderSubmission mintOrder = new MintOrderSubmission();
@@ -120,8 +124,11 @@ public class CardanoCliTests {
 
 	@Test
 	void mintCoin() throws Exception {
+
+		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip());
+
 		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
-		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), "addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x", "{\"type\": \"PaymentSigningKeyShelley_ed25519\", \"description\": \"Payment Signing Key\", \"cborHex\": \"5820a210dfed41a028bb2bf4b9a7569b23c4c19a354ab6c167f7604827e56d145a14\"}", "{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", new ArrayList<>(), 0l, 0l));
+		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), "addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x", "{\"type\": \"PaymentSigningKeyShelley_ed25519\", \"description\": \"Payment Signing Key\", \"cborHex\": \"5820a210dfed41a028bb2bf4b9a7569b23c4c19a354ab6c167f7604827e56d145a14\"}", "{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", new ArrayList<>(), 0l, 0l, policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate()));
 		Account account = accountRepository.findById(key).get();
 
 		MintOrderSubmission mintOrder = new MintOrderSubmission();
@@ -147,7 +154,6 @@ public class CardanoCliTests {
 		mintOrder.setTokens(tokens);
 		mintOrder.setTip(false);
 		mintOrder.setTargetAddress(account.getAddress());
-
 
 		JSONObject utxo = cardanoCli.getUtxo(account);
 		account.setBalance(cardanoCli.calculateBalance(utxo));

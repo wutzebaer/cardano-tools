@@ -34,7 +34,6 @@ public class MintTransaction {
 
 	@Column(columnDefinition = "TEXT")
 	@NotBlank
-	@JsonIgnore
 	private String signedData;
 
 	@Column(columnDefinition = "TEXT")

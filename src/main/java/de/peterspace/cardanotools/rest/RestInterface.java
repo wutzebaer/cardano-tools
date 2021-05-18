@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
+import de.peterspace.cardanotools.cardano.Policy;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
 import de.peterspace.cardanotools.dbsync.TokenData;
@@ -69,11 +70,17 @@ public class RestInterface {
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
 
+			if (account.getPolicyDueDate() == null) {
+				Policy policy = cardanoCli.createPolicy(account.getVkey(), cardanoCli.queryTip());
+				account.setPolicy(policy.getPolicy());
+				account.setPolicyId(policy.getPolicyId());
+				account.setPolicyDueDate(policy.getPolicyDueDate());
+			}
+
 			account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress()));
 			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress()));
 			account.setLastUpdate(System.currentTimeMillis());
 			accountRepository.save(account);
-
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<Account>(HttpStatus.NOT_FOUND);

@@ -50,4 +50,13 @@ public class Account {
 	@Column(columnDefinition = "bigint DEFAULT 0")
 	private Long lastUpdate;
 
+	@Column(columnDefinition = "TEXT")
+	@NotBlank
+	private String policy;
+
+	@NotBlank
+	private String policyId;
+
+	@NotNull
+	private Date policyDueDate;
 }
