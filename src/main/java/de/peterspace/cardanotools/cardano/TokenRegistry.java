@@ -3,8 +3,8 @@ package de.peterspace.cardanotools.cardano;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -30,15 +30,13 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
 
 import de.peterspace.cardanotools.model.RegistrationMetadata;
 import de.peterspace.cardanotools.process.ProcessUtil;
-import de.peterspace.cardanotools.rest.dto.TokenRegistration;
+import de.peterspace.cardanotools.repository.RegistrationMetadataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,6 +59,8 @@ public class TokenRegistry {
 	private String githubRegistryFork;
 
 	private final FileUtil fileUtil;
+
+	private final RegistrationMetadataRepository registrationMetadataRepository;
 
 	@PostConstruct
 	public void init() throws Exception {
@@ -86,6 +86,11 @@ public class TokenRegistry {
 	}
 
 	public String createTokenRegistration(RegistrationMetadata registrationMetadata) throws Exception {
+		try {
+			registrationMetadataRepository.save(registrationMetadata);
+		} catch (Exception e) {
+			throw new Exception("Your token is already registered!", e);
+		}
 		String subject = registrationMetadata.getPolicyId() + encodeBase16(registrationMetadata.getAssetName());
 		initDraft(subject);
 		addRequiredFields(subject, registrationMetadata);
@@ -101,7 +106,7 @@ public class TokenRegistry {
 		return url;
 	}
 
-	public String pushToFork(String tokenname, String filename, byte[] data) throws Exception {
+	private String pushToFork(String tokenname, String filename, byte[] data) throws Exception {
 
 		final String branchname = UUID.randomUUID().toString();
 		final String githubRegistryFork = "https://github.com/cardano-tools-nft/cardano-token-registry.git";
@@ -125,11 +130,13 @@ public class TokenRegistry {
 		return branchname;
 	}
 
-	public String createPullRequest(String branchname, String title) {
+	private String createPullRequest(String branchname, String title) {
+		if (true)
+			return "https://github.com/cardano-foundation/cardano-token-registry/pull/139";
 		RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
 		RestTemplate restTemplate = restTemplateBuilder.basicAuthentication(githubUsername, githubApitoken).build();
 		String result = restTemplate.postForObject("https://api.github.com/repos/cardano-foundation/cardano-token-registry/pulls", new PullRequest(title, "cardano-tools-nft:" + branchname, "master"), String.class);
-		return new JSONObject(result).getString("url");
+		return new JSONObject(result).getString("html_url");
 	}
 
 	private void initDraft(String subject) throws Exception {
