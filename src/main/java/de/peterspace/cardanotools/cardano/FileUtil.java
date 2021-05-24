@@ -31,6 +31,10 @@ public class FileUtil {
 		return Files.readString(Paths.get(workingDir, filename));
 	}
 
+	public byte[] readFileBinary(String filename) throws Exception {
+		return Files.readAllBytes(Paths.get(workingDir, filename));
+	}
+
 	public void writeFile(String filename, String content) throws Exception {
 		Files.writeString(Paths.get(workingDir, filename), content);
 	}

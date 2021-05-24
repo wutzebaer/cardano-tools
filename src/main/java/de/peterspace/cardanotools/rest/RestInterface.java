@@ -151,7 +151,7 @@ public class RestInterface {
 	}
 
 	@PostMapping(path = "generateTokenRegistration", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<TokenRegistration> generateTokenRegistration(@RequestPart String registrationMetadataString, @RequestPart(required = false) MultipartFile file) throws Exception {
+	public ResponseEntity<String> generateTokenRegistration(@RequestPart String registrationMetadataString, @RequestPart(required = false) MultipartFile file) throws Exception {
 
 		RegistrationMetadata registrationMetadata = new ObjectMapper().readValue(registrationMetadataString, RegistrationMetadata.class);
 
@@ -163,9 +163,9 @@ public class RestInterface {
 			registrationMetadata.setLogo(bos.toByteArray());
 		}
 
-		TokenRegistration createTokenRegistration = tokenRegistry.createTokenRegistration(registrationMetadata);
+		String pullRequestUrl = tokenRegistry.createTokenRegistration(registrationMetadata);
 
-		return new ResponseEntity<TokenRegistration>(createTokenRegistration, HttpStatus.OK);
+		return new ResponseEntity<String>(pullRequestUrl, HttpStatus.OK);
 	}
 
 }
