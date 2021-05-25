@@ -1,5 +1,6 @@
 package de.peterspace.cardanotools.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -54,6 +55,7 @@ public class RegistrationMetadata {
 	// kleiner als 64kb und png
 	@Size(max = 52428800)
 	@JsonIgnore
+	@Column(columnDefinition = "VARBINARY(52428800)")
 	byte[] logo;
 
 }
