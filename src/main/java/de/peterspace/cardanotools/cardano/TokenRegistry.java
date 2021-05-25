@@ -83,6 +83,7 @@ public class TokenRegistry {
 		String title;
 		String head;
 		String base;
+		String body;
 	}
 
 	public String createTokenRegistration(RegistrationMetadata registrationMetadata) throws Exception {
@@ -104,7 +105,6 @@ public class TokenRegistry {
 		fileUtil.removeFile(subject + ".json");
 
 		String url = createPullRequest(branchname, registrationMetadata.getName());
-
 		return url;
 	}
 
@@ -135,7 +135,27 @@ public class TokenRegistry {
 	private String createPullRequest(String branchname, String title) {
 		RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
 		RestTemplate restTemplate = restTemplateBuilder.basicAuthentication(githubUsername, githubApitoken).build();
-		String result = restTemplate.postForObject("https://api.github.com/repos/cardano-foundation/cardano-token-registry/pulls", new PullRequest(title, "cardano-tools-nft:" + branchname, "master"), String.class);
+		PullRequest pullRequest = new PullRequest(title, "cardano-tools-nft:" + branchname, "master", "# Pull Request Template\r\n"
+				+ "\r\n"
+				+ "## Description\r\n"
+				+ "\r\n"
+				+ "Please include a short summary of the changes in this PR.\r\n"
+				+ "\r\n"
+				+ "## Type of change\r\n"
+				+ "\r\n"
+				+ "- [x] Metadata related change\r\n"
+				+ "- [ ] Other\r\n"
+				+ "\r\n"
+				+ "## Checklist:\r\n"
+				+ "\r\n"
+				+ "- [ ] For metadata related changes, this PR code passes the Github Actions metadata validation\r\n"
+				+ "\r\n"
+				+ "\r\n"
+				+ "## Metadata PRs\r\n"
+				+ "\r\n"
+				+ "Please note it may take up to 4 hours for merged changes to take effect on the metadata server.\r\n"
+				+ "");
+		String result = restTemplate.postForObject("https://api.github.com/repos/cardano-foundation/cardano-token-registry/pulls", pullRequest, String.class);
 		return new JSONObject(result).getString("html_url");
 	}
 
