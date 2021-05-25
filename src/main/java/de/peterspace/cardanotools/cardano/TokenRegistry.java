@@ -86,11 +86,13 @@ public class TokenRegistry {
 	}
 
 	public String createTokenRegistration(RegistrationMetadata registrationMetadata) throws Exception {
+
 		try {
 			registrationMetadataRepository.save(registrationMetadata);
 		} catch (Exception e) {
 			throw new Exception("Your token is already registered!", e);
 		}
+
 		String subject = registrationMetadata.getPolicyId() + encodeBase16(registrationMetadata.getAssetName());
 		initDraft(subject);
 		addRequiredFields(subject, registrationMetadata);
@@ -131,8 +133,6 @@ public class TokenRegistry {
 	}
 
 	private String createPullRequest(String branchname, String title) {
-		if (true)
-			return "https://github.com/cardano-foundation/cardano-token-registry/pull/139";
 		RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
 		RestTemplate restTemplate = restTemplateBuilder.basicAuthentication(githubUsername, githubApitoken).build();
 		String result = restTemplate.postForObject("https://api.github.com/repos/cardano-foundation/cardano-token-registry/pulls", new PullRequest(title, "cardano-tools-nft:" + branchname, "master"), String.class);
