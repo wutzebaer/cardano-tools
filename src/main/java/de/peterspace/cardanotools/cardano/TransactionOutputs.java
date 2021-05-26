@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+
 import lombok.Data;
 
 @Data
@@ -24,6 +26,7 @@ public class TransactionOutputs {
 				.map(addressEntry -> addressEntry.getKey() + "+" +
 						addressEntry.getValue()
 								.entrySet().stream()
+								.filter(currencyEntry -> currencyEntry.getValue() > 0)
 								.map(currencyEntry -> (currencyEntry.getValue() + " " + currencyEntry.getKey()).trim())
 								.collect(Collectors.joining("+"))
 
