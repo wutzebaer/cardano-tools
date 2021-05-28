@@ -73,13 +73,11 @@ public class CardanoDbSyncClient {
 			+ "	limit 1\r\n"
 			+ "),\r\n"
 			+ "owned_tokens as (\r\n"
-			+ "	SELECT mto.policy \"policy\", mto.name \"name\", sum(quantity) quantity, max(to2.id) txId\r\n"
+			+ "	SELECT mto.policy \"policy\", mto.name \"name\", quantity quantity, to2.id txId\r\n"
 			+ "	FROM utxo_view uv \r\n"
 			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\" \r\n"
 			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id \r\n"
 			+ "	where uv.stake_address_id = (select * from stake_address_id)\r\n"
-			+ "	group by \"policy\", name\r\n"
-			+ "	order by txId desc\r\n"
 			+ ")\r\n"
 			+ "select\r\n"
 			+ "encode(ot.policy::bytea, 'hex') policyId,\r\n"
@@ -99,7 +97,7 @@ public class CardanoDbSyncClient {
 			+ "left join tx_metadata tm on tm.tx_id = t.id \r\n"
 			+ "join block b on b.id = t.block_id\r\n"
 			+ "group by ot.policy, ot.name\r\n"
-			+ "order by max(ot.txId) desc";
+			+ "order by (select min(id) from ma_tx_mint sorter where sorter.policy = ot.policy and sorter.name = ot.name) desc";
 
 	private static final String delegatorsQuery = "with \r\n"
 			+ "delegates as (\r\n"
