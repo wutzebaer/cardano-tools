@@ -15,6 +15,9 @@ public class TransactionOutputs {
 	private Map<String, Map<String, Long>> outputs = new HashMap<>();
 
 	public void add(String address, String currency, long amount) {
+		if(amount < 1) {
+			return;
+		}
 		Map<String, Long> addressMap = outputs.computeIfAbsent(address, k -> new HashMap<>());
 		Long currentAmount = addressMap.computeIfAbsent(currency, k -> 0l);
 		addressMap.put(currency, currentAmount + amount);
@@ -26,7 +29,6 @@ public class TransactionOutputs {
 				.map(addressEntry -> addressEntry.getKey() + "+" +
 						addressEntry.getValue()
 								.entrySet().stream()
-								.filter(currencyEntry -> currencyEntry.getValue() > 0)
 								.map(currencyEntry -> (currencyEntry.getValue() + " " + currencyEntry.getKey()).trim())
 								.collect(Collectors.joining("+"))
 
