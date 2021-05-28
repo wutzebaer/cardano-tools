@@ -300,6 +300,22 @@ public class CardanoDbSyncClient {
 		}
 	}
 
+	@TrackExecutionTime
+	@Cacheable("walletTokens")
+	public List<TokenData> walletTokens(String address) throws DecoderException {
+		try (Connection connection = hds.getConnection()) {
+			String findTokenQuery = walletTokenQuery;
+			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
+			getTxInput.setString(1, address);
+			getTxInput.setString(2, address);
+			ResultSet result = getTxInput.executeQuery();
+			List<TokenData> tokenDatas = parseTokenResultset(result);
+			return tokenDatas;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private List<TokenData> parseTokenResultset(ResultSet result) throws SQLException {
 		List<TokenData> tokenDatas = new ArrayList<>();
 		while (result.next()) {

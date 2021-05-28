@@ -150,6 +150,13 @@ public class RestInterface {
 		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
 	}
 
+	@GetMapping("walletTokens")
+	public ResponseEntity<List<TokenData>> walletTokens(@RequestParam String address) throws Exception {
+		List<TokenData> findTokens = cardanoDbSyncClient.walletTokens(address);
+		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
+	}
+
+
 	@PostMapping(path = "generateTokenRegistration", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public String generateTokenRegistration(@RequestPart String registrationMetadataString, @RequestPart(required = false) MultipartFile file) throws Exception {
 

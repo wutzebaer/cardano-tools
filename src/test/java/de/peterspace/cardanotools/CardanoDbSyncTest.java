@@ -91,4 +91,10 @@ public class CardanoDbSyncTest {
 		cardanoDbSyncClient.latestTokens(null);
 	}
 
+	@Test
+	void walletTokens() throws DecoderException, JSONException {
+		List<TokenData> tokenData = cardanoDbSyncClient.walletTokens("addr_test1qqypqe4g9kw9aeuuxp94lcuk0v6k0z79n2f8de8nnm7uwwsxu2hyfhlkwuxupa9d5085eunq2qywy7hvmvej456flknsymw6pl");
+		assertEquals(269, tokenData.size());
+	}
+
 }
