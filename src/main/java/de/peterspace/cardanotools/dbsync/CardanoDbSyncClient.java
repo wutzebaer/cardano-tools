@@ -53,7 +53,8 @@ public class CardanoDbSyncClient {
 			+ "b.block_no,\r\n"
 			+ "b.epoch_no,\r\n"
 			+ "b.epoch_slot_no, \r\n"
-			+ "t.id tid \r\n"
+			+ "t.id tid, \r\n"
+			+ "mtm.id mintid \r\n"
 			+ "from ma_tx_mint mtm\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
 			+ "left join tx_metadata tm on tm.tx_id = t.id \r\n"
@@ -90,7 +91,8 @@ public class CardanoDbSyncClient {
 			+ "max(b.block_no) block_no,\r\n"
 			+ "max(b.epoch_no) epoch_no,\r\n"
 			+ "max(b.epoch_slot_no) epoch_slot_no, \r\n"
-			+ "max(t.id) tid\r\n"
+			+ "max(t.id) tid, \r\n"
+			+ "max(mtm.id) mintid \r\n"
 			+ "from owned_tokens ot\r\n"
 			+ "join ma_tx_mint mtm on mtm.\"policy\"=ot.policy and mtm.\"name\"=ot.name\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
@@ -209,7 +211,7 @@ public class CardanoDbSyncClient {
 
 	@TrackExecutionTime
 	@Cacheable("findTokens")
-	public List<TokenData> findTokens(String string, Long fromTid) throws DecoderException {
+	public List<TokenData> findTokens(String string, Long fromMintid) throws DecoderException {
 
 		byte[] bytes = null;
 
@@ -248,10 +250,10 @@ public class CardanoDbSyncClient {
 			}
 			findTokenQuery += ") AS U ";
 
-			if (fromTid != null)
-				findTokenQuery += "where tid > ? ";
+			if (fromMintid != null)
+				findTokenQuery += "WHERE mintid < ? ";
 
-			findTokenQuery += "order by tid ";
+			findTokenQuery += "order by mintid ";
 			findTokenQuery += "limit 100 ";
 
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
@@ -263,11 +265,11 @@ public class CardanoDbSyncClient {
 			if (bytes != null) {
 				getTxInput.setBytes(4, bytes);
 				getTxInput.setBytes(5, bytes);
-				if (fromTid != null)
-					getTxInput.setLong(6, fromTid);
+				if (fromMintid != null)
+					getTxInput.setLong(6, fromMintid);
 			} else {
-				if (fromTid != null)
-					getTxInput.setLong(4, fromTid);
+				if (fromMintid != null)
+					getTxInput.setLong(4, fromMintid);
 			}
 
 			ResultSet result = getTxInput.executeQuery();
@@ -280,16 +282,16 @@ public class CardanoDbSyncClient {
 
 	@TrackExecutionTime
 	@Cacheable("latestTokens")
-	public List<TokenData> latestTokens(Long fromTid) throws DecoderException {
+	public List<TokenData> latestTokens(Long fromMintid) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
 			String findTokenQuery = tokenQuery;
-			if (fromTid != null)
-				findTokenQuery += "WHERE t.id < ?";
-			findTokenQuery += "order by t.id desc ";
+			if (fromMintid != null)
+				findTokenQuery += "WHERE mtm.id < ? ";
+			findTokenQuery += "order by mtm.id desc ";
 			findTokenQuery += "limit 100 ";
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
-			if (fromTid != null)
-				getTxInput.setLong(1, fromTid);
+			if (fromMintid != null)
+				getTxInput.setLong(1, fromMintid);
 			ResultSet result = getTxInput.executeQuery();
 			List<TokenData> tokenDatas = parseTokenResultset(result);
 			return tokenDatas;
@@ -335,6 +337,7 @@ public class CardanoDbSyncClient {
 			tokenData.setEpochNo(result.getLong(9));
 			tokenData.setEpochSlotNo(result.getLong(10));
 			tokenData.setTid(result.getLong(11));
+			tokenData.setMintid(result.getLong(12));
 			tokenDatas.add(tokenData);
 		}
 
