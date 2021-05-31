@@ -1,13 +1,11 @@
 package de.peterspace.cardanotools.dbsync;
 
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -18,17 +16,20 @@ import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import com.zaxxer.hikari.HikariDataSource;
 
 import de.peterspace.cardanotools.TrackExecutionTime;
-import io.swagger.v3.oas.annotations.Parameter;
+import de.peterspace.cardanotools.cardano.TokenRegistry;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class CardanoDbSyncClient {
+
+	private final TokenRegistry tokenRegistry;
 
 	private static final String getTxInputQuery = "select distinct address from tx_out "
 			+ "inner join tx_in on tx_out.tx_id = tx_in.tx_out_id "
@@ -338,6 +339,7 @@ public class CardanoDbSyncClient {
 			tokenData.setEpochSlotNo(result.getLong(10));
 			tokenData.setTid(result.getLong(11));
 			tokenData.setMintid(result.getLong(12));
+			tokenData.setTokenRegistryMetadata(tokenRegistry.getTokenRegistryMetadata(tokenData.getPolicyId(), tokenData.getName()));
 			tokenDatas.add(tokenData);
 		}
 

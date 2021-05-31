@@ -34,10 +34,12 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
 
+import de.peterspace.cardanotools.TrackExecutionTime;
 import de.peterspace.cardanotools.model.RegistrationMetadata;
 import de.peterspace.cardanotools.process.ProcessUtil;
 import de.peterspace.cardanotools.repository.RegistrationMetadataRepository;
@@ -68,6 +70,8 @@ public class TokenRegistry {
 
 	private final RegistrationMetadataRepository registrationMetadataRepository;
 
+	private final RestTemplate restTemplate = new RestTemplate();
+
 	@PostConstruct
 	public void init() throws Exception {
 		File repoDir = Paths.get(workingDir, "cardano-token-registry").toFile();
@@ -92,6 +96,18 @@ public class TokenRegistry {
 		String body;
 	}
 
+	@TrackExecutionTime
+	@Cacheable("tokenRegistryMetadata")
+	public String getTokenRegistryMetadata(String policyId, String tokenName) {
+		String subject = CardanoUtil.createSubject(policyId, tokenName);
+		try {
+			String metaData = restTemplate.getForObject("https://tokens.cardano.org/metadata/" + subject, String.class);
+			return metaData;
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
 	public String createTokenRegistration(RegistrationMetadata registrationMetadata) throws Exception {
 
 		try {
@@ -100,7 +116,7 @@ public class TokenRegistry {
 			throw new Exception("Your token is already registered!", e);
 		}
 
-		String subject = registrationMetadata.getPolicyId() + encodeBase16(registrationMetadata.getAssetName());
+		String subject = CardanoUtil.createSubject(registrationMetadata.getPolicyId(), registrationMetadata.getAssetName());
 		initDraft(subject);
 		addRequiredFields(subject, registrationMetadata);
 		addOptionalFields(subject, registrationMetadata);
@@ -322,10 +338,6 @@ public class TokenRegistry {
 		cmd.add("--finalize");
 
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
-	}
-
-	private static String encodeBase16(String content) {
-		return new String(new Base16().encode(content.getBytes()));
 	}
 
 	public static void mainBAK(String[] args) throws Exception {

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Base16;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.ArrayUtils;
 import org.bitcoinj.core.Bech32;
@@ -14,6 +15,14 @@ import ove.crypto.digest.Blake2b.Digest;
 
 @UtilityClass
 public class CardanoUtil {
+
+	public static String createSubject(String policyId, String assetName) {
+		return policyId + encodeBase16(assetName);
+	}
+
+	private static String encodeBase16(String content) {
+		return new String(new Base16().encode(content.getBytes()));
+	}
 
 	public static String createAssetFingerprint(String policyId, String assetName) throws DecoderException {
 		byte[] policyIdBytes = Hex.decodeHex(policyId);

@@ -45,8 +45,15 @@ public class TokenData {
 	@NotNull
 	private Long mintid;
 
+	private String tokenRegistryMetadata;
+
 	@NotNull
 	public String getFingerprint() throws DecoderException {
 		return CardanoUtil.createAssetFingerprint(policyId, name);
+	}
+
+	@NotNull
+	public String getSubject() {
+		return CardanoUtil.createSubject(policyId, name);
 	}
 }
