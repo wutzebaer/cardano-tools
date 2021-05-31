@@ -3,6 +3,9 @@ package de.peterspace.cardanotools.dbsync;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
+import org.apache.commons.codec.DecoderException;
+
+import de.peterspace.cardanotools.cardano.CardanoUtil;
 import lombok.Data;
 
 @Data
@@ -38,4 +41,9 @@ public class TokenData {
 
 	@NotNull
 	private Long tid;
+
+	@NotNull
+	public String getFingerprint() throws DecoderException {
+		return CardanoUtil.createAssetFingerprint(policyId, name);
+	}
 }

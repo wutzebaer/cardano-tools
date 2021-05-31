@@ -3,14 +3,18 @@ package de.peterspace.cardanotools.cardano;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base16;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.bitcoinj.core.Bech32;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.internal.storage.dfs.DfsRepositoryDescription;
 import org.eclipse.jgit.internal.storage.dfs.InMemoryRepository;
@@ -39,6 +43,8 @@ import de.peterspace.cardanotools.process.ProcessUtil;
 import de.peterspace.cardanotools.repository.RegistrationMetadataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ove.crypto.digest.Blake2b;
+import ove.crypto.digest.Blake2b.Digest;
 
 @Component
 @Validated

@@ -95,6 +95,17 @@
 			<scope>test</scope>
 		</dependency>
 
+<dependency>
+	<groupId>org.bitcoinj</groupId>
+	<artifactId>bitcoinj-core</artifactId>
+	<version>0.15.10</version>
+</dependency>
+<dependency>
+	<groupId>com.github.alphazero</groupId>
+	<artifactId>Blake2b</artifactId>
+	<version>bbf094983c</version>
+</dependency>
+
 		<!-- misc -->
 		<dependency>
 			<groupId>org.json</groupId>
@@ -130,10 +141,10 @@
 			<version>5.11.1.202105131744-r</version>
 		</dependency>
 		<dependency>
-    <groupId>org.apache.httpcomponents</groupId>
-    <artifactId>httpclient</artifactId>
-    <version>4.5.12</version>
-</dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.12</version>
+		</dependency>
 
 	</dependencies>
 

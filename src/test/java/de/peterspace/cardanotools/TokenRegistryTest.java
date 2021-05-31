@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +65,6 @@ public class TokenRegistryTest {
 
 		MintTransaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
 		mintTransaction.setAccount(account);
-
 		byte[] logoData = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("mini.png"));
 		String url = tokenRegistry.createTokenRegistration(new RegistrationMetadata(null, "AAAAA", mintTransaction.getPolicyId(), mintTransaction.getPolicy(), mintTransaction.getAccount().getSkey(), "AAANAME", "AAADESC", "AAATI", null, logoData));
 
