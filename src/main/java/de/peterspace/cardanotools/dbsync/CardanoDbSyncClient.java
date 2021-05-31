@@ -35,12 +35,12 @@ public class CardanoDbSyncClient {
 			+ "inner join tx on tx.id = tx_in.tx_in_id and tx_in.tx_out_index = tx_out.index "
 			+ "where tx.hash = ? ;";
 
-	private static final String getAddressFundingQuery = "select distinct tx_out.address \r\n"
-			+ "	from tx_out\r\n"
-			+ "	inner join tx_in on tx_out.tx_id = tx_in.tx_out_id\r\n"
-			+ "	inner join tx on tx.id = tx_in.tx_in_id and tx_in.tx_out_index = tx_out.index\r\n"
-			+ "	inner join tx_out tx_out2 on tx_out2.tx_id = tx.id\r\n"
-			+ "	where tx_out2.address = ? and tx_out.address != ?";
+	private static final String getAddressFundingQuery = "select to2.address \r\n"
+			+ "from utxo_view uv \r\n"
+			+ "join tx t on t.id = uv.tx_id\r\n"
+			+ "join tx_in ti on ti.tx_in_id = t.id\r\n"
+			+ "join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index \r\n"
+			+ "where uv.address = ? and to2.address != ?";
 
 	private static final String tokenQuery = "select\r\n"
 			+ "encode(mtm.policy::bytea, 'hex') policyId,\r\n"
