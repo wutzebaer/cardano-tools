@@ -251,7 +251,7 @@ public class CardanoDbSyncClient {
 			findTokenQuery += ") AS U ";
 
 			if (fromMintid != null)
-				findTokenQuery += "WHERE mintid < ? ";
+				findTokenQuery += "WHERE mintid > ? ";
 
 			findTokenQuery += "order by mintid ";
 			findTokenQuery += "limit 100 ";
