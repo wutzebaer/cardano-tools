@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
+import javax.validation.constraints.NotBlank;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base16;
@@ -35,14 +36,18 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import de.peterspace.cardanotools.TrackExecutionTime;
 import de.peterspace.cardanotools.model.RegistrationMetadata;
 import de.peterspace.cardanotools.process.ProcessUtil;
 import de.peterspace.cardanotools.repository.RegistrationMetadataRepository;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ove.crypto.digest.Blake2b;
@@ -70,7 +75,6 @@ public class TokenRegistry {
 
 	private final RegistrationMetadataRepository registrationMetadataRepository;
 
-	private final RestTemplate restTemplate = new RestTemplate();
 
 	@PostConstruct
 	public void init() throws Exception {
@@ -96,16 +100,43 @@ public class TokenRegistry {
 		String body;
 	}
 
+	@Data
+	public static class TokenRegistryMetadata {
+		@NotBlank
+		String name;
+		@NotBlank
+		String description;
+		String ticker;
+		String url;
+		String logo;
+	}
+
 	@TrackExecutionTime
 	@Cacheable("tokenRegistryMetadata")
-	public String getTokenRegistryMetadata(String policyId, String tokenName) {
-		String subject = CardanoUtil.createSubject(policyId, tokenName);
+	public TokenRegistryMetadata getTokenRegistryMetadata(String policyId, String tokenName) {
+
 		try {
-			String metaData = restTemplate.getForObject("https://tokens.cardano.org/metadata/" + subject, String.class);
-			return metaData;
-		} catch (Exception e) {
+			String subject = CardanoUtil.createSubject(policyId, tokenName);
+
+			RestTemplate restTemplate = new RestTemplate();
+			ResponseEntity<String> response = restTemplate.getForEntity("https://tokens.cardano.org/metadata/" + subject, String.class);
+
+			JSONObject jsonObject = new JSONObject(response.getBody());
+			TokenRegistryMetadata tokenRegistryMetadata = new TokenRegistryMetadata();
+			tokenRegistryMetadata.setName(jsonObject.getJSONObject("name").getString("value"));
+			tokenRegistryMetadata.setDescription(jsonObject.getJSONObject("description").getString("value"));
+			if (jsonObject.has("ticker"))
+				tokenRegistryMetadata.setTicker(jsonObject.getJSONObject("ticker").getString("value"));
+			if (jsonObject.has("url"))
+				tokenRegistryMetadata.setUrl(jsonObject.getJSONObject("url").getString("value"));
+			if (jsonObject.has("logo"))
+				tokenRegistryMetadata.setLogo(jsonObject.getJSONObject("logo").getString("value"));
+			return tokenRegistryMetadata;
+
+		} catch (HttpClientErrorException.NotFound e) {
 			return null;
 		}
+
 	}
 
 	public String createTokenRegistration(RegistrationMetadata registrationMetadata) throws Exception {

@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.cardano.Policy;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
+import de.peterspace.cardanotools.cardano.TokenRegistry.TokenRegistryMetadata;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
 import de.peterspace.cardanotools.dbsync.TokenData;
 import de.peterspace.cardanotools.ipfs.IpfsClient;
@@ -156,7 +157,6 @@ public class RestInterface {
 		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
 	}
 
-
 	@PostMapping(path = "generateTokenRegistration", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public String generateTokenRegistration(@RequestPart String registrationMetadataString, @RequestPart(required = false) MultipartFile file) throws Exception {
 
@@ -173,6 +173,12 @@ public class RestInterface {
 		String pullRequestUrl = tokenRegistry.createTokenRegistration(registrationMetadata);
 
 		return JSONStringer.valueToString(pullRequestUrl);
+	}
+
+	@GetMapping("tokenRegistryMetadata/{policyId}/{tokenName}")
+	public ResponseEntity<TokenRegistryMetadata> getTokenRegistryMetadata(@PathVariable("policyId") String policyId, @PathVariable("tokenName") String tokenName) throws Exception {
+		TokenRegistryMetadata tokenRegistryMetadata = tokenRegistry.getTokenRegistryMetadata(policyId, tokenName);
+		return new ResponseEntity<TokenRegistryMetadata>(tokenRegistryMetadata, HttpStatus.OK);
 	}
 
 }

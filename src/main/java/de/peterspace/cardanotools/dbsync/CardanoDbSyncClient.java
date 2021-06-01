@@ -339,7 +339,6 @@ public class CardanoDbSyncClient {
 			tokenData.setEpochSlotNo(result.getLong(10));
 			tokenData.setTid(result.getLong(11));
 			tokenData.setMintid(result.getLong(12));
-			tokenData.setTokenRegistryMetadata(tokenRegistry.getTokenRegistryMetadata(tokenData.getPolicyId(), tokenData.getName()));
 			tokenDatas.add(tokenData);
 		}
 

@@ -15,7 +15,7 @@
 	<name>cardano-minter</name>
 	<description>Webapp for minting native cardano coins</description>
 	<properties>
-		<java.version>11</java.version>
+		<java.version>15</java.version>
 	</properties>
 
 	<repositories>
