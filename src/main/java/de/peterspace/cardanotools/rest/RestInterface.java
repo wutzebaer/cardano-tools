@@ -29,7 +29,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.cardano.Policy;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
-import de.peterspace.cardanotools.cardano.TokenRegistry.TokenRegistryMetadata;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
 import de.peterspace.cardanotools.dbsync.TokenData;
 import de.peterspace.cardanotools.ipfs.IpfsClient;
@@ -39,7 +38,6 @@ import de.peterspace.cardanotools.model.MintTransaction;
 import de.peterspace.cardanotools.model.RegistrationMetadata;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintTransactionRepository;
-import de.peterspace.cardanotools.rest.dto.TokenRegistration;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -173,12 +171,6 @@ public class RestInterface {
 		String pullRequestUrl = tokenRegistry.createTokenRegistration(registrationMetadata);
 
 		return JSONStringer.valueToString(pullRequestUrl);
-	}
-
-	@GetMapping("tokenRegistryMetadata/{policyId}/{tokenName}")
-	public ResponseEntity<TokenRegistryMetadata> getTokenRegistryMetadata(@PathVariable("policyId") String policyId, @PathVariable("tokenName") String tokenName) throws Exception {
-		TokenRegistryMetadata tokenRegistryMetadata = tokenRegistry.getTokenRegistryMetadata(policyId, tokenName);
-		return new ResponseEntity<TokenRegistryMetadata>(tokenRegistryMetadata, HttpStatus.OK);
 	}
 
 }

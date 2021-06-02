@@ -4,18 +4,15 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotBlank;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Base16;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bitcoinj.core.Bech32;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.internal.storage.dfs.DfsRepositoryDescription;
 import org.eclipse.jgit.internal.storage.dfs.InMemoryRepository;
@@ -35,23 +32,18 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import de.peterspace.cardanotools.TrackExecutionTime;
 import de.peterspace.cardanotools.model.RegistrationMetadata;
 import de.peterspace.cardanotools.process.ProcessUtil;
 import de.peterspace.cardanotools.repository.RegistrationMetadataRepository;
 import lombok.Data;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import ove.crypto.digest.Blake2b;
-import ove.crypto.digest.Blake2b.Digest;
 
 @Component
 @Validated
@@ -75,6 +67,8 @@ public class TokenRegistry {
 
 	private final RegistrationMetadataRepository registrationMetadataRepository;
 
+	@Getter
+	private Map<String, TokenRegistryMetadata> tokenRegistryMetadata;
 
 	@PostConstruct
 	public void init() throws Exception {
@@ -90,6 +84,12 @@ public class TokenRegistry {
 					.setDirectory(repoDir)
 					.call();
 		}
+		updateRegistry();
+	}
+
+	@Scheduled(cron = "0 0 0 * * *")
+	public void updateRegistry() throws Exception {
+		tokenRegistryMetadata = fetchRegistry();
 	}
 
 	@lombok.Value
@@ -109,34 +109,6 @@ public class TokenRegistry {
 		String ticker;
 		String url;
 		String logo;
-	}
-
-	@TrackExecutionTime
-	@Cacheable("tokenRegistryMetadata")
-	public TokenRegistryMetadata getTokenRegistryMetadata(String policyId, String tokenName) {
-
-		try {
-			String subject = CardanoUtil.createSubject(policyId, tokenName);
-
-			RestTemplate restTemplate = new RestTemplate();
-			ResponseEntity<String> response = restTemplate.getForEntity("https://tokens.cardano.org/metadata/" + subject, String.class);
-
-			JSONObject jsonObject = new JSONObject(response.getBody());
-			TokenRegistryMetadata tokenRegistryMetadata = new TokenRegistryMetadata();
-			tokenRegistryMetadata.setName(jsonObject.getJSONObject("name").getString("value"));
-			tokenRegistryMetadata.setDescription(jsonObject.getJSONObject("description").getString("value"));
-			if (jsonObject.has("ticker"))
-				tokenRegistryMetadata.setTicker(jsonObject.getJSONObject("ticker").getString("value"));
-			if (jsonObject.has("url"))
-				tokenRegistryMetadata.setUrl(jsonObject.getJSONObject("url").getString("value"));
-			if (jsonObject.has("logo"))
-				tokenRegistryMetadata.setLogo(jsonObject.getJSONObject("logo").getString("value"));
-			return tokenRegistryMetadata;
-
-		} catch (HttpClientErrorException.NotFound e) {
-			return null;
-		}
-
 	}
 
 	public String createTokenRegistration(RegistrationMetadata registrationMetadata) throws Exception {
@@ -159,6 +131,35 @@ public class TokenRegistry {
 
 		String url = createPullRequest(branchname, registrationMetadata.getName());
 		return url;
+	}
+
+	private Map<String, TokenRegistryMetadata> fetchRegistry() throws Exception {
+		final String githubRegistry = "https://github.com/cardano-foundation/cardano-token-registry.git";
+		final File tempDir = Files.createTempDirectory("cardano-token-registry").toFile();
+		final Map<String, TokenRegistryMetadata> result = new HashMap<>();
+		try (Git git = Git.cloneRepository().setURI(githubRegistry).setDirectory(tempDir).call()) {
+			File mappingsDir = tempDir.toPath().resolve("mappings").toFile();
+			for (File mappingFile : mappingsDir.listFiles()) {
+				if (mappingFile.isFile()) {
+					String subject = FilenameUtils.getBaseName(mappingFile.getName());
+					String content = Files.readString(mappingFile.toPath());
+
+					JSONObject jsonObject = new JSONObject(content);
+					TokenRegistryMetadata tokenRegistryMetadata = new TokenRegistryMetadata();
+					tokenRegistryMetadata.setName(jsonObject.getJSONObject("name").getString("value"));
+					tokenRegistryMetadata.setDescription(jsonObject.getJSONObject("description").getString("value"));
+					if (jsonObject.has("ticker"))
+						tokenRegistryMetadata.setTicker(jsonObject.getJSONObject("ticker").getString("value"));
+					if (jsonObject.has("url"))
+						tokenRegistryMetadata.setUrl(jsonObject.getJSONObject("url").getString("value"));
+					if (jsonObject.has("logo"))
+						tokenRegistryMetadata.setLogo(jsonObject.getJSONObject("logo").getString("value"));
+
+					result.put(subject, tokenRegistryMetadata);
+				}
+			}
+		}
+		return result;
 	}
 
 	private String pushToFork(String tokenname, String filename, byte[] data) throws Exception {

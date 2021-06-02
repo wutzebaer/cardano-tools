@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import com.zaxxer.hikari.HikariDataSource;
 
 import de.peterspace.cardanotools.TrackExecutionTime;
+import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -340,6 +341,9 @@ public class CardanoDbSyncClient {
 			tokenData.setTid(result.getLong(11));
 			tokenData.setMintid(result.getLong(12));
 			tokenDatas.add(tokenData);
+
+			String subject = CardanoUtil.createSubject(tokenData.getPolicyId(), tokenData.getName());
+			tokenData.setTokenRegistryMetadata(tokenRegistry.getTokenRegistryMetadata().get(subject));
 		}
 
 		return tokenDatas;

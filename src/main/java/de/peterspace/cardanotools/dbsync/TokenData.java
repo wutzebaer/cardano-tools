@@ -6,6 +6,7 @@ import javax.validation.constraints.NotNull;
 import org.apache.commons.codec.DecoderException;
 
 import de.peterspace.cardanotools.cardano.CardanoUtil;
+import de.peterspace.cardanotools.cardano.TokenRegistry.TokenRegistryMetadata;
 import lombok.Data;
 
 @Data
@@ -45,13 +46,11 @@ public class TokenData {
 	@NotNull
 	private Long mintid;
 
+	private TokenRegistryMetadata tokenRegistryMetadata;
+
 	@NotNull
 	public String getFingerprint() throws DecoderException {
 		return CardanoUtil.createAssetFingerprint(policyId, name);
 	}
 
-	@NotNull
-	public String getSubject() {
-		return CardanoUtil.createSubject(policyId, name);
-	}
 }
