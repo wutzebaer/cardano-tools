@@ -13,12 +13,16 @@ public class TransactionOutputs {
 	private Map<String, Map<String, Long>> outputs = new HashMap<>();
 
 	public void add(String address, String currency, long amount) {
-		if(amount < 1) {
-			return;
-		}
 		Map<String, Long> addressMap = outputs.computeIfAbsent(address, k -> new HashMap<>());
 		Long currentAmount = addressMap.computeIfAbsent(currency, k -> 0l);
-		addressMap.put(currency, currentAmount + amount);
+		if (currentAmount + amount != 0) {
+			addressMap.put(currency, currentAmount + amount);
+		} else {
+			addressMap.remove(currency);
+		}
+		if (addressMap.isEmpty()) {
+			outputs.remove(address);
+		}
 	}
 
 	public List<String> toCliFormat() {
