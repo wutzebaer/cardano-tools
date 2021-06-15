@@ -253,9 +253,8 @@ public class CardanoCli {
 		JSONObject metadata = new JSONObject();
 		JSONObject policyMetadata = new JSONObject();
 		for (TokenSubmission token : mintOrderSubmission.getTokens()) {
-			JSONObject cleanedMetadata = token.getCleanedMetadata();
+			JSONObject cleanedMetadata = new JSONObject(token.getMetaData());
 			cleanedMetadata.put("policy", policyScript);
-			cleanedMetadata.put("tool", "https://cardano-tools.io/");
 			if (cleanedMetadata != null) {
 				policyMetadata.put(token.getAssetName(), cleanedMetadata);
 			}

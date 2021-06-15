@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -16,6 +17,7 @@ import org.json.JSONObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -38,22 +40,8 @@ public class TokenSubmission {
 	@NotNull
 	private Long amount;
 
-	@NotNull
-	@OneToMany(cascade = CascadeType.ALL)
-	private Map<String, MetaValue> metaData;
-
-	@JsonIgnore
-	public JSONObject getCleanedMetadata() {
-		JSONObject targetObject = new JSONObject();
-		for (Entry<String, MetaValue> metaEntry : metaData.entrySet()) {
-			MetaValue valueObject = metaEntry.getValue();
-			if (!valueObject.getListValue().isEmpty()) {
-				targetObject.put(metaEntry.getKey().toLowerCase(), new JSONArray(valueObject.getListValue()));
-			} else {
-				targetObject.put(metaEntry.getKey().toLowerCase(), valueObject.getValue());
-			}
-		}
-		return targetObject;
-	}
+	@Column(columnDefinition = "TEXT DEFAULT '{}'")
+	@NotBlank
+	private String metaData;
 
 }

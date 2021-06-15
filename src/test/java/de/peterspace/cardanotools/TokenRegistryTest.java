@@ -49,16 +49,14 @@ public class TokenRegistryTest {
 
 		TokenSubmission token1 = new TokenSubmission();
 		token1.setAmount(1000000l);
-		token1.setMetaData(Map.of(
-				"haha", new MetaValue(0l, "hoho", List.of()),
-				"hahalist", new MetaValue(0l, "", List.of("list1", "list2"))));
+		token1.setMetaData("{haha: 'hoho'}, hahalist:['list1', 'list2']");
 		token1.setAssetName("AAAAA");
 		tokens.add(token1);
 
 		TokenSubmission token2 = new TokenSubmission();
 		token2.setAmount(1000000l);
 		token2.setAssetName("BBBB");
-		token2.setMetaData(new HashMap<String, MetaValue>());
+		token2.setMetaData("{}");
 		tokens.add(token2);
 
 		mintOrder.setTokens(tokens);

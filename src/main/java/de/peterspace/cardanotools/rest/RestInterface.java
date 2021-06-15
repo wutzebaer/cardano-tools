@@ -10,6 +10,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.lang3.StringUtils;
 import org.imgscalr.Scalr;
+import org.json.JSONObject;
 import org.json.JSONStringer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -127,8 +128,10 @@ public class RestInterface {
 
 		registrationMetadata.setAssetName(mintTransaction.getMintOrderSubmission().getTokens().get(0).getAssetName());
 
-		if (mintTransaction.getMintOrderSubmission().getTokens().get(0).getMetaData().containsKey("Name"))
-			registrationMetadata.setName(mintTransaction.getMintOrderSubmission().getTokens().get(0).getMetaData().get("Name").getValue());
+		JSONObject tokenMetaData = new JSONObject(mintTransaction.getMintOrderSubmission().getTokens().get(0).getMetaData());
+		if (tokenMetaData.has("name")) {
+			registrationMetadata.setName(tokenMetaData.getString("name"));
+		}
 
 		registrationMetadata.setPolicyId(mintTransaction.getPolicyId());
 		registrationMetadata.setPolicy(mintTransaction.getPolicy());
