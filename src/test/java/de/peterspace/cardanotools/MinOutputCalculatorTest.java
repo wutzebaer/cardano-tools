@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
 
 import de.peterspace.cardanotools.cardano.MinOutputCalculator;
-import de.peterspace.cardanotools.model.MintOrderSubmission;
-import de.peterspace.cardanotools.model.MintTransaction;
 import de.peterspace.cardanotools.model.TokenSubmission;
 
 public class MinOutputCalculatorTest {

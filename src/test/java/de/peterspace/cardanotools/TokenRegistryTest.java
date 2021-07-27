@@ -1,11 +1,7 @@
 package de.peterspace.cardanotools;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.model.Account;
-import de.peterspace.cardanotools.model.MetaValue;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.MintTransaction;
 import de.peterspace.cardanotools.model.RegistrationMetadata;

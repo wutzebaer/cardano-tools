@@ -84,7 +84,7 @@ public class CardanoDbSyncTest {
 	@Test
 	void getLatestTokens() throws DecoderException, JSONException {
 		List<TokenData> tokenData = cardanoDbSyncClient.latestTokens(null);
-		assertEquals(1000, tokenData.size());
+		assertEquals(100, tokenData.size());
 		cardanoDbSyncClient.latestTokens(null);
 		cardanoDbSyncClient.latestTokens(null);
 		cardanoDbSyncClient.latestTokens(null);

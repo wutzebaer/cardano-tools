@@ -7,9 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -17,11 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
-import de.peterspace.cardanotools.cardano.MinOutputCalculator;
 import de.peterspace.cardanotools.cardano.Policy;
 import de.peterspace.cardanotools.model.Account;
-import de.peterspace.cardanotools.model.ChangeAction;
-import de.peterspace.cardanotools.model.MetaValue;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.MintTransaction;
 import de.peterspace.cardanotools.model.TokenSubmission;
