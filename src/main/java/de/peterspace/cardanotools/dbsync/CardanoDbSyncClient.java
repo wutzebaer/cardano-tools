@@ -21,6 +21,7 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import de.peterspace.cardanotools.TrackExecutionTime;
 import de.peterspace.cardanotools.cardano.CardanoUtil;
+import de.peterspace.cardanotools.cardano.PolicyScanner;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CardanoDbSyncClient {
 
 	private final TokenRegistry tokenRegistry;
+	private final PolicyScanner policyScanner;
 
 	private static final String getTxInputQuery = "select distinct address from tx_out "
 			+ "inner join tx_in on tx_out.tx_id = tx_in.tx_out_id "
@@ -56,7 +58,8 @@ public class CardanoDbSyncClient {
 			+ "b.epoch_no,\r\n"
 			+ "b.epoch_slot_no, \r\n"
 			+ "t.id tid, \r\n"
-			+ "mtm.id mintid \r\n"
+			+ "mtm.id mintid,\r\n"
+			+ "b.slot_no\r\n"
 			+ "from ma_tx_mint mtm\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
 			+ "left join tx_metadata tm on tm.tx_id = t.id \r\n"
@@ -94,7 +97,8 @@ public class CardanoDbSyncClient {
 			+ "max(b.epoch_no) epoch_no,\r\n"
 			+ "max(b.epoch_slot_no) epoch_slot_no, \r\n"
 			+ "max(t.id) tid, \r\n"
-			+ "max(mtm.id) mintid \r\n"
+			+ "max(mtm.id) mintid, \r\n"
+			+ "max(b.slot_no) \r\n"
 			+ "from owned_tokens ot\r\n"
 			+ "join ma_tx_mint mtm on mtm.\"policy\"=ot.policy and mtm.\"name\"=ot.name\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
@@ -340,10 +344,13 @@ public class CardanoDbSyncClient {
 			tokenData.setEpochSlotNo(result.getLong(10));
 			tokenData.setTid(result.getLong(11));
 			tokenData.setMintid(result.getLong(12));
+			tokenData.setSlotNo(result.getLong(13));
 			tokenDatas.add(tokenData);
 
 			String subject = CardanoUtil.createSubject(tokenData.getPolicyId(), tokenData.getName());
 			tokenData.setTokenRegistryMetadata(tokenRegistry.getTokenRegistryMetadata().get(subject));
+
+			tokenData.setPolicy(policyScanner.getPolicies().get(tokenData.getPolicyId()));
 		}
 
 		return tokenDatas;

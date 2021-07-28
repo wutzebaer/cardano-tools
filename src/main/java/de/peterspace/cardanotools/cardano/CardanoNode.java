@@ -34,6 +34,10 @@ public class CardanoNode {
 	@Value("${cardano-node.container-name}")
 	private String containerName;
 
+	@Getter
+	@Value("${cardano-node.ipc-volume-name}")
+	private String ipcVolumeName;
+
 	@PostConstruct
 	public void init() throws Exception {
 
@@ -52,6 +56,11 @@ public class CardanoNode {
 		// determine container name
 		if (StringUtils.isBlank(containerName)) {
 			this.containerName = network + "-node";
+		}
+
+		// determine ipc volume name
+		if (StringUtils.isBlank(ipcVolumeName)) {
+			this.ipcVolumeName = network + "-ipc";
 		}
 
 		String runningContainers = ProcessUtil.runCommand(new String[] { "docker", "ps" });
@@ -126,7 +135,7 @@ public class CardanoNode {
 		cmd.add(network + "-data:/data");
 
 		cmd.add("-v");
-		cmd.add(network + "-ipc:/ipc");
+		cmd.add(ipcVolumeName + ":/ipc");
 
 		cmd.add("-e");
 		cmd.add("NETWORK=" + network);

@@ -32,6 +32,9 @@ public class TokenData {
 	private Long invalid_hereafter;
 
 	@NotNull
+	private Long slotNo;
+
+	@NotNull
 	private Long blockNo;
 
 	@NotNull
@@ -47,6 +50,8 @@ public class TokenData {
 	private Long mintid;
 
 	private TokenRegistryMetadata tokenRegistryMetadata;
+
+	private String policy;
 
 	@NotNull
 	public String getFingerprint() throws DecoderException {

@@ -1,1 +1,1 @@
-docker run --name mainnet-node --rm -v mainenet-data:/data -v %cd%:/work -v mainnet-ipc:/ipc -e NETWORK=mainnet inputoutput/cardano-node
+docker run --name mainnet-node --rm -v mainenet-data:/data -v %cd%\cardano-minter-workdir:/work -v mainnet-ipc:/ipc -e NETWORK=mainnet inputoutput/cardano-node
