@@ -51,7 +51,7 @@ public class CardanoDbSyncClient {
 			+ "encode(mtm.name::bytea, 'escape') tokenName,\r\n"
 			+ "mtm.quantity,\r\n"
 			+ "encode(t.hash ::bytea, 'hex') txId,\r\n"
-			+ "tm.json,\r\n"
+			+ "tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape') json,\r\n"
 			+ "t.invalid_before,\r\n"
 			+ "t.invalid_hereafter,\r\n"
 			+ "b.block_no,\r\n"
@@ -91,7 +91,7 @@ public class CardanoDbSyncClient {
 			+ "encode(ot.name::bytea, 'escape') tokenName,\r\n"
 			+ "max(ot.quantity) quantity,\r\n"
 			+ "max(encode(t.hash ::bytea, 'hex')) txId,\r\n"
-			+ "jsonb_agg(tm.json)->0 json,\r\n"
+			+ "jsonb_agg(tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape'))->0 json,\r\n"
 			+ "max(t.invalid_before) invalid_before,\r\n"
 			+ "max(t.invalid_hereafter) invalid_hereafter,\r\n"
 			+ "max(b.block_no) block_no,\r\n"
@@ -152,8 +152,8 @@ public class CardanoDbSyncClient {
 
 		try (Connection connection = hds.getConnection()) {
 			log.debug("Create json index");
-			connection.createStatement().executeUpdate("CREATE INDEX if not exists jsonmetadata_fts ON tx_metadata USING gin (( to_tsvector('english',json) ));");
-			connection.createStatement().executeUpdate("CREATE INDEX if not exists tokenname_fts ON ma_tx_mint USING gin (( to_tsvector('english',encode(name::bytea, 'escape')) ));");
+			//connection.createStatement().executeUpdate("CREATE INDEX if not exists jsonmetadata_fts ON tx_metadata USING gin (( to_tsvector('english',json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape')) ));");
+			//connection.createStatement().executeUpdate("CREATE INDEX if not exists tokenname_fts ON ma_tx_mint USING gin (( to_tsvector('english',(encode(policy::bytea, 'hex') ||  '.' || encode(name::bytea, 'escape'))) ));");
 		}
 
 	}
@@ -238,12 +238,12 @@ public class CardanoDbSyncClient {
 			findTokenQuery += "UNION ";
 			findTokenQuery += tokenQuery;
 			findTokenQuery += "WHERE ";
-			findTokenQuery += "encode(mtm.name::bytea, 'escape') ilike concat('%', ? ,'%') ";
+			findTokenQuery += "(encode(policy::bytea, 'hex') ||  '.' || encode(name::bytea, 'escape')) ilike concat('%', ? ,'%') ";
 
 			findTokenQuery += "UNION ";
 			findTokenQuery += tokenQuery;
 			findTokenQuery += "WHERE ";
-			findTokenQuery += "to_tsvector('english',json) @@ to_tsquery(?) ";
+			findTokenQuery += "to_tsvector('english',tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape')) @@ to_tsquery(?) ";
 
 			if (bytes != null) {
 				findTokenQuery += "UNION ";
