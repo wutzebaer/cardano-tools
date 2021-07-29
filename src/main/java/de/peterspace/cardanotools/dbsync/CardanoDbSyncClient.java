@@ -59,7 +59,8 @@ public class CardanoDbSyncClient {
 			+ "b.epoch_slot_no, \r\n"
 			+ "t.id tid, \r\n"
 			+ "mtm.id mintid,\r\n"
-			+ "b.slot_no\r\n"
+			+ "b.slot_no,\r\n"
+			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.\"policy\"=mtm.\"policy\" and mtm2.\"name\"=mtm.\"name\") total_supply\r\n"
 			+ "from ma_tx_mint mtm\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
 			+ "left join tx_metadata tm on tm.tx_id = t.id \r\n"
@@ -98,7 +99,8 @@ public class CardanoDbSyncClient {
 			+ "max(b.epoch_slot_no) epoch_slot_no, \r\n"
 			+ "max(t.id) tid, \r\n"
 			+ "max(mtm.id) mintid, \r\n"
-			+ "max(b.slot_no) \r\n"
+			+ "max(b.slot_no), \r\n"
+			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.\"policy\"=ot.\"policy\" and mtm2.\"name\"=ot.\"name\") total_supply \r\n"
 			+ "from owned_tokens ot\r\n"
 			+ "join ma_tx_mint mtm on mtm.\"policy\"=ot.policy and mtm.\"name\"=ot.name\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
@@ -345,6 +347,7 @@ public class CardanoDbSyncClient {
 			tokenData.setTid(result.getLong(11));
 			tokenData.setMintid(result.getLong(12));
 			tokenData.setSlotNo(result.getLong(13));
+			tokenData.setTotalSupply(result.getLong(14));
 			tokenDatas.add(tokenData);
 
 			String subject = CardanoUtil.createSubject(tokenData.getPolicyId(), tokenData.getName());

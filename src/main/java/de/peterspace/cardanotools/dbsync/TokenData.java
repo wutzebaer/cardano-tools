@@ -54,6 +54,9 @@ public class TokenData {
 	private String policy;
 
 	@NotNull
+	private Long totalSupply;
+
+	@NotNull
 	public String getFingerprint() throws DecoderException {
 		return CardanoUtil.createAssetFingerprint(policyId, name);
 	}
