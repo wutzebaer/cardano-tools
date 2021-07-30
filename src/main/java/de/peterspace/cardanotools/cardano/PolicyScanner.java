@@ -41,6 +41,7 @@ public class PolicyScanner {
 	@PostConstruct
 	public void init() throws Exception {
 		outputPath = new File(workingDir, "policy-scripts");
+		outputPath.mkdirs();
 		if (outputPath.listFiles().length == 0) {
 			extractPolicies();
 		}
@@ -65,8 +66,6 @@ public class PolicyScanner {
 				+ ", signingKeyFile      = \"payment.skey\"\r\n"
 				+ "}";
 		fileUtil.writeFile("config.mantis", config);
-
-		outputPath.mkdirs();
 
 		// @formatter:off
         String[] cmd = new String[] {
