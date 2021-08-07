@@ -113,18 +113,19 @@ public class TokenRegistry {
 
 	public String createTokenRegistration(RegistrationMetadata registrationMetadata) throws Exception {
 
-		try {
-			registrationMetadataRepository.save(registrationMetadata);
-		} catch (Exception e) {
-			throw new Exception("Your token is already registered!", e);
-		}
-
 		String subject = CardanoUtil.createSubject(registrationMetadata.getPolicyId(), registrationMetadata.getAssetName());
 		initDraft(subject);
 		addRequiredFields(subject, registrationMetadata);
 		addOptionalFields(subject, registrationMetadata);
 		sign(subject, registrationMetadata);
 		finalize(subject, registrationMetadata);
+
+		try {
+			registrationMetadataRepository.save(registrationMetadata);
+		} catch (Exception e) {
+			throw new Exception("Your token is already registered!", e);
+		}
+
 
 		String branchname = pushToFork(registrationMetadata.getName(), subject + ".json", fileUtil.readFileBinary(subject + ".json"));
 		fileUtil.removeFile(subject + ".json");
