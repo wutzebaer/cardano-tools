@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.cardano.Policy;
+import de.peterspace.cardanotools.cardano.PolicyScanner;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
 import de.peterspace.cardanotools.dbsync.TokenData;
@@ -52,6 +53,7 @@ public class RestInterface {
 	private final AccountRepository accountRepository;
 	private final CardanoDbSyncClient cardanoDbSyncClient;
 	private final TokenRegistry tokenRegistry;
+	private final PolicyScanner policyScanner;
 
 	@GetMapping("tip")
 	public long getTip() throws Exception {
@@ -174,6 +176,12 @@ public class RestInterface {
 		String pullRequestUrl = tokenRegistry.createTokenRegistration(registrationMetadata);
 
 		return JSONStringer.valueToString(pullRequestUrl);
+	}
+
+	@GetMapping("policy")
+	public String policy(@RequestParam String policyId) throws Exception {
+		String policy = policyScanner.getPolicies().get(policyId);
+		return policy;
 	}
 
 }
