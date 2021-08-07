@@ -234,7 +234,7 @@ public class CardanoDbSyncClient {
 			findTokenQuery += "to_tsvector('english',json) @@ to_tsquery(?) ";
 			findTokenQuery += "and to_tsvector('english',tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape')) @@ to_tsquery(?) ";
 
-			findTokenQuery += ") AS U ";
+			findTokenQuery += ") AS U where U.quantity > 0 ";
 			findTokenQuery += ") as numbered ";
 
 			findTokenQuery += "where rn = 1 ";
