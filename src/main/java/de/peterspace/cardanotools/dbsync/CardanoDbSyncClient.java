@@ -91,7 +91,7 @@ public class CardanoDbSyncClient {
 			+ "encode(ot.name::bytea, 'escape') tokenName,\r\n"
 			+ "max(ot.quantity) quantity,\r\n"
 			+ "max(encode(t.hash ::bytea, 'hex')) txId,\r\n"
-			+ "jsonb_agg(tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape'))->0 json,\r\n"
+			+ "jsonb_agg(tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape'))->-1 json,\r\n"
 			+ "max(t.invalid_before) invalid_before,\r\n"
 			+ "max(t.invalid_hereafter) invalid_hereafter,\r\n"
 			+ "max(b.block_no) block_no,\r\n"
