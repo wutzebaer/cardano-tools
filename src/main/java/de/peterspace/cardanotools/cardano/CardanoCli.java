@@ -193,7 +193,7 @@ public class CardanoCli {
 
 	public Policy createPolicy(String vkey, long tip) throws Exception {
 
-		int secondsToLive = 60 * 60 * 24;
+		int secondsToLive = 60 * 60 * 24 * 7;
 		long dueSlot = tip + secondsToLive;
 
 		String vkeyFilename = filename("vkey");
