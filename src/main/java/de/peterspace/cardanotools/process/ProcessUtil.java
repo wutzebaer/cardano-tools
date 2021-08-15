@@ -22,9 +22,13 @@ public class ProcessUtil {
 
 		int returnCode = process.waitFor();
 		if (returnCode != 0) {
-			throw new Exception(errorStringWriter.toString());
+			synchronized (errorStringWriter) {
+				throw new Exception(errorStringWriter.toString());
+			}
 		} else {
-			return new String(inputStringWriter.toString()).trim();
+			synchronized (inputStringWriter) {
+				return new String(inputStringWriter.toString()).trim();
+			}
 		}
 	}
 
@@ -32,16 +36,17 @@ public class ProcessUtil {
 		StringWriter sw = new StringWriter();
 		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 		new Thread(() -> {
-			String line;
-			try {
-				while ((line = reader.readLine()) != null) {
+			synchronized (sw) {
+				String line;
+				try {
+					while ((line = reader.readLine()) != null) {
 					log.trace(line);
-					sw.append(line);
+						sw.append(line);
+					}
+				} catch (IOException e) {
+					log.error("Reading the stream failed", e);
 				}
-			} catch (IOException e) {
-				log.error("Reading the stream failed", e);
 			}
-
 		}).start();
 		return sw;
 	}
