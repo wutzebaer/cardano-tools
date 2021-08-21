@@ -3,6 +3,8 @@ package de.peterspace.cardanotools.cardano;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -37,6 +40,7 @@ public class PolicyScanner {
 
 	private final FileUtil fileUtil;
 	private final CardanoNode cardanoNode;
+	private final TaskExecutor taskExecutor;
 	private File outputPath;
 
 	@Getter
@@ -46,14 +50,18 @@ public class PolicyScanner {
 	public void init() throws Exception {
 		outputPath = new File(workingDir, "policy-scripts");
 		outputPath.mkdirs();
-	}
 
-	@EventListener(ApplicationReadyEvent.class)
-	public void initialize() throws Exception {
-		if (outputPath.listFiles().length == 0) {
-			extractPolicies();
-		}
-		readPolicies();
+		taskExecutor.execute(() -> {
+			try {
+				if (outputPath.listFiles().length == 0) {
+					extractPolicies();
+				}
+				readPolicies();
+			} catch (Exception e) {
+				log.error("Create json index", e);
+			}
+		});
+
 	}
 
 	@Scheduled(cron = "0 0 * * * *")
@@ -93,7 +101,6 @@ public class PolicyScanner {
 	}
 
 	private void readPolicies() throws IOException {
-		log.info("updatePolicies");
 		File[] files = outputPath.listFiles();
 		long count = 0;
 		for (File mappingFile : files) {
@@ -105,10 +112,11 @@ public class PolicyScanner {
 					policies.put(subject, content);
 				}
 				float progress = (float) count / files.length * 100;
-				log.info("updatePolicies read: {}", String.format("%.2f%%", progress));
+				if (count % 2000 == 0 || count == files.length) {
+					log.info("updatePolicies read: {}", String.format("%.2f%%", progress));
+				}
 			}
 		}
-		log.info("updatePolicies finished: {}", policies.size());
 	}
 
 }

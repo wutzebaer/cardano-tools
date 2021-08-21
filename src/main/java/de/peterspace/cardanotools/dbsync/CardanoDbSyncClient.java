@@ -14,7 +14,12 @@ import javax.annotation.PreDestroy;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.zaxxer.hikari.HikariDataSource;
@@ -33,6 +38,7 @@ public class CardanoDbSyncClient {
 
 	private final TokenRegistry tokenRegistry;
 	private final PolicyScanner policyScanner;
+	private final TaskExecutor taskExecutor;
 
 	private static final String getTxInputQuery = "select distinct address from tx_out "
 			+ "inner join tx_in on tx_out.tx_id = tx_in.tx_out_id "
@@ -155,11 +161,15 @@ public class CardanoDbSyncClient {
 		hds.setMaximumPoolSize(30);
 		hds.setAutoCommit(false);
 
-		try (Connection connection = hds.getConnection()) {
-			log.debug("Create json index");
-			connection.createStatement().executeUpdate("CREATE INDEX if not exists jsonmetadata_fts ON tx_metadata USING gin (( to_tsvector('english',json) ));");
-		}
-
+		taskExecutor.execute(() -> {
+			try (Connection connection = hds.getConnection()) {
+				log.debug("Create json index");
+				connection.createStatement().executeUpdate("CREATE INDEX if not exists jsonmetadata_fts ON tx_metadata USING gin (( to_tsvector('english',json) ));");
+				log.debug("Create json index finshed");
+			} catch (SQLException e) {
+				log.error("Create json index", e);
+			}
+		});
 	}
 
 	@PreDestroy

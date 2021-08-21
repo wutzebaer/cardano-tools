@@ -1,6 +1,7 @@
 package de.peterspace.cardanotools.cardano;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -14,6 +15,9 @@ import javax.validation.constraints.NotBlank;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.internal.storage.dfs.DfsRepositoryDescription;
 import org.eclipse.jgit.internal.storage.dfs.InMemoryRepository;
 import org.eclipse.jgit.lib.CommitBuilder;
@@ -32,6 +36,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -64,27 +69,34 @@ public class TokenRegistry {
 	private String githubRegistryFork;
 
 	private final FileUtil fileUtil;
-
 	private final RegistrationMetadataRepository registrationMetadataRepository;
+	private final TaskExecutor taskExecutor;
 
 	@Getter
 	private Map<String, TokenRegistryMetadata> tokenRegistryMetadata;
 
 	@PostConstruct
 	public void init() throws Exception {
-		File repoDir = Paths.get(workingDir, "cardano-token-registry").toFile();
-		if (repoDir.exists()) {
-			Git git = Git.open(repoDir);
-			git
-					.fetch()
-					.call();
-		} else {
-			Git.cloneRepository()
-					.setURI(githubRegistryFork)
-					.setDirectory(repoDir)
-					.call();
-		}
-		updateRegistry();
+		taskExecutor.execute(() -> {
+			try {
+				File repoDir = Paths.get(workingDir, "cardano-token-registry").toFile();
+				if (repoDir.exists()) {
+					Git git = Git.open(repoDir);
+					git
+							.fetch()
+							.call();
+				} else {
+					Git.cloneRepository()
+							.setURI(githubRegistryFork)
+							.setDirectory(repoDir)
+							.call();
+				}
+				updateRegistry();
+			} catch (Exception e) {
+				log.error("Create json index", e);
+			}
+		});
+
 	}
 
 	@Scheduled(cron = "0 0 0 * * *")
@@ -125,7 +137,6 @@ public class TokenRegistry {
 		} catch (Exception e) {
 			throw new Exception("Your token is already registered!", e);
 		}
-
 
 		String branchname = pushToFork(registrationMetadata.getName(), subject + ".json", fileUtil.readFileBinary(subject + ".json"));
 		fileUtil.removeFile(subject + ".json");
