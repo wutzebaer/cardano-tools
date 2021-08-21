@@ -116,7 +116,7 @@ public class CardanoCli {
 		String vkey = fileUtil.readFile(key + ".vkey");
 		Policy policy = createPolicy(vkey, queryTip());
 
-		Account account = new Account(key, new Date(), addressLiteral, fileUtil.readFile(key + ".skey"), vkey, new ArrayList<>(), 0l, 0l, policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate());
+		Account account = new Account(key, new Date(), addressLiteral, fileUtil.readFile(key + ".skey"), vkey, new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate());
 		accountRepository.save(account);
 
 		fileUtil.removeFile(key + ".skey");

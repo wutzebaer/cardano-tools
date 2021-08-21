@@ -2,6 +2,7 @@ package de.peterspace.cardanotools.rest;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -76,12 +77,11 @@ public class RestInterface {
 				Policy policy = cardanoCli.createPolicy(account.getVkey(), cardanoCli.queryTip());
 				account.setPolicy(policy.getPolicy());
 				account.setPolicyId(policy.getPolicyId());
-				account.setPolicyDueDate(policy.getPolicyDueDate());
 			}
 
 			account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress()));
 			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress()));
-			account.setLastUpdate(System.currentTimeMillis());
+			account.setLastUpdate(new Date());
 			accountRepository.save(account);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {
@@ -100,7 +100,7 @@ public class RestInterface {
 			account.setPolicyDueDate(policy.getPolicyDueDate());
 			account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress()));
 			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress()));
-			account.setLastUpdate(System.currentTimeMillis());
+			account.setLastUpdate(new Date());
 			accountRepository.save(account);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {

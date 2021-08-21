@@ -43,12 +43,10 @@ public class Account {
 
 	@NotNull
 	@Min(0)
-	@Column(columnDefinition = "bigint DEFAULT 0")
 	private Long balance;
 
 	@NotNull
-	@Column(columnDefinition = "bigint DEFAULT 0")
-	private Long lastUpdate;
+	private Date lastUpdate;
 
 	@Column(columnDefinition = "TEXT")
 	@NotBlank
@@ -58,6 +56,5 @@ public class Account {
 	private String policyId;
 
 	@NotNull
-	@Column(columnDefinition = "timestamp default '1970-01-01'")
 	private Date policyDueDate;
 }

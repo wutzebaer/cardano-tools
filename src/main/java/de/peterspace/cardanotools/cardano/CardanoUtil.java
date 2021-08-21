@@ -1,6 +1,7 @@
 package de.peterspace.cardanotools.cardano;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.codec.DecoderException;
@@ -15,6 +16,11 @@ import ove.crypto.digest.Blake2b.Digest;
 
 @UtilityClass
 public class CardanoUtil {
+
+	public static Date calculatePolicyDueDate(Long slot) {
+		var lockDate = new Date((1596491091 + (slot - 4924800)) * 1000);
+		return lockDate;
+	}
 
 	public static String createSubject(String policyId, String assetName) {
 		return policyId + encodeBase16(assetName);
