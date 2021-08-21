@@ -89,6 +89,25 @@ public class RestInterface {
 		}
 	}
 
+	@PostMapping("account/{key}/refreshPolicy")
+	public ResponseEntity<Account> refreshPolicy(@PathVariable("key") UUID key) throws Exception {
+		Optional<Account> accountOptional = accountRepository.findById(key.toString());
+		if (accountOptional.isPresent()) {
+			Account account = accountOptional.get();
+			Policy policy = cardanoCli.createPolicy(account.getVkey(), cardanoCli.queryTip());
+			account.setPolicy(policy.getPolicy());
+			account.setPolicyId(policy.getPolicyId());
+			account.setPolicyDueDate(policy.getPolicyDueDate());
+			account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress()));
+			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress()));
+			account.setLastUpdate(System.currentTimeMillis());
+			accountRepository.save(account);
+			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<Account>(HttpStatus.NOT_FOUND);
+		}
+	}
+
 	@PostMapping(path = "file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public String postFile(@RequestPart MultipartFile file) throws Exception {
 		String ipfsData = ipfsClient.addFile(file.getInputStream());

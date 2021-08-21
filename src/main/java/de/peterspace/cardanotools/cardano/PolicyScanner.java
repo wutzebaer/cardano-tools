@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -92,8 +93,9 @@ public class PolicyScanner {
 				if (!policies.containsKey(subject)) {
 					String content = Files.readString(mappingFile.toPath());
 					policies.put(subject, content);
-					log.info("updatePolicies read: {}", subject);
 				}
+				float progress = Integer.parseInt(StringUtils.left(subject, 3), 16) / 4096f * 100;
+				log.info("updatePolicies read: {}", String.format("%.2f%%", progress));
 			}
 		}
 		log.info("updatePolicies finished: {}", policies.size());
