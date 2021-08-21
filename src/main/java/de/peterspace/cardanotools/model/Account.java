@@ -42,6 +42,10 @@ public class Account {
 	private List<String> fundingAddresses;
 
 	@NotNull
+	@ElementCollection
+	private List<String> fundingAddressesHistory;
+
+	@NotNull
 	@Min(0)
 	private Long balance;
 

@@ -81,6 +81,7 @@ public class RestInterface {
 
 			account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress()));
 			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress()));
+			account.setFundingAddressesHistory(cardanoDbSyncClient.getFundingAddressesHistory(account.getAddress()));
 			account.setLastUpdate(new Date());
 			accountRepository.save(account);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
@@ -100,6 +101,7 @@ public class RestInterface {
 			account.setPolicyDueDate(policy.getPolicyDueDate());
 			account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress()));
 			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress()));
+			account.setFundingAddressesHistory(cardanoDbSyncClient.getFundingAddressesHistory(account.getAddress()));
 			account.setLastUpdate(new Date());
 			accountRepository.save(account);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
@@ -177,6 +179,19 @@ public class RestInterface {
 	public ResponseEntity<List<TokenData>> walletTokens(@RequestParam String address) throws Exception {
 		List<TokenData> findTokens = cardanoDbSyncClient.walletTokens(address);
 		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
+	}
+
+	@GetMapping("offerToken/{key}")
+	public ResponseEntity<List<TokenData>> offerToken(@PathVariable("key") UUID key) throws Exception {
+		Optional<Account> accountOptional = accountRepository.findById(key.toString());
+		if (accountOptional.isPresent()) {
+			Account account = accountOptional.get();
+			List<TokenData> findTokens = cardanoDbSyncClient.offerToken(account.getAddress());
+			return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<List<TokenData>>(HttpStatus.NOT_FOUND);
+		}
+
 	}
 
 	@PostMapping(path = "generateTokenRegistration", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -45,6 +45,14 @@ public class CardanoDbSyncClient {
 			+ "inner join tx on tx.id = tx_in.tx_in_id and tx_in.tx_out_index = tx_out.index "
 			+ "where tx.hash = ? ;";
 
+	private static final String getAddressFundingQueryHistory = "select to2.address\r\n"
+			+ "from tx_out to1\r\n"
+			+ "join tx t on t.id = to1.tx_id\r\n"
+			+ "join tx_in ti on ti.tx_in_id = t.id\r\n"
+			+ "join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index\r\n"
+			+ "where to1.address = ?\r\n"
+			+ "and to2.address != ?";
+
 	private static final String getAddressFundingQuery = "select to2.address \r\n"
 			+ "from utxo_view uv \r\n"
 			+ "join tx t on t.id = uv.tx_id\r\n"
@@ -71,6 +79,52 @@ public class CardanoDbSyncClient {
 			+ "join tx t on t.id = mtm.tx_id \r\n"
 			+ "left join tx_metadata tm on tm.tx_id = t.id \r\n"
 			+ "join block b on b.id = t.block_id ";
+
+	private static final String offerTokenQuery = "with\r\n"
+			+ "addresses as (\r\n"
+			+ "	select to2.address\r\n"
+			+ "	from tx_out to1\r\n"
+			+ "	join tx t on t.id = to1.tx_id\r\n"
+			+ "	join tx_in ti on ti.tx_in_id = t.id\r\n"
+			+ "	join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index\r\n"
+			+ "	where to1.address = ?\r\n"
+			+ "	and to2.address != ?\r\n"
+			+ "),\r\n"
+			+ "stake_address_id as (\r\n"
+			+ "	select to2.stake_address_id\r\n"
+			+ "	from tx_out to2 \r\n"
+			+ "	where \r\n"
+			+ "	to2.address in (select address from addresses)\r\n"
+			+ "),\r\n"
+			+ "owned_tokens as (\r\n"
+			+ "	SELECT mto.policy \"policy\", mto.name \"name\", quantity quantity, to2.id txId\r\n"
+			+ "	FROM utxo_view uv \r\n"
+			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\" \r\n"
+			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id \r\n"
+			+ "	where uv.stake_address_id in (select distinct stake_address_id from stake_address_id)\r\n"
+			+ ")\r\n"
+			+ "select\r\n"
+			+ "encode(ot.policy::bytea, 'hex') policyId,\r\n"
+			+ "encode(ot.name::bytea, 'escape') tokenName,\r\n"
+			+ "max(ot.quantity) quantity,\r\n"
+			+ "max(encode(t.hash ::bytea, 'hex')) txId,\r\n"
+			+ "jsonb_agg(tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape'))->-1 json,\r\n"
+			+ "max(t.invalid_before) invalid_before,\r\n"
+			+ "max(t.invalid_hereafter) invalid_hereafter,\r\n"
+			+ "max(b.block_no) block_no,\r\n"
+			+ "max(b.epoch_no) epoch_no,\r\n"
+			+ "max(b.epoch_slot_no) epoch_slot_no, \r\n"
+			+ "max(t.id) tid, \r\n"
+			+ "max(mtm.id) mintid, \r\n"
+			+ "max(b.slot_no), \r\n"
+			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.\"policy\"=ot.\"policy\" and mtm2.\"name\"=ot.\"name\") total_supply \r\n"
+			+ "from owned_tokens ot\r\n"
+			+ "join ma_tx_mint mtm on mtm.\"policy\"=ot.policy and mtm.\"name\"=ot.name\r\n"
+			+ "join tx t on t.id = mtm.tx_id \r\n"
+			+ "left join tx_metadata tm on tm.tx_id = t.id \r\n"
+			+ "join block b on b.id = t.block_id\r\n"
+			+ "group by ot.policy, ot.name\r\n"
+			+ "order by (select min(id) from ma_tx_mint sorter where sorter.policy = ot.policy and sorter.name = ot.name) desc";
 
 	private static final String walletTokenQuery = "with  \r\n"
 			+ "stake_address_id as (\r\n"
@@ -232,6 +286,23 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
+	public List<String> getFundingAddressesHistory(String address) {
+		List<String> addresses = new ArrayList<>();
+		try (Connection connection = hds.getConnection()) {
+			PreparedStatement getTxInput = connection.prepareStatement(getAddressFundingQueryHistory);
+			getTxInput.setString(1, address);
+			getTxInput.setString(2, address);
+			ResultSet result = getTxInput.executeQuery();
+			while (result.next()) {
+				addresses.add(result.getString(1));
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return addresses;
+	}
+
+	@TrackExecutionTime
 	// @Cacheable("findTokens")
 	public List<TokenData> findTokens(String string, Long fromMintid) throws DecoderException {
 
@@ -299,6 +370,22 @@ public class CardanoDbSyncClient {
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
 			if (fromMintid != null)
 				getTxInput.setLong(1, fromMintid);
+			ResultSet result = getTxInput.executeQuery();
+			List<TokenData> tokenDatas = parseTokenResultset(result);
+			return tokenDatas;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@TrackExecutionTime
+	@Cacheable("offerToken")
+	public List<TokenData> offerToken(String address) throws DecoderException {
+		try (Connection connection = hds.getConnection()) {
+			String findTokenQuery = offerTokenQuery;
+			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
+			getTxInput.setString(1, address);
+			getTxInput.setString(2, address);
 			ResultSet result = getTxInput.executeQuery();
 			List<TokenData> tokenDatas = parseTokenResultset(result);
 			return tokenDatas;
