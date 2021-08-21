@@ -273,9 +273,18 @@ public class CardanoDbSyncClient {
 	public List<TokenData> latestTokens(Long fromMintid) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
 			String findTokenQuery = tokenQuery;
-			if (fromMintid != null)
+
+			if (fromMintid == null) {
+				// no where
+			} else if (fromMintid > 0) {
 				findTokenQuery += "WHERE mtm.id < ? ";
+			} else {
+				fromMintid = -fromMintid;
+				findTokenQuery += "WHERE mtm.id > ? ";
+			}
+
 			findTokenQuery += "order by mtm.id desc ";
+
 			findTokenQuery += "limit 100 ";
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
 			if (fromMintid != null)

@@ -21,7 +21,7 @@
 
 	<cache alias="latestTokens">
 		<expiry>
-			<ttl unit="seconds">10</ttl>
+			<ttl unit="seconds">1</ttl>
 		</expiry>
 		<heap unit="entries">1000000</heap>
 		<jsr107:mbeans enable-statistics="true"/>
