@@ -40,7 +40,7 @@ public class CardanoDbSyncClient {
 			+ "where tx.hash = ? ;";
 
 	private static final String getAddressFundingQuery = "select to2.address \r\n"
-			+ "from utxo_byron_view uv \r\n"
+			+ "from utxo_view uv \r\n"
 			+ "join tx t on t.id = uv.tx_id\r\n"
 			+ "join tx_in ti on ti.tx_in_id = t.id\r\n"
 			+ "join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index \r\n"
@@ -81,7 +81,7 @@ public class CardanoDbSyncClient {
 			+ "),\r\n"
 			+ "owned_tokens as (\r\n"
 			+ "	SELECT mto.policy \"policy\", mto.name \"name\", quantity quantity, to2.id txId\r\n"
-			+ "	FROM utxo_byron_view uv \r\n"
+			+ "	FROM utxo_view uv \r\n"
 			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\" \r\n"
 			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id \r\n"
 			+ "	where uv.stake_address_id = (select * from stake_address_id)\r\n"
@@ -175,7 +175,7 @@ public class CardanoDbSyncClient {
 	public long getBalance(String address) {
 		List<String> addresses = new ArrayList<>();
 		try (Connection connection = hds.getConnection()) {
-			PreparedStatement getBalance = connection.prepareStatement("select sum(value) from utxo_byron_view uv where uv.address = ?");
+			PreparedStatement getBalance = connection.prepareStatement("select sum(value) from utxo_view uv where uv.address = ?");
 			getBalance.setString(1, address);
 			ResultSet result = getBalance.executeQuery();
 			while (result.next()) {
