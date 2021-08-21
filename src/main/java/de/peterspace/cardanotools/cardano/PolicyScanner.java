@@ -11,6 +11,9 @@ import javax.annotation.PostConstruct;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -43,6 +46,10 @@ public class PolicyScanner {
 	public void init() throws Exception {
 		outputPath = new File(workingDir, "policy-scripts");
 		outputPath.mkdirs();
+	}
+
+	@EventListener(ApplicationReadyEvent.class)
+	public void initialize() throws Exception {
 		if (outputPath.listFiles().length == 0) {
 			extractPolicies();
 		}
