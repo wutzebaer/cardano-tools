@@ -85,12 +85,14 @@ public class PolicyScanner {
 	}
 
 	private void readPolicies() throws IOException {
+		log.info("updatePolicies");
 		for (File mappingFile : outputPath.listFiles()) {
 			if (mappingFile.isFile()) {
 				String subject = FilenameUtils.getBaseName(mappingFile.getName());
 				if (!policies.containsKey(subject)) {
 					String content = Files.readString(mappingFile.toPath());
 					policies.put(subject, content);
+					log.info("updatePolicies read: {}", subject);
 				}
 			}
 		}
