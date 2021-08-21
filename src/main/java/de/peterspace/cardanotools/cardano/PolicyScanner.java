@@ -87,14 +87,17 @@ public class PolicyScanner {
 
 	private void readPolicies() throws IOException {
 		log.info("updatePolicies");
-		for (File mappingFile : outputPath.listFiles()) {
+		File[] files = outputPath.listFiles();
+		long count = 0;
+		for (File mappingFile : files) {
+			count++;
 			if (mappingFile.isFile()) {
 				String subject = FilenameUtils.getBaseName(mappingFile.getName());
 				if (!policies.containsKey(subject)) {
 					String content = Files.readString(mappingFile.toPath());
 					policies.put(subject, content);
 				}
-				float progress = Integer.parseInt(StringUtils.left(subject, 3), 16) / 4096f * 100;
+				float progress = (float) count / files.length * 100;
 				log.info("updatePolicies read: {}", String.format("%.2f%%", progress));
 			}
 		}
