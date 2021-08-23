@@ -35,6 +35,14 @@
 		<jsr107:mbeans enable-statistics="true"/>
 	</cache>
 
+	<cache alias="getCurrentStake">
+		<expiry>
+			<ttl unit="seconds">10</ttl>
+		</expiry>
+		<heap unit="entries">1000000</heap>
+		<jsr107:mbeans enable-statistics="true"/>
+	</cache>
+
 	<cache alias="getOfferableTokens">
 		<expiry>
 			<ttl unit="seconds">10</ttl>

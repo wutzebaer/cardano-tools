@@ -64,7 +64,7 @@ public class PolicyScanner {
 
 	}
 
-	@Scheduled(cron = "0 0 * * * *")
+	@Scheduled(cron = "${policy.cron}")
 	public void updatePolicies() throws Exception {
 		extractPolicies();
 		readPolicies();

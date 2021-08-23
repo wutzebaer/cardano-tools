@@ -75,17 +75,7 @@ public class RestInterface {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-
-			if (account.getPolicyDueDate() == null || System.currentTimeMillis() > account.getPolicyDueDate().getTime()) {
-				Policy policy = cardanoCli.createPolicy(account.getAddress().getVkey(), cardanoCli.queryTip());
-				account.setPolicy(policy.getPolicy());
-				account.setPolicyId(policy.getPolicyId());
-			}
-
-			account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress().getAddress()));
-			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress().getAddress()));
-			account.setFundingAddressesHistory(cardanoDbSyncClient.getFundingAddressesHistory(account.getAddress().getAddress()));
-			account.setLastUpdate(new Date());
+			refreshAccount(account);
 			accountRepository.save(account);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {
@@ -98,19 +88,27 @@ public class RestInterface {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-			Policy policy = cardanoCli.createPolicy(account.getAddress().getVkey(), cardanoCli.queryTip());
-			account.setPolicy(policy.getPolicy());
-			account.setPolicyId(policy.getPolicyId());
-			account.setPolicyDueDate(policy.getPolicyDueDate());
-			account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress().getAddress()));
-			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress().getAddress()));
-			account.setFundingAddressesHistory(cardanoDbSyncClient.getFundingAddressesHistory(account.getAddress().getAddress()));
-			account.setLastUpdate(new Date());
+			account.setPolicyDueDate(null);
+			refreshAccount(account);
 			accountRepository.save(account);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<Account>(HttpStatus.NOT_FOUND);
 		}
+	}
+
+	private void refreshAccount(Account account) throws Exception {
+		if (account.getPolicyDueDate() == null || System.currentTimeMillis() > account.getPolicyDueDate().getTime()) {
+			Policy policy = cardanoCli.createPolicy(account.getAddress().getVkey(), cardanoCli.queryTip());
+			account.setPolicy(policy.getPolicy());
+			account.setPolicyId(policy.getPolicyId());
+			account.setPolicyDueDate(policy.getPolicyDueDate());
+		}
+		account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress().getAddress()));
+		account.setStake(cardanoDbSyncClient.getCurrentStake(account.getAddress().getAddress()));
+		account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress().getAddress()));
+		account.setFundingAddressesHistory(cardanoDbSyncClient.getFundingAddressesHistory(account.getAddress().getAddress()));
+		account.setLastUpdate(new Date());
 	}
 
 	@PostMapping(path = "file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -202,6 +200,11 @@ public class RestInterface {
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
 
+			// min stake
+			if (cardanoDbSyncClient.getCurrentStake(account.getAddress().getAddress()) < 95) {
+				return new ResponseEntity<Void>(HttpStatus.FORBIDDEN);
+			}
+
 			// check if user is owning the token to sell
 			List<TokenData> offerableTokens = cardanoDbSyncClient.getOfferableTokens(account.getAddress().getAddress());
 			if (offerableTokens.stream().noneMatch(t -> t.getPolicyId().equals(tokenOffer.getPolicyId()) && t.getName().equals(tokenOffer.getAssetName()))) {
@@ -220,7 +223,7 @@ public class RestInterface {
 		}
 	}
 
-	@GetMapping("offerToken/{key}")
+	@GetMapping("offeredTokens/{key}")
 	public ResponseEntity<List<TokenOffer>> getOfferedTokens(@PathVariable("key") UUID key) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {

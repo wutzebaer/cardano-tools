@@ -36,6 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CardanoDbSyncClient {
 
+	@Value("${pool.address}")
+	private String poolAddress;
+
 	private final TokenRegistry tokenRegistry;
 	private final PolicyScanner policyScanner;
 	private final TaskExecutor taskExecutor;
@@ -168,6 +171,36 @@ public class CardanoDbSyncClient {
 			+ "join block b on b.id = t.block_id\r\n"
 			+ "group by ot.policy, ot.name\r\n"
 			+ "order by (select min(id) from ma_tx_mint sorter where sorter.policy = ot.policy and sorter.name = ot.name) desc";
+
+	private static final String currentDelegateQuery = "with \r\n"
+			+ "potential_delegates as (\r\n"
+			+ "	select to2.stake_address_id\r\n"
+			+ "	from tx_out to1\r\n"
+			+ "	join tx t on t.id = to1.tx_id\r\n"
+			+ "	join tx_in ti on ti.tx_in_id = t.id\r\n"
+			+ "	join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index\r\n"
+			+ "	where to1.address = ?\r\n"
+			+ "	and to2.address != ?\r\n"
+			+ ")\r\n"
+			+ ",delegates as (\r\n"
+			+ "	select stake_address_id from (\r\n"
+			+ "		select row_number() over(PARTITION BY d.addr_id order by d.addr_id, d.id desc) row_number, ph.\"view\" pool_address, d.addr_id stake_address_id\r\n"
+			+ "		from delegation d \r\n"
+			+ "		join pool_hash ph on ph.id = d.pool_hash_id\r\n"
+			+ "		join stake_address sa on sa.id = d.addr_id \r\n"
+			+ "		join potential_delegates on potential_delegates.stake_address_id=d.addr_id\r\n"
+			+ "	) inner_query\r\n"
+			+ "	where row_number=1 and pool_address=?\r\n"
+			+ ")\r\n"
+			+ ",stakeamounts as (\r\n"
+			+ "	select \r\n"
+			+ "	(select view from stake_address sa where sa.id=utxo.stake_address_id),\r\n"
+			+ "	sum(value)\r\n"
+			+ "	from utxo_view utxo \r\n"
+			+ "	join delegates d on d.stake_address_id = utxo.stake_address_id\r\n"
+			+ "	group by utxo.stake_address_id\r\n"
+			+ ")\r\n"
+			+ "select coalesce(sum(sum),0) from stakeamounts";
 
 	private static final String delegatorsQuery = "with \r\n"
 			+ "potential_delegates as (\r\n"
@@ -389,6 +422,22 @@ public class CardanoDbSyncClient {
 			ResultSet result = getTxInput.executeQuery();
 			List<TokenData> tokenDatas = parseTokenResultset(result);
 			return tokenDatas;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@TrackExecutionTime
+	@Cacheable("getCurrentStake")
+	public long getCurrentStake(String address) throws DecoderException {
+		try (Connection connection = hds.getConnection()) {
+			PreparedStatement getTxInput = connection.prepareStatement(currentDelegateQuery);
+			getTxInput.setString(1, address);
+			getTxInput.setString(2, address);
+			getTxInput.setString(3, poolAddress);
+			ResultSet result = getTxInput.executeQuery();
+			result.next();
+			return result.getLong(1);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

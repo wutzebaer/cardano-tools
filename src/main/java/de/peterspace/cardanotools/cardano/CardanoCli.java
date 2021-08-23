@@ -95,7 +95,7 @@ public class CardanoCli {
 		String key = UUID.randomUUID().toString();
 		Address address = createAddress();
 		Policy policy = createPolicy(address.getVkey(), queryTip());
-		Account account = new Account(key, new Date(), address, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate());
+		Account account = new Account(key, new Date(), address, new ArrayList<>(), new ArrayList<>(), 0l, 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate());
 		accountRepository.save(account);
 		return account;
 	}
