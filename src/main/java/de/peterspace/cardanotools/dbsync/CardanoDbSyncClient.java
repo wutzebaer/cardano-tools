@@ -379,8 +379,8 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
-	@Cacheable("offerToken")
-	public List<TokenData> offerToken(String address) throws DecoderException {
+	@Cacheable("getOfferableTokens")
+	public List<TokenData> getOfferableTokens(String address) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
 			String findTokenQuery = offerTokenQuery;
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);

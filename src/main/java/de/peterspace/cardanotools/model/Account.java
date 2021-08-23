@@ -3,10 +3,12 @@ package de.peterspace.cardanotools.model;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -28,14 +30,9 @@ public class Account {
 	@NotNull
 	private Date createdAt;
 
-	@NotBlank
-	private String address;
-
-	@NotBlank
-	private String skey;
-
-	@NotBlank
-	private String vkey;
+	@NotNull
+	@ManyToOne(cascade = CascadeType.ALL)
+	private Address address;
 
 	@NotNull
 	@ElementCollection

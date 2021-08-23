@@ -35,7 +35,7 @@
 		<jsr107:mbeans enable-statistics="true"/>
 	</cache>
 
-	<cache alias="offerToken">
+	<cache alias="getOfferableTokens">
 		<expiry>
 			<ttl unit="seconds">10</ttl>
 		</expiry>

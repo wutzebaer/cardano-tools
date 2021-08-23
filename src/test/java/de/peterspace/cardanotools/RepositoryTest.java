@@ -32,7 +32,7 @@ public class RepositoryTest {
 
 		Optional<Account> loadedAddress = addressRepository.findById(account.getKey());
 		assertTrue(loadedAddress.isPresent());
-		assertEquals(loadedAddress.get().getAddress(), account.getAddress());
+		assertEquals(loadedAddress.get().getAddress().getAddress(), account.getAddress().getAddress());
 	}
 
 }

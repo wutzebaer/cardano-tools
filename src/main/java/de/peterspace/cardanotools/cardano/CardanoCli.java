@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 import de.peterspace.cardanotools.model.Account;
+import de.peterspace.cardanotools.model.Address;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.MintTransaction;
 import de.peterspace.cardanotools.model.TokenSubmission;
@@ -91,17 +92,27 @@ public class CardanoCli {
 	}
 
 	public Account createAccount() throws Exception {
-
 		String key = UUID.randomUUID().toString();
+		Address address = createAddress();
+		Policy policy = createPolicy(address.getVkey(), queryTip());
+		Account account = new Account(key, new Date(), address, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate());
+		accountRepository.save(account);
+		return account;
+	}
+
+	public Address createAddress() throws Exception {
+
+		String skeyFilename = filename("skey");
+		String vkeyFilename = filename("vkey");
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
 		cmd.add("address");
 		cmd.add("key-gen");
 		cmd.add("--verification-key-file");
-		cmd.add(key + ".vkey");
+		cmd.add(vkeyFilename);
 		cmd.add("--signing-key-file");
-		cmd.add(key + ".skey");
+		cmd.add(skeyFilename);
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 		cmd = new ArrayList<String>();
@@ -109,20 +120,15 @@ public class CardanoCli {
 		cmd.add("address");
 		cmd.add("build");
 		cmd.add("--payment-verification-key-file");
-		cmd.add(key + ".vkey");
+		cmd.add(vkeyFilename);
 		cmd.addAll(List.of(networkMagicArgs));
 		String addressLiteral = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
-		String vkey = fileUtil.readFile(key + ".vkey");
-		Policy policy = createPolicy(vkey, queryTip());
+		String skey = fileUtil.consumeFile(skeyFilename);
+		String vkey = fileUtil.consumeFile(vkeyFilename);
 
-		Account account = new Account(key, new Date(), addressLiteral, fileUtil.readFile(key + ".skey"), vkey, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate());
-		accountRepository.save(account);
-
-		fileUtil.removeFile(key + ".skey");
-		fileUtil.removeFile(key + ".vkey");
-
-		return account;
+		Address address = new Address(addressLiteral, skey, vkey);
+		return address;
 	}
 
 	public JSONObject getUtxo(Account account) throws Exception {
@@ -134,7 +140,7 @@ public class CardanoCli {
 		cmd.add("query");
 		cmd.add("utxo");
 		cmd.add("--address");
-		cmd.add(account.getAddress());
+		cmd.add(account.getAddress().getAddress());
 		cmd.addAll(List.of(networkMagicArgs));
 		cmd.add("--out-file");
 		cmd.add(utxoFilename);
@@ -412,7 +418,7 @@ public class CardanoCli {
 		String rawFilename = filename("raw");
 		String signedFilename = filename("signed");
 
-		fileUtil.writeFile(skeyFilename, account.getSkey());
+		fileUtil.writeFile(skeyFilename, account.getAddress().getSkey());
 		fileUtil.writeFile(rawFilename, mintTransaction.getRawData());
 
 		ArrayList<String> cmd = new ArrayList<String>();

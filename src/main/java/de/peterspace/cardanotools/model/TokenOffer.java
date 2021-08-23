@@ -1,15 +1,16 @@
 package de.peterspace.cardanotools.model;
 
-import javax.persistence.Column;
+import java.util.Date;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
-
-import org.hibernate.validator.constraints.URL;
+import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -18,11 +19,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "policyId", "assetName", "account_key" }) })
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "policyId", "assetName" }) })
-public class RegistrationMetadata {
+public class TokenOffer {
 
 	@Id
 	@GeneratedValue
@@ -30,32 +31,26 @@ public class RegistrationMetadata {
 	private Long id;
 
 	@NotBlank
-	private String assetName;
-
-	@NotBlank
 	private String policyId;
 
 	@NotBlank
-	private String policy;
+	private String assetName;
 
-	@NotBlank
-	private String policySkey;
+	@NotNull
+	private Double price;
 
-	@NotBlank
-	private String name;
-
-	@NotBlank
-	private String description;
-
-	String ticker;
-
-	@URL
-	String url;
-
-	// kleiner als 64kb und png
-	@Size(max = 52428800)
+	@NotNull
 	@JsonIgnore
-	//@Column(columnDefinition = "VARBINARY(52428800)")
-	byte[] logo;
+	@ManyToOne
+	private Account account;
+
+	@NotNull
+	@JsonIgnore
+	private Date createdAt;
+
+	@NotNull
+	@JsonIgnore
+	@ManyToOne(cascade = CascadeType.ALL)
+	private Address address;
 
 }

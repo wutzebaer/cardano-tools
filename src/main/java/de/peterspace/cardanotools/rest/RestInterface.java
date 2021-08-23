@@ -39,8 +39,10 @@ import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.MintTransaction;
 import de.peterspace.cardanotools.model.RegistrationMetadata;
+import de.peterspace.cardanotools.model.TokenOffer;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintTransactionRepository;
+import de.peterspace.cardanotools.repository.TokenOfferRepository;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -55,6 +57,7 @@ public class RestInterface {
 	private final CardanoDbSyncClient cardanoDbSyncClient;
 	private final TokenRegistry tokenRegistry;
 	private final PolicyScanner policyScanner;
+	private final TokenOfferRepository tokenOfferRepository;
 
 	@GetMapping("tip")
 	public long getTip() throws Exception {
@@ -74,14 +77,14 @@ public class RestInterface {
 			Account account = accountOptional.get();
 
 			if (account.getPolicyDueDate() == null || System.currentTimeMillis() > account.getPolicyDueDate().getTime()) {
-				Policy policy = cardanoCli.createPolicy(account.getVkey(), cardanoCli.queryTip());
+				Policy policy = cardanoCli.createPolicy(account.getAddress().getVkey(), cardanoCli.queryTip());
 				account.setPolicy(policy.getPolicy());
 				account.setPolicyId(policy.getPolicyId());
 			}
 
-			account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress()));
-			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress()));
-			account.setFundingAddressesHistory(cardanoDbSyncClient.getFundingAddressesHistory(account.getAddress()));
+			account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress().getAddress()));
+			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress().getAddress()));
+			account.setFundingAddressesHistory(cardanoDbSyncClient.getFundingAddressesHistory(account.getAddress().getAddress()));
 			account.setLastUpdate(new Date());
 			accountRepository.save(account);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
@@ -95,13 +98,13 @@ public class RestInterface {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-			Policy policy = cardanoCli.createPolicy(account.getVkey(), cardanoCli.queryTip());
+			Policy policy = cardanoCli.createPolicy(account.getAddress().getVkey(), cardanoCli.queryTip());
 			account.setPolicy(policy.getPolicy());
 			account.setPolicyId(policy.getPolicyId());
 			account.setPolicyDueDate(policy.getPolicyDueDate());
-			account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress()));
-			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress()));
-			account.setFundingAddressesHistory(cardanoDbSyncClient.getFundingAddressesHistory(account.getAddress()));
+			account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress().getAddress()));
+			account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress().getAddress()));
+			account.setFundingAddressesHistory(cardanoDbSyncClient.getFundingAddressesHistory(account.getAddress().getAddress()));
 			account.setLastUpdate(new Date());
 			accountRepository.save(account);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
@@ -158,7 +161,7 @@ public class RestInterface {
 
 		registrationMetadata.setPolicyId(mintTransaction.getPolicyId());
 		registrationMetadata.setPolicy(mintTransaction.getPolicy());
-		registrationMetadata.setPolicySkey(mintTransaction.getAccount().getSkey());
+		registrationMetadata.setPolicySkey(mintTransaction.getAccount().getAddress().getSkey());
 
 		return new ResponseEntity<RegistrationMetadata>(registrationMetadata, HttpStatus.OK);
 	}
@@ -181,17 +184,52 @@ public class RestInterface {
 		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
 	}
 
-	@GetMapping("offerToken/{key}")
-	public ResponseEntity<List<TokenData>> offerToken(@PathVariable("key") UUID key) throws Exception {
+	@GetMapping("offerableTokens/{key}")
+	public ResponseEntity<List<TokenData>> getOfferableTokens(@PathVariable("key") UUID key) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-			List<TokenData> findTokens = cardanoDbSyncClient.offerToken(account.getAddress());
-			return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
+			List<TokenData> offerableTokens = cardanoDbSyncClient.getOfferableTokens(account.getAddress().getAddress());
+			return new ResponseEntity<List<TokenData>>(offerableTokens, HttpStatus.OK);
 		} else {
 			return new ResponseEntity<List<TokenData>>(HttpStatus.NOT_FOUND);
 		}
+	}
 
+	@PostMapping("offerToken/{key}")
+	public ResponseEntity<Void> postOfferToken(@PathVariable("key") UUID key, @RequestBody TokenOffer tokenOffer) throws Exception {
+		Optional<Account> accountOptional = accountRepository.findById(key.toString());
+		if (accountOptional.isPresent()) {
+			Account account = accountOptional.get();
+
+			// check if user is owning the token to sell
+			List<TokenData> offerableTokens = cardanoDbSyncClient.getOfferableTokens(account.getAddress().getAddress());
+			if (offerableTokens.stream().noneMatch(t -> t.getPolicyId().equals(tokenOffer.getPolicyId()) && t.getName().equals(tokenOffer.getAssetName()))) {
+				return new ResponseEntity<Void>(HttpStatus.FORBIDDEN);
+			}
+
+			// save offer
+			tokenOffer.setAccount(account);
+			tokenOffer.setAddress(cardanoCli.createAddress());
+			tokenOffer.setCreatedAt(new Date());
+			tokenOfferRepository.save(tokenOffer);
+
+			return new ResponseEntity<Void>(HttpStatus.OK);
+		} else {
+			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
+		}
+	}
+
+	@GetMapping("offerToken/{key}")
+	public ResponseEntity<List<TokenOffer>> getOfferedTokens(@PathVariable("key") UUID key) throws Exception {
+		Optional<Account> accountOptional = accountRepository.findById(key.toString());
+		if (accountOptional.isPresent()) {
+			Account account = accountOptional.get();
+			List<TokenOffer> findByAccount = tokenOfferRepository.findByAccount(account);
+			return new ResponseEntity<List<TokenOffer>>(findByAccount, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<List<TokenOffer>>(HttpStatus.NOT_FOUND);
+		}
 	}
 
 	@PostMapping(path = "generateTokenRegistration", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
