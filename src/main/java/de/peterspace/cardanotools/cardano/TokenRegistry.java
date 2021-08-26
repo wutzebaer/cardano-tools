@@ -2,17 +2,22 @@ package de.peterspace.cardanotools.cardano;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotBlank;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -146,31 +151,39 @@ public class TokenRegistry {
 	}
 
 	private Map<String, TokenRegistryMetadata> fetchRegistry() throws Exception {
-		final String githubRegistry = "https://github.com/cardano-foundation/cardano-token-registry.git";
-		final File tempDir = Files.createTempDirectory("cardano-token-registry").toFile();
+
 		final Map<String, TokenRegistryMetadata> result = new HashMap<>();
-		try (Git git = Git.cloneRepository().setURI(githubRegistry).setDirectory(tempDir).call()) {
-			File mappingsDir = tempDir.toPath().resolve("mappings").toFile();
-			for (File mappingFile : mappingsDir.listFiles()) {
-				if (mappingFile.isFile()) {
-					String subject = FilenameUtils.getBaseName(mappingFile.getName());
-					String content = Files.readString(mappingFile.toPath());
+		ZipInputStream zis = new ZipInputStream(new URL("https://github.com/cardano-foundation/cardano-token-registry/archive/refs/heads/master.zip").openStream());
+		ZipEntry ze;
+		while ((ze = zis.getNextEntry()) != null) {
+			if (ze.isDirectory()) {
+				continue;
+			}
+			if (!ze.getName().startsWith("cardano-token-registry-master/mappings")) {
+				continue;
+			}
 
-					JSONObject jsonObject = new JSONObject(content);
-					TokenRegistryMetadata tokenRegistryMetadata = new TokenRegistryMetadata();
-					tokenRegistryMetadata.setName(jsonObject.getJSONObject("name").getString("value"));
-					tokenRegistryMetadata.setDescription(jsonObject.getJSONObject("description").getString("value"));
-					if (jsonObject.has("ticker"))
-						tokenRegistryMetadata.setTicker(jsonObject.getJSONObject("ticker").getString("value"));
-					if (jsonObject.has("url"))
-						tokenRegistryMetadata.setUrl(jsonObject.getJSONObject("url").getString("value"));
-					if (jsonObject.has("logo"))
-						tokenRegistryMetadata.setLogo(jsonObject.getJSONObject("logo").getString("value"));
+			log.info("Reading {}", ze.getName());
 
-					result.put(subject, tokenRegistryMetadata);
-				}
+			try {
+				String subject = FilenameUtils.getBaseName(ze.getName());
+				String content = IOUtils.toString(zis, StandardCharsets.UTF_8);
+				JSONObject jsonObject = new JSONObject(content);
+				TokenRegistryMetadata tokenRegistryMetadata = new TokenRegistryMetadata();
+				tokenRegistryMetadata.setName(jsonObject.getJSONObject("name").getString("value"));
+				tokenRegistryMetadata.setDescription(jsonObject.getJSONObject("description").getString("value"));
+				if (jsonObject.has("ticker"))
+					tokenRegistryMetadata.setTicker(jsonObject.getJSONObject("ticker").getString("value"));
+				if (jsonObject.has("url"))
+					tokenRegistryMetadata.setUrl(jsonObject.getJSONObject("url").getString("value"));
+				if (jsonObject.has("logo"))
+					tokenRegistryMetadata.setLogo(jsonObject.getJSONObject("logo").getString("value"));
+				result.put(subject, tokenRegistryMetadata);
+			} catch (Exception e) {
+				log.error("File {} failed: {}", ze.getName(), e.getMessage());
 			}
 		}
+
 		return result;
 	}
 
