@@ -6,6 +6,7 @@ import javax.validation.constraints.NotNull;
 import org.apache.commons.codec.DecoderException;
 
 import de.peterspace.cardanotools.cardano.CardanoUtil;
+import de.peterspace.cardanotools.cardano.ProjectRegistry.ProjectMetadata;
 import de.peterspace.cardanotools.cardano.TokenRegistry.TokenRegistryMetadata;
 import lombok.Data;
 
@@ -23,6 +24,8 @@ public class TokenData {
 
 	@NotBlank
 	private String txId;
+
+	private ProjectMetadata projectMetadata;
 
 	@NotBlank
 	private String json;

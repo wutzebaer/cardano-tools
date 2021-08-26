@@ -27,6 +27,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import de.peterspace.cardanotools.TrackExecutionTime;
 import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.PolicyScanner;
+import de.peterspace.cardanotools.cardano.ProjectRegistry;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,7 @@ public class CardanoDbSyncClient {
 
 	private final TokenRegistry tokenRegistry;
 	private final PolicyScanner policyScanner;
+	private final ProjectRegistry projectRegistry;
 	private final TaskExecutor taskExecutor;
 
 	private static final String getTxInputQuery = "select distinct address from tx_out "
@@ -483,6 +485,7 @@ public class CardanoDbSyncClient {
 			tokenData.setMintid(result.getLong(12));
 			tokenData.setSlotNo(result.getLong(13));
 			tokenData.setTotalSupply(result.getLong(14));
+			tokenData.setProjectMetadata(projectRegistry.getProjectRegistryMetadata().get(tokenData.getPolicyId()));
 			tokenDatas.add(tokenData);
 
 			String subject = CardanoUtil.createSubject(tokenData.getPolicyId(), tokenData.getName());

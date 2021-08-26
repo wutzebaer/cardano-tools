@@ -93,7 +93,7 @@ public class TokenRegistry {
 				}
 				updateRegistry();
 			} catch (Exception e) {
-				log.error("Create json index", e);
+				log.error("Init TokenRegistryMetadata", e);
 			}
 		});
 
