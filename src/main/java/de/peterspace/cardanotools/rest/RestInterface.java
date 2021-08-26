@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import javax.imageio.ImageIO;
+import javax.validation.Valid;
 
 import org.apache.commons.lang3.StringUtils;
 import org.imgscalr.Scalr;
@@ -40,6 +41,7 @@ import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.MintTransaction;
 import de.peterspace.cardanotools.model.RegistrationMetadata;
 import de.peterspace.cardanotools.model.TokenOffer;
+import de.peterspace.cardanotools.model.TokenOfferPost;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintTransactionRepository;
 import de.peterspace.cardanotools.repository.TokenOfferRepository;
@@ -195,7 +197,7 @@ public class RestInterface {
 	}
 
 	@PostMapping("offerToken/{key}")
-	public ResponseEntity<Void> postOfferToken(@PathVariable("key") UUID key, @RequestBody TokenOffer tokenOffer) throws Exception {
+	public ResponseEntity<Void> postOfferToken(@PathVariable("key") UUID key, @Valid @RequestBody TokenOfferPost tokenOfferPost) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
@@ -207,14 +209,22 @@ public class RestInterface {
 
 			// check if user is owning the token to sell
 			List<TokenData> offerableTokens = cardanoDbSyncClient.getOfferableTokens(account.getAddress().getAddress());
-			if (offerableTokens.stream().noneMatch(t -> t.getPolicyId().equals(tokenOffer.getPolicyId()) && t.getName().equals(tokenOffer.getAssetName()))) {
+			if (offerableTokens.stream().noneMatch(t -> t.getPolicyId().equals(tokenOfferPost.getPolicyId()) && t.getName().equals(tokenOfferPost.getAssetName()))) {
 				return new ResponseEntity<Void>(HttpStatus.FORBIDDEN);
 			}
 
 			// save offer
+			TokenOffer tokenOffer = tokenOfferRepository.findByAccountAndPolicyIdAndAssetName(account, tokenOfferPost.getPolicyId(), tokenOfferPost.getAssetName());
+			if (tokenOffer == null) {
+				tokenOffer = new TokenOffer();
+			}
 			tokenOffer.setAccount(account);
 			tokenOffer.setAddress(cardanoCli.createAddress());
 			tokenOffer.setCreatedAt(new Date());
+			tokenOffer.setPrice(tokenOfferPost.getPrice());
+			tokenOffer.setPolicyId(tokenOfferPost.getPolicyId());
+			tokenOffer.setAssetName(tokenOfferPost.getAssetName());
+			tokenOffer.setCanceled(tokenOfferPost.getCanceled());
 			tokenOfferRepository.save(tokenOffer);
 
 			return new ResponseEntity<Void>(HttpStatus.OK);
@@ -228,7 +238,7 @@ public class RestInterface {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-			List<TokenOffer> findByAccount = tokenOfferRepository.findByAccount(account);
+			List<TokenOffer> findByAccount = tokenOfferRepository.findByAccountAndCanceledIsFalse(account);
 			return new ResponseEntity<List<TokenOffer>>(findByAccount, HttpStatus.OK);
 		} else {
 			return new ResponseEntity<List<TokenOffer>>(HttpStatus.NOT_FOUND);

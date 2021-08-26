@@ -9,6 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
@@ -52,5 +53,8 @@ public class TokenOffer {
 	@JsonIgnore
 	@ManyToOne(cascade = CascadeType.ALL)
 	private Address address;
+
+	@NotNull
+	private Boolean canceled;
 
 }
