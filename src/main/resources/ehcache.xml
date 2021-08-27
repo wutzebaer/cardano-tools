@@ -1,62 +1,30 @@
 <config xmlns='http://www.ehcache.org/v3'
-		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		xmlns:jsr107="http://www.ehcache.org/v3/jsr107"
-		xsi:schemaLocation="http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.0.xsd
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jsr107="http://www.ehcache.org/v3/jsr107"
+	xsi:schemaLocation="http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.0.xsd
 							http://www.ehcache.org/v3/jsr107 http://www.ehcache.org/schema/ehcache-107-ext-3.0.xsd">
 	<cache alias="buckets">
 		<expiry>
 			<ttl unit="seconds">3600</ttl>
 		</expiry>
 		<heap unit="entries">1000000</heap>
-		<jsr107:mbeans enable-statistics="true"/>
+		<jsr107:mbeans enable-statistics="true" />
 	</cache>
 
-	<cache alias="findTokens">
-		<expiry>
-			<ttl unit="seconds">10</ttl>
-		</expiry>
-		<heap unit="entries">1000000</heap>
-		<jsr107:mbeans enable-statistics="true"/>
-	</cache>
-
-	<cache alias="latestTokens">
+	<cache alias="short">
 		<expiry>
 			<ttl unit="seconds">1</ttl>
 		</expiry>
 		<heap unit="entries">1000000</heap>
-		<jsr107:mbeans enable-statistics="true"/>
+		<jsr107:mbeans enable-statistics="true" />
 	</cache>
 
-	<cache alias="walletTokens">
+	<cache alias="medium">
 		<expiry>
 			<ttl unit="seconds">10</ttl>
 		</expiry>
 		<heap unit="entries">1000000</heap>
-		<jsr107:mbeans enable-statistics="true"/>
-	</cache>
-
-	<cache alias="getCurrentStake">
-		<expiry>
-			<ttl unit="seconds">10</ttl>
-		</expiry>
-		<heap unit="entries">1000000</heap>
-		<jsr107:mbeans enable-statistics="true"/>
-	</cache>
-
-	<cache alias="getOfferableTokens">
-		<expiry>
-			<ttl unit="seconds">10</ttl>
-		</expiry>
-		<heap unit="entries">1000000</heap>
-		<jsr107:mbeans enable-statistics="true"/>
-	</cache>
-
-	<cache alias="tokenRegistryMetadata">
-		<expiry>
-			<ttl unit="hours">24</ttl>
-		</expiry>
-		<heap unit="entries">1000000</heap>
-		<jsr107:mbeans enable-statistics="true"/>
+		<jsr107:mbeans enable-statistics="true" />
 	</cache>
 
 </config>

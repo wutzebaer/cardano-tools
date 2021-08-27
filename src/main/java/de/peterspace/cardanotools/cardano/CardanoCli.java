@@ -95,7 +95,7 @@ public class CardanoCli {
 		String key = UUID.randomUUID().toString();
 		Address address = createAddress();
 		Policy policy = createPolicy(address.getVkey(), queryTip());
-		Account account = new Account(key, new Date(), address, new ArrayList<>(), new ArrayList<>(), 0l, 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate());
+		Account account = new Account(key, new Date(), address, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate());
 		accountRepository.save(account);
 		return account;
 	}
@@ -127,7 +127,7 @@ public class CardanoCli {
 		String skey = fileUtil.consumeFile(skeyFilename);
 		String vkey = fileUtil.consumeFile(vkeyFilename);
 
-		Address address = new Address(addressLiteral, skey, vkey);
+		Address address = new Address(addressLiteral, skey, vkey, 0l);
 		return address;
 	}
 
@@ -180,7 +180,7 @@ public class CardanoCli {
 
 		long fee = calculateFee(mintTransaction, utxo);
 		long neededBalance = mintTransaction.getMinOutput() + fee + (mintOrderSubmission.getTip() ? 1000000 : 0);
-		if (!utxo.has("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0") && account.getBalance() < neededBalance) {
+		if (!utxo.has("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0") && account.getAddress().getBalance() < neededBalance) {
 			// simulate a further input, because the user has to make another utxo
 			utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAddress).put("value", new JSONObject().put("lovelace", 1000000000l)));
 			mintTransaction = createMintTransaction(mintOrderSubmission, account, utxo, 0);

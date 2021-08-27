@@ -4,6 +4,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -15,11 +16,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Address {
 
-	public Address(@NotBlank String address, @NotBlank String skey, @NotBlank String vkey) {
+	public Address(@NotBlank String address, @NotBlank String skey, @NotBlank String vkey, Long balance) {
 		super();
 		this.address = address;
 		this.skey = skey;
 		this.vkey = vkey;
+		this.balance = balance;
 	}
 
 	@Id
@@ -31,9 +33,14 @@ public class Address {
 	private String address;
 
 	@NotBlank
+	@JsonIgnore
 	private String skey;
 
 	@NotBlank
+	@JsonIgnore
 	private String vkey;
+
+	@NotNull
+	private Long balance;
 
 }

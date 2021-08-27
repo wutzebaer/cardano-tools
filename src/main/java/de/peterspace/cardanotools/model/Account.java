@@ -43,10 +43,6 @@ public class Account {
 	private List<String> fundingAddressesHistory;
 
 	@NotNull
-	@Min(0)
-	private Long balance;
-
-	@NotNull
 	@Column(columnDefinition = "int8 NOT NULL DEFAULT 0")
 	private Long stake;
 

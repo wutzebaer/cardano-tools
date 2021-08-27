@@ -3,6 +3,7 @@ package de.peterspace.cardanotools.model;
 import java.util.Date;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -28,7 +29,6 @@ public class TokenOffer {
 
 	@Id
 	@GeneratedValue
-	@JsonIgnore
 	private Long id;
 
 	@NotBlank
@@ -50,11 +50,14 @@ public class TokenOffer {
 	private Date createdAt;
 
 	@NotNull
-	@JsonIgnore
 	@ManyToOne(cascade = CascadeType.ALL)
 	private Address address;
 
 	@NotNull
 	private Boolean canceled;
+
+	@NotBlank
+	@Column(columnDefinition = "TEXT")
+	String tokenData;
 
 }

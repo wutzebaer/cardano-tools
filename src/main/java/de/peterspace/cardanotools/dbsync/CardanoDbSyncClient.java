@@ -338,7 +338,6 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
-	// @Cacheable("findTokens")
 	public List<TokenData> findTokens(String string, Long fromMintid) throws DecoderException {
 
 		try (Connection connection = hds.getConnection()) {
@@ -385,7 +384,6 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
-	@Cacheable("latestTokens")
 	public List<TokenData> latestTokens(Long fromMintid) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
 			String findTokenQuery = tokenQuery;
@@ -414,7 +412,6 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
-	@Cacheable("getOfferableTokens")
 	public List<TokenData> getOfferableTokens(String address) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
 			String findTokenQuery = offerTokenQuery;
@@ -430,7 +427,6 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
-	@Cacheable("getCurrentStake")
 	public long getCurrentStake(String address) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
 			PreparedStatement getTxInput = connection.prepareStatement(currentDelegateQuery);
@@ -446,7 +442,6 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
-	@Cacheable("walletTokens")
 	public List<TokenData> walletTokens(String address) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
 			String findTokenQuery = walletTokenQuery;

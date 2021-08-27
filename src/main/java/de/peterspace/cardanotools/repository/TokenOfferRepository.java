@@ -11,6 +11,8 @@ import de.peterspace.cardanotools.model.TokenOffer;
 @Repository
 public interface TokenOfferRepository extends PagingAndSortingRepository<TokenOffer, Long> {
 
+	List<TokenOffer> findByCanceledIsFalse();
+
 	List<TokenOffer> findByAccountAndCanceledIsFalse(Account account);
 
 	TokenOffer findByAccountAndPolicyIdAndAssetName(Account account, String policyId, String assetName);

@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.imgscalr.Scalr;
 import org.json.JSONObject;
 import org.json.JSONStringer;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -62,6 +63,7 @@ public class RestInterface {
 	private final TokenOfferRepository tokenOfferRepository;
 
 	@GetMapping("tip")
+	@Cacheable("short")
 	public long getTip() throws Exception {
 		return cardanoCli.queryTip();
 	}
@@ -73,6 +75,7 @@ public class RestInterface {
 	}
 
 	@GetMapping("account/{key}")
+	@Cacheable("short")
 	public ResponseEntity<Account> getAccount(@PathVariable("key") UUID key) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
@@ -106,7 +109,7 @@ public class RestInterface {
 			account.setPolicyId(policy.getPolicyId());
 			account.setPolicyDueDate(policy.getPolicyDueDate());
 		}
-		account.setBalance(cardanoDbSyncClient.getBalance(account.getAddress().getAddress()));
+		account.getAddress().setBalance(cardanoDbSyncClient.getBalance(account.getAddress().getAddress()));
 		account.setStake(cardanoDbSyncClient.getCurrentStake(account.getAddress().getAddress()));
 		account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress().getAddress()));
 		account.setFundingAddressesHistory(cardanoDbSyncClient.getFundingAddressesHistory(account.getAddress().getAddress()));
@@ -127,7 +130,7 @@ public class RestInterface {
 			return new ResponseEntity<MintTransaction>(HttpStatus.NOT_FOUND);
 		}
 
-		if (account.get().getBalance() > 0 && !StringUtils.isBlank(mintOrderSubmission.getTargetAddress()) && !account.get().getFundingAddresses().contains(mintOrderSubmission.getTargetAddress())) {
+		if (account.get().getAddress().getBalance() > 0 && !StringUtils.isBlank(mintOrderSubmission.getTargetAddress()) && !account.get().getFundingAddresses().contains(mintOrderSubmission.getTargetAddress())) {
 			throw new Exception("Invalid target address.");
 		}
 
@@ -148,6 +151,7 @@ public class RestInterface {
 	}
 
 	@GetMapping("getRegistrationMetadata/{key}")
+	@Cacheable("medium")
 	public ResponseEntity<RegistrationMetadata> getRegistrationMetadata(@PathVariable("key") UUID key) throws Exception {
 		MintTransaction mintTransaction = mintTransactionRepository.findFirstByAccountKeyOrderByIdDesc(key.toString());
 		RegistrationMetadata registrationMetadata = new RegistrationMetadata();
@@ -167,24 +171,48 @@ public class RestInterface {
 	}
 
 	@GetMapping("findTokens")
+	@Cacheable("medium")
 	public ResponseEntity<List<TokenData>> findTokens(@RequestParam String string, @RequestParam(required = false) Long fromTid) throws Exception {
 		List<TokenData> findTokens = cardanoDbSyncClient.findTokens(string, fromTid);
 		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
 	}
 
 	@GetMapping("latestTokens")
+	@Cacheable("short")
 	public ResponseEntity<List<TokenData>> latestTokens(@RequestParam(required = false) Long fromMintid) throws Exception {
 		List<TokenData> findTokens = cardanoDbSyncClient.latestTokens(fromMintid);
 		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
 	}
 
 	@GetMapping("walletTokens")
+	@Cacheable("medium")
 	public ResponseEntity<List<TokenData>> walletTokens(@RequestParam String address) throws Exception {
 		List<TokenData> findTokens = cardanoDbSyncClient.walletTokens(address);
 		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
 	}
 
+	@GetMapping("offers")
+	@Cacheable("short")
+	public List<TokenOffer> getOffers() throws Exception {
+		return tokenOfferRepository.findByCanceledIsFalse();
+	}
+
+	@GetMapping("offer/{id}")
+	@Cacheable("short")
+	public ResponseEntity<TokenOffer> getOffer(@PathVariable("id") Long id) throws Exception {
+		Optional<TokenOffer> findById = tokenOfferRepository.findById(id);
+		if (!findById.isPresent()) {
+			return new ResponseEntity<TokenOffer>(HttpStatus.NOT_FOUND);
+		}
+
+		TokenOffer tokenOffer = findById.get();
+		tokenOffer.getAddress().setBalance(cardanoDbSyncClient.getBalance(tokenOffer.getAddress().getAddress()));
+		tokenOfferRepository.save(tokenOffer);
+		return new ResponseEntity<TokenOffer>(tokenOffer, HttpStatus.OK);
+	}
+
 	@GetMapping("offerableTokens/{key}")
+	@Cacheable("medium")
 	public ResponseEntity<List<TokenData>> getOfferableTokens(@PathVariable("key") UUID key) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
@@ -209,7 +237,8 @@ public class RestInterface {
 
 			// check if user is owning the token to sell
 			List<TokenData> offerableTokens = cardanoDbSyncClient.getOfferableTokens(account.getAddress().getAddress());
-			if (offerableTokens.stream().noneMatch(t -> t.getPolicyId().equals(tokenOfferPost.getPolicyId()) && t.getName().equals(tokenOfferPost.getAssetName()))) {
+			Optional<TokenData> tokenData = offerableTokens.stream().filter(t -> t.getPolicyId().equals(tokenOfferPost.getPolicyId()) && t.getName().equals(tokenOfferPost.getAssetName())).findAny();
+			if (!tokenData.isPresent()) {
 				return new ResponseEntity<Void>(HttpStatus.FORBIDDEN);
 			}
 
@@ -225,6 +254,7 @@ public class RestInterface {
 			tokenOffer.setPolicyId(tokenOfferPost.getPolicyId());
 			tokenOffer.setAssetName(tokenOfferPost.getAssetName());
 			tokenOffer.setCanceled(tokenOfferPost.getCanceled());
+			tokenOffer.setTokenData(new ObjectMapper().writeValueAsString(tokenData.get()));
 			tokenOfferRepository.save(tokenOffer);
 
 			return new ResponseEntity<Void>(HttpStatus.OK);
@@ -234,6 +264,7 @@ public class RestInterface {
 	}
 
 	@GetMapping("offeredTokens/{key}")
+	@Cacheable("short")
 	public ResponseEntity<List<TokenOffer>> getOfferedTokens(@PathVariable("key") UUID key) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
@@ -264,6 +295,7 @@ public class RestInterface {
 	}
 
 	@GetMapping("policy")
+	@Cacheable("medium")
 	public String policy(@RequestParam String policyId) throws Exception {
 		String policy = policyScanner.getPolicies().get(policyId);
 		return policy;
