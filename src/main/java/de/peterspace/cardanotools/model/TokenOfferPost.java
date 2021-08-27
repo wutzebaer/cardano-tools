@@ -16,7 +16,7 @@ public class TokenOfferPost {
 	private String assetName;
 
 	@NotNull
-	@Min(1000000)
+	@Min(2000000)
 	private Long price;
 
 	@NotNull

@@ -15,7 +15,7 @@ import de.peterspace.cardanotools.model.TokenSubmission;
  */
 public class MinOutputCalculator {
 
-	public static long calculate(List<TokenSubmission> tokens) throws DecoderException {
+	public static long calculate(List<String> assetNames, long distinctPolicyIds) throws DecoderException {
 
 		// fixed
 		final double minUTxOValue = 1000000;
@@ -26,9 +26,11 @@ public class MinOutputCalculator {
 		final double adaPerUTxOWord = 37037;
 
 		// transaction properties
-		double numPIDs = 1;
-		double numAssets = tokens.size();
-		double sumAssetNameLengths = tokens.stream().mapToDouble(t -> t.getAssetName().length()).sum();
+		// the number of distinct PolicyIDs
+		double numPIDs = distinctPolicyIds;
+		// the number of distinct AssetIDs
+		double numAssets = assetNames.size();
+		double sumAssetNameLengths = assetNames.stream().mapToDouble(t -> t.length()).sum();
 
 		double size = 6 + Math.floor(((numAssets * 12) + sumAssetNameLengths + (numPIDs * pidSize) + 7) / 8);
 

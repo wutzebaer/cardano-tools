@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MintTransaction {
+public class Transaction {
 
 	@Id
 	@GeneratedValue
@@ -46,14 +46,12 @@ public class MintTransaction {
 	@NotNull
 	private Long fee;
 
-	@NotNull
 	private Long minOutput;
 
 	@NotNull
 	@Column(columnDefinition = "bigint DEFAULT 0")
 	private Long txSize;
 
-	@NotBlank
 	private String policyId;
 
 	@Column(columnDefinition = "TEXT")
@@ -65,14 +63,11 @@ public class MintTransaction {
 	private String inputs;
 
 	@Column(columnDefinition = "TEXT")
-	@NotBlank
 	private String metaDataJson;
 
 	@Column(columnDefinition = "TEXT")
-	@NotBlank
 	private String policy;
 
-	@NotNull
 	@OneToOne(cascade = CascadeType.ALL)
 	MintOrderSubmission mintOrderSubmission;
 

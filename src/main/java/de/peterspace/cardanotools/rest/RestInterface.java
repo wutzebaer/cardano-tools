@@ -40,7 +40,7 @@ import de.peterspace.cardanotools.ipfs.IpfsClient;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.Address;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
-import de.peterspace.cardanotools.model.MintTransaction;
+import de.peterspace.cardanotools.model.Transaction;
 import de.peterspace.cardanotools.model.RegistrationMetadata;
 import de.peterspace.cardanotools.model.TokenOffer;
 import de.peterspace.cardanotools.model.TokenOfferPost;
@@ -129,29 +129,29 @@ public class RestInterface {
 	}
 
 	@PostMapping("buildMintTransaction/{key}")
-	public ResponseEntity<MintTransaction> buildMintTransaction(@PathVariable("key") UUID key, @RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
+	public ResponseEntity<Transaction> buildMintTransaction(@PathVariable("key") UUID key, @RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
 
 		Optional<Account> account = accountRepository.findById(key.toString());
 		if (!account.isPresent()) {
-			return new ResponseEntity<MintTransaction>(HttpStatus.NOT_FOUND);
+			return new ResponseEntity<Transaction>(HttpStatus.NOT_FOUND);
 		}
 
 		if (account.get().getAddress().getBalance() > 0 && !StringUtils.isBlank(mintOrderSubmission.getTargetAddress()) && !account.get().getFundingAddresses().contains(mintOrderSubmission.getTargetAddress())) {
 			throw new Exception("Invalid target address.");
 		}
 
-		MintTransaction mintTransaction = cardanoCli.buildMintTransaction(mintOrderSubmission, account.get());
-		return new ResponseEntity<MintTransaction>(mintTransaction, HttpStatus.OK);
+		Transaction mintTransaction = cardanoCli.buildMintTransaction(mintOrderSubmission, account.get());
+		return new ResponseEntity<Transaction>(mintTransaction, HttpStatus.OK);
 	}
 
 	@PostMapping("submitMintTransaction/{key}")
-	public ResponseEntity<Void> submitMintTransaction(@PathVariable("key") UUID key, @RequestBody MintTransaction mintTransaction) throws Exception {
+	public ResponseEntity<Void> submitMintTransaction(@PathVariable("key") UUID key, @RequestBody Transaction mintTransaction) throws Exception {
 		Optional<Account> account = accountRepository.findById(key.toString());
 		if (!account.isPresent()) {
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		}
 		mintTransaction.setAccount(account.get());
-		cardanoCli.executeMintTransaction(mintTransaction);
+		cardanoCli.submitTransaction(mintTransaction);
 		mintTransactionRepository.save(mintTransaction);
 		return new ResponseEntity<Void>(HttpStatus.OK);
 	}
@@ -159,7 +159,7 @@ public class RestInterface {
 	@GetMapping("getRegistrationMetadata/{key}")
 	@Cacheable("getRegistrationMetadata")
 	public ResponseEntity<RegistrationMetadata> getRegistrationMetadata(@PathVariable("key") UUID key) throws Exception {
-		MintTransaction mintTransaction = mintTransactionRepository.findFirstByAccountKeyOrderByIdDesc(key.toString());
+		Transaction mintTransaction = mintTransactionRepository.findFirstByAccountKeyOrderByIdDesc(key.toString());
 		RegistrationMetadata registrationMetadata = new RegistrationMetadata();
 
 		registrationMetadata.setAssetName(mintTransaction.getMintOrderSubmission().getTokens().get(0).getAssetName());
@@ -200,7 +200,7 @@ public class RestInterface {
 	@GetMapping("offers")
 	@Cacheable("getOffers")
 	public List<TokenOffer> getOffers() throws Exception {
-		return tokenOfferRepository.findByCanceledIsFalse();
+		return tokenOfferRepository.findByCanceledIsFalseAndTransactionIsNull();
 	}
 
 	@GetMapping("offer/{id}")
@@ -249,7 +249,7 @@ public class RestInterface {
 			}
 
 			// save offer
-			TokenOffer tokenOffer = tokenOfferRepository.findByAccountAndPolicyIdAndAssetName(account, tokenOfferPost.getPolicyId(), tokenOfferPost.getAssetName());
+			TokenOffer tokenOffer = tokenOfferRepository.findByAccountAndPolicyIdAndAssetNameAndTransactionIsNull(account, tokenOfferPost.getPolicyId(), tokenOfferPost.getAssetName());
 			if (tokenOffer == null) {
 				tokenOffer = new TokenOffer();
 				tokenOffer.setAccount(account);
@@ -275,7 +275,7 @@ public class RestInterface {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-			List<TokenOffer> findByAccount = tokenOfferRepository.findByAccountAndCanceledIsFalse(account);
+			List<TokenOffer> findByAccount = tokenOfferRepository.findByAccountAndCanceledIsFalseAndTransactionIsNullOrErrorIsNotNull(account);
 			return new ResponseEntity<List<TokenOffer>>(findByAccount, HttpStatus.OK);
 		} else {
 			return new ResponseEntity<List<TokenOffer>>(HttpStatus.NOT_FOUND);

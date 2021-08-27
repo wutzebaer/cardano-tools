@@ -12,7 +12,7 @@ import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
-import de.peterspace.cardanotools.model.MintTransaction;
+import de.peterspace.cardanotools.model.Transaction;
 import de.peterspace.cardanotools.model.RegistrationMetadata;
 import de.peterspace.cardanotools.model.TokenSubmission;
 import de.peterspace.cardanotools.repository.AccountRepository;
@@ -56,7 +56,7 @@ public class TokenRegistryTest {
 
 		mintOrder.setTokens(tokens);
 
-		MintTransaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
+		Transaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
 		mintTransaction.setAccount(account);
 		byte[] logoData = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("mini.png"));
 		String url = tokenRegistry.createTokenRegistration(new RegistrationMetadata(null, "AAAAA", mintTransaction.getPolicyId(), mintTransaction.getPolicy(), mintTransaction.getAccount().getAddress().getSkey(), "AAANAME", "AAADESC", "AAATI", null, logoData));

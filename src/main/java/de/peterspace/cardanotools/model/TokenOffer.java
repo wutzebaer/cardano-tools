@@ -21,7 +21,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "policyId", "assetName", "account_key" }) })
+@Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "policyId", "assetName", "account_key", "transaction_id" }) })
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -61,6 +61,10 @@ public class TokenOffer {
 	@Column(columnDefinition = "TEXT")
 	String tokenData;
 
-	String transactionId;
+	@ManyToOne(cascade = CascadeType.ALL)
+	Transaction transaction;
+
+	@Column(columnDefinition = "TEXT")
+	String error;
 
 }
