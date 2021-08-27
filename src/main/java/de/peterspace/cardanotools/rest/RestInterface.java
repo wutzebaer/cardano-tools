@@ -252,13 +252,13 @@ public class RestInterface {
 			TokenOffer tokenOffer = tokenOfferRepository.findByAccountAndPolicyIdAndAssetName(account, tokenOfferPost.getPolicyId(), tokenOfferPost.getAssetName());
 			if (tokenOffer == null) {
 				tokenOffer = new TokenOffer();
+				tokenOffer.setAccount(account);
+				tokenOffer.setPolicyId(tokenOfferPost.getPolicyId());
+				tokenOffer.setAssetName(tokenOfferPost.getAssetName());
+				tokenOffer.setAddress(cardanoCli.createAddress());
 			}
-			tokenOffer.setAccount(account);
-			tokenOffer.setAddress(cardanoCli.createAddress());
 			tokenOffer.setCreatedAt(new Date());
 			tokenOffer.setPrice(tokenOfferPost.getPrice());
-			tokenOffer.setPolicyId(tokenOfferPost.getPolicyId());
-			tokenOffer.setAssetName(tokenOfferPost.getAssetName());
 			tokenOffer.setCanceled(tokenOfferPost.getCanceled());
 			tokenOffer.setTokenData(new ObjectMapper().writeValueAsString(tokenData.get()));
 			tokenOfferRepository.save(tokenOffer);

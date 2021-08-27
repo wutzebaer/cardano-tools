@@ -13,6 +13,8 @@ public interface TokenOfferRepository extends PagingAndSortingRepository<TokenOf
 
 	List<TokenOffer> findByCanceledIsFalse();
 
+	List<TokenOffer> findByCanceledIsFalseAndTransactionIdNull();
+
 	List<TokenOffer> findByAccountAndCanceledIsFalse(Account account);
 
 	TokenOffer findByAccountAndPolicyIdAndAssetName(Account account, String policyId, String assetName);

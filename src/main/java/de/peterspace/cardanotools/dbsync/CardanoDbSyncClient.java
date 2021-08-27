@@ -65,6 +65,23 @@ public class CardanoDbSyncClient {
 			+ "join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index \r\n"
 			+ "where uv.address = ? and to2.address != ?";
 
+	private static final String offerFundingQuery = "select to2.stake_address_id ,(select max(address) from tx_out to4 where to4.stake_address_id=to2.stake_address_id) address, sum(uv.value) \r\n"
+			+ "from utxo_view uv \r\n"
+			+ "join tx_in ti on ti.tx_in_id = uv.tx_id\r\n"
+			+ "join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index \r\n"
+			+ "where uv.address = ? and to2.address != ?\r\n"
+			+ "group by to2.stake_address_id \r\n"
+			+ "order by sum(uv.value)";
+
+	private static final String offerTokenFundingQuery = "SELECT to3.stake_address_id, (select max(address) from tx_out to4 where to4.stake_address_id=to3.stake_address_id) address, encode(mto.policy::bytea, 'hex') \"policy\", encode(mto.name::bytea, 'escape') \"name\", sum(quantity) quantity\r\n"
+			+ "FROM utxo_view uv \r\n"
+			+ "join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\" \r\n"
+			+ "join ma_tx_out mto on mto.tx_out_id = to2.id \r\n"
+			+ "join tx_in ti on ti.tx_in_id = uv.tx_id\r\n"
+			+ "join tx_out to3 on to3.tx_id = ti.tx_out_id and to3.\"index\" = ti.tx_out_index\r\n"
+			+ "where uv.address = ? and to3.address != ?\r\n"
+			+ "group by to3.stake_address_id, mto.policy, mto.name";
+
 	private static final String tokenQuery = "select\r\n"
 			+ "encode(mtm.policy::bytea, 'hex') policyId,\r\n"
 			+ "encode(mtm.name::bytea, 'escape') tokenName,\r\n"
@@ -303,7 +320,6 @@ public class CardanoDbSyncClient {
 
 	@TrackExecutionTime
 	public long getBalance(String address) {
-		List<String> addresses = new ArrayList<>();
 		try (Connection connection = hds.getConnection()) {
 			PreparedStatement getBalance = connection.prepareStatement("select sum(value) from utxo_view uv where uv.address = ?");
 			getBalance.setString(1, address);
@@ -494,6 +510,40 @@ public class CardanoDbSyncClient {
 			ResultSet result = getTxInput.executeQuery();
 			List<TokenData> tokenDatas = parseTokenResultset(result);
 			return tokenDatas;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@TrackExecutionTime
+	public List<OfferFunding> getOfferFundings(String offerAddress) {
+		try (Connection connection = hds.getConnection()) {
+			PreparedStatement getTxInput = connection.prepareStatement(offerFundingQuery);
+			getTxInput.setString(1, offerAddress);
+			getTxInput.setString(2, offerAddress);
+			ResultSet result = getTxInput.executeQuery();
+			List<OfferFunding> offerFundings = new ArrayList<OfferFunding>();
+			while (result.next()) {
+				offerFundings.add(new OfferFunding(result.getString(2), result.getLong(3)));
+			}
+			return offerFundings;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@TrackExecutionTime
+	public List<OfferTokenFunding> getOfferTokenFundings(String offerAddress) {
+		try (Connection connection = hds.getConnection()) {
+			PreparedStatement getTxInput = connection.prepareStatement(offerTokenFundingQuery);
+			getTxInput.setString(1, offerAddress);
+			getTxInput.setString(2, offerAddress);
+			ResultSet result = getTxInput.executeQuery();
+			List<OfferTokenFunding> offerFundings = new ArrayList<OfferTokenFunding>();
+			while (result.next()) {
+				offerFundings.add(new OfferTokenFunding(result.getString(2), result.getString(3), result.getString(4), result.getLong(5)));
+			}
+			return offerFundings;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

@@ -39,7 +39,7 @@ public class TokenOffer {
 	private String assetName;
 
 	@NotNull
-	private Double price;
+	private Long price;
 
 	@NotNull
 	@JsonIgnore
@@ -60,5 +60,7 @@ public class TokenOffer {
 	@NotBlank
 	@Column(columnDefinition = "TEXT")
 	String tokenData;
+
+	String transactionId;
 
 }

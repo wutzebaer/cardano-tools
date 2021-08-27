@@ -17,7 +17,7 @@ public class TokenOfferPost {
 
 	@NotNull
 	@Min(1000000)
-	private Double price;
+	private Long price;
 
 	@NotNull
 	private Boolean canceled;
