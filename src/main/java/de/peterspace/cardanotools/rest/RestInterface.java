@@ -38,6 +38,7 @@ import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
 import de.peterspace.cardanotools.dbsync.TokenData;
 import de.peterspace.cardanotools.ipfs.IpfsClient;
 import de.peterspace.cardanotools.model.Account;
+import de.peterspace.cardanotools.model.Address;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.MintTransaction;
 import de.peterspace.cardanotools.model.RegistrationMetadata;
@@ -63,7 +64,7 @@ public class RestInterface {
 	private final TokenOfferRepository tokenOfferRepository;
 
 	@GetMapping("tip")
-	@Cacheable("short")
+	@Cacheable("getTip")
 	public long getTip() throws Exception {
 		return cardanoCli.queryTip();
 	}
@@ -75,7 +76,7 @@ public class RestInterface {
 	}
 
 	@GetMapping("account/{key}")
-	@Cacheable("short")
+	@Cacheable("getAccount")
 	public ResponseEntity<Account> getAccount(@PathVariable("key") UUID key) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
@@ -109,11 +110,16 @@ public class RestInterface {
 			account.setPolicyId(policy.getPolicyId());
 			account.setPolicyDueDate(policy.getPolicyDueDate());
 		}
-		account.getAddress().setBalance(cardanoDbSyncClient.getBalance(account.getAddress().getAddress()));
+		refreshAddress(account.getAddress());
 		account.setStake(cardanoDbSyncClient.getCurrentStake(account.getAddress().getAddress()));
 		account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress().getAddress()));
 		account.setFundingAddressesHistory(cardanoDbSyncClient.getFundingAddressesHistory(account.getAddress().getAddress()));
 		account.setLastUpdate(new Date());
+	}
+
+	private void refreshAddress(Address address) throws Exception {
+		address.setBalance(cardanoDbSyncClient.getBalance(address.getAddress()));
+		address.setTokensData(new ObjectMapper().writeValueAsString(cardanoDbSyncClient.addressTokens(address.getAddress())));
 	}
 
 	@PostMapping(path = "file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -151,7 +157,7 @@ public class RestInterface {
 	}
 
 	@GetMapping("getRegistrationMetadata/{key}")
-	@Cacheable("medium")
+	@Cacheable("getRegistrationMetadata")
 	public ResponseEntity<RegistrationMetadata> getRegistrationMetadata(@PathVariable("key") UUID key) throws Exception {
 		MintTransaction mintTransaction = mintTransactionRepository.findFirstByAccountKeyOrderByIdDesc(key.toString());
 		RegistrationMetadata registrationMetadata = new RegistrationMetadata();
@@ -171,34 +177,34 @@ public class RestInterface {
 	}
 
 	@GetMapping("findTokens")
-	@Cacheable("medium")
+	@Cacheable("findTokens")
 	public ResponseEntity<List<TokenData>> findTokens(@RequestParam String string, @RequestParam(required = false) Long fromTid) throws Exception {
 		List<TokenData> findTokens = cardanoDbSyncClient.findTokens(string, fromTid);
 		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
 	}
 
 	@GetMapping("latestTokens")
-	@Cacheable("short")
+	@Cacheable("latestTokens")
 	public ResponseEntity<List<TokenData>> latestTokens(@RequestParam(required = false) Long fromMintid) throws Exception {
 		List<TokenData> findTokens = cardanoDbSyncClient.latestTokens(fromMintid);
 		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
 	}
 
 	@GetMapping("walletTokens")
-	@Cacheable("medium")
+	@Cacheable("walletTokens")
 	public ResponseEntity<List<TokenData>> walletTokens(@RequestParam String address) throws Exception {
 		List<TokenData> findTokens = cardanoDbSyncClient.walletTokens(address);
 		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
 	}
 
 	@GetMapping("offers")
-	@Cacheable("short")
+	@Cacheable("getOffers")
 	public List<TokenOffer> getOffers() throws Exception {
 		return tokenOfferRepository.findByCanceledIsFalse();
 	}
 
 	@GetMapping("offer/{id}")
-	@Cacheable("short")
+	@Cacheable("getOffer")
 	public ResponseEntity<TokenOffer> getOffer(@PathVariable("id") Long id) throws Exception {
 		Optional<TokenOffer> findById = tokenOfferRepository.findById(id);
 		if (!findById.isPresent()) {
@@ -206,13 +212,13 @@ public class RestInterface {
 		}
 
 		TokenOffer tokenOffer = findById.get();
-		tokenOffer.getAddress().setBalance(cardanoDbSyncClient.getBalance(tokenOffer.getAddress().getAddress()));
+		refreshAddress(tokenOffer.getAddress());
 		tokenOfferRepository.save(tokenOffer);
 		return new ResponseEntity<TokenOffer>(tokenOffer, HttpStatus.OK);
 	}
 
 	@GetMapping("offerableTokens/{key}")
-	@Cacheable("medium")
+	@Cacheable("getOfferableTokens")
 	public ResponseEntity<List<TokenData>> getOfferableTokens(@PathVariable("key") UUID key) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
@@ -264,7 +270,7 @@ public class RestInterface {
 	}
 
 	@GetMapping("offeredTokens/{key}")
-	@Cacheable("short")
+	@Cacheable("getOfferedTokens")
 	public ResponseEntity<List<TokenOffer>> getOfferedTokens(@PathVariable("key") UUID key) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
@@ -295,7 +301,7 @@ public class RestInterface {
 	}
 
 	@GetMapping("policy")
-	@Cacheable("medium")
+	@Cacheable("policy")
 	public String policy(@RequestParam String policyId) throws Exception {
 		String policy = policyScanner.getPolicies().get(policyId);
 		return policy;

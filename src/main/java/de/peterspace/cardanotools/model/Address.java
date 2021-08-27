@@ -1,5 +1,6 @@
 package de.peterspace.cardanotools.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -16,12 +17,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Address {
 
-	public Address(@NotBlank String address, @NotBlank String skey, @NotBlank String vkey, Long balance) {
+	public Address(String address, String skey, String vkey, Long balance, String tokensData) {
 		super();
 		this.address = address;
 		this.skey = skey;
 		this.vkey = vkey;
 		this.balance = balance;
+		this.tokensData = tokensData;
 	}
 
 	@Id
@@ -42,5 +44,9 @@ public class Address {
 
 	@NotNull
 	private Long balance;
+
+	@NotBlank
+	@Column(columnDefinition = "TEXT")
+	String tokensData;
 
 }

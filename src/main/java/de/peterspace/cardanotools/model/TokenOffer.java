@@ -29,6 +29,7 @@ public class TokenOffer {
 
 	@Id
 	@GeneratedValue
+	@NotNull
 	private Long id;
 
 	@NotBlank

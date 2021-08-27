@@ -127,7 +127,7 @@ public class CardanoCli {
 		String skey = fileUtil.consumeFile(skeyFilename);
 		String vkey = fileUtil.consumeFile(vkeyFilename);
 
-		Address address = new Address(addressLiteral, skey, vkey, 0l);
+		Address address = new Address(addressLiteral, skey, vkey, 0l, "[]");
 		return address;
 	}
 
