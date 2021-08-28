@@ -441,7 +441,7 @@ public class CardanoDbSyncClient {
 			if (fromMintid != null)
 				findTokenQuery += "and mintid > ? ";
 
-			findTokenQuery += "order by tokenname ";
+			findTokenQuery += "order by epoch_no, tokenname ";
 			findTokenQuery += "limit 100 ";
 
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
