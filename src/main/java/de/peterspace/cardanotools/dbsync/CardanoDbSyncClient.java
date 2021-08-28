@@ -431,7 +431,7 @@ public class CardanoDbSyncClient {
 
 
 			if (fromMintid != null)
-				getTxInput.setLong(4, fromMintid);
+				getTxInput.setLong(3, fromMintid);
 
 			ResultSet result = getTxInput.executeQuery();
 			List<TokenData> tokenDatas = parseTokenResultset(result);
