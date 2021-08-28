@@ -394,15 +394,19 @@ public class CardanoDbSyncClient {
 
 			String findTokenQuery = "SELECT * FROM (\r\n";
 			findTokenQuery += "SELECT U.*, row_number() over(PARTITION by  policyId, tokenName order by mintid desc) rn FROM (\r\n";
-			findTokenQuery += CardanoDbSyncClient.tokenQuery;
-			findTokenQuery += "WHERE ";
-			findTokenQuery += "encode(mtm.policy::bytea, 'hex') ||  '.' || encode(mtm.name::bytea, 'escape') ilike concat('%', ? ,'%') ";
 
-			findTokenQuery += "UNION ";
-			findTokenQuery += CardanoDbSyncClient.tokenQuery;
-			findTokenQuery += "WHERE ";
-			findTokenQuery += "to_tsvector('english',json) @@ to_tsquery(?) ";
-			findTokenQuery += "and to_tsvector('english',tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape')) @@ to_tsquery(?) ";
+			String[] bits = string.split("\\.");
+			boolean policyAndTokenSearch = bits.length == 2 && bits[0].length() == 56;
+			if (policyAndTokenSearch) {
+				findTokenQuery += CardanoDbSyncClient.tokenQuery;
+				findTokenQuery += "WHERE ";
+				findTokenQuery += "encode(mtm.policy::bytea, 'hex')=? AND encode(mtm.name::bytea, 'escape') ilike concat('%', ? ,'%') ";
+			} else {
+				findTokenQuery += CardanoDbSyncClient.tokenQuery;
+				findTokenQuery += "WHERE ";
+				findTokenQuery += "to_tsvector('english',json) @@ to_tsquery(?) ";
+				findTokenQuery += "and to_tsvector('english',tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape')) @@ to_tsquery(?) ";
+			}
 
 			findTokenQuery += ") AS U where U.quantity > 0 ";
 			findTokenQuery += ") as numbered ";
@@ -416,11 +420,15 @@ public class CardanoDbSyncClient {
 
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
 
-			String tsquery = string.trim().replaceAll("[^A-Za-z0-9]+", " & ");
+			if (policyAndTokenSearch) {
+				getTxInput.setString(1, bits[0]);
+				getTxInput.setString(2, bits[1]);
+			} else {
+				String tsquery = string.trim().replaceAll("[^A-Za-z0-9]+", " & ");
+				getTxInput.setString(1, tsquery);
+				getTxInput.setString(2, tsquery);
+			}
 
-			getTxInput.setString(1, string.trim());
-			getTxInput.setString(2, tsquery);
-			getTxInput.setString(3, tsquery);
 
 			if (fromMintid != null)
 				getTxInput.setLong(4, fromMintid);
