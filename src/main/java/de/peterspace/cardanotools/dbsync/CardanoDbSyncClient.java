@@ -5,7 +5,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -395,17 +399,39 @@ public class CardanoDbSyncClient {
 			String findTokenQuery = "SELECT * FROM (\r\n";
 			findTokenQuery += "SELECT U.*, row_number() over(PARTITION by  policyId, tokenName order by mintid desc) rn FROM (\r\n";
 
+			Map<Integer, Object> fillPlaceholders = new HashMap<>();
+
 			String[] bits = string.split("\\.");
-			boolean policyAndTokenSearch = bits.length == 2 && bits[0].length() == 56;
-			if (policyAndTokenSearch) {
+			if (bits.length == 2 && bits[0].length() == 56) {
 				findTokenQuery += CardanoDbSyncClient.tokenQuery;
 				findTokenQuery += "WHERE ";
 				findTokenQuery += "encode(mtm.policy::bytea, 'hex')=? AND encode(mtm.name::bytea, 'escape') ilike concat('%', ? ,'%') ";
+
+				fillPlaceholders.put(1, bits[0]);
+				fillPlaceholders.put(2, bits[1]);
+				if (fromMintid != null)
+					fillPlaceholders.put(3, fromMintid);
+
+			} else if (bits.length == 1 && bits[0].length() == 56) {
+				findTokenQuery += CardanoDbSyncClient.tokenQuery;
+				findTokenQuery += "WHERE ";
+				findTokenQuery += "encode(mtm.policy::bytea, 'hex')=?";
+
+				fillPlaceholders.put(1, bits[0]);
+				if (fromMintid != null)
+					fillPlaceholders.put(2, fromMintid);
+
 			} else {
 				findTokenQuery += CardanoDbSyncClient.tokenQuery;
 				findTokenQuery += "WHERE ";
 				findTokenQuery += "to_tsvector('english',json) @@ to_tsquery(?) ";
 				findTokenQuery += "and to_tsvector('english',tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape')) @@ to_tsquery(?) ";
+
+				String tsquery = string.trim().replaceAll("[^A-Za-z0-9]+", " & ");
+				fillPlaceholders.put(1, tsquery);
+				fillPlaceholders.put(2, tsquery);
+				if (fromMintid != null)
+					fillPlaceholders.put(3, fromMintid);
 			}
 
 			findTokenQuery += ") AS U where U.quantity > 0 ";
@@ -419,19 +445,9 @@ public class CardanoDbSyncClient {
 			findTokenQuery += "limit 100 ";
 
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
-
-			if (policyAndTokenSearch) {
-				getTxInput.setString(1, bits[0]);
-				getTxInput.setString(2, bits[1]);
-			} else {
-				String tsquery = string.trim().replaceAll("[^A-Za-z0-9]+", " & ");
-				getTxInput.setString(1, tsquery);
-				getTxInput.setString(2, tsquery);
+			for (Entry<Integer, Object> entry : fillPlaceholders.entrySet()) {
+				getTxInput.setObject(entry.getKey(), entry.getValue());
 			}
-
-
-			if (fromMintid != null)
-				getTxInput.setLong(3, fromMintid);
 
 			ResultSet result = getTxInput.executeQuery();
 			List<TokenData> tokenDatas = parseTokenResultset(result);
