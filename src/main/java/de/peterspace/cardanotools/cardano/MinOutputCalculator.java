@@ -1,10 +1,8 @@
 package de.peterspace.cardanotools.cardano;
 
-import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.codec.DecoderException;
-
-import de.peterspace.cardanotools.model.TokenSubmission;
 
 /**
  * @author wutze
@@ -15,7 +13,7 @@ import de.peterspace.cardanotools.model.TokenSubmission;
  */
 public class MinOutputCalculator {
 
-	public static long calculate(List<String> assetNames, long distinctPolicyIds) throws DecoderException {
+	public static long calculate(Set<String> assetNames, long distinctPolicyIds) throws DecoderException {
 
 		// fixed
 		final double minUTxOValue = 1000000;

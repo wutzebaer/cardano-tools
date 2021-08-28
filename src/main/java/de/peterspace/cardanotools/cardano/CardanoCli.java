@@ -182,7 +182,7 @@ public class CardanoCli {
 		List<String> mints = createMintList(mintOrderSubmission, account.getPolicyId());
 		long balance = calculateBalance(utxo);
 		long minOutput = MinOutputCalculator.calculate(
-				mintOrderSubmission.getTokens().stream().map(t -> t.getAssetName()).collect(Collectors.toList()),
+				mintOrderSubmission.getTokens().stream().map(t -> t.getAssetName()).collect(Collectors.toSet()),
 				1l);
 		long maxSlot = new JSONObject(account.getPolicy()).getJSONArray("scripts").getJSONObject(0).getLong("slot");
 		String scriptFilename = filename("script");

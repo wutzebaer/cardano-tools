@@ -3,6 +3,8 @@ package de.peterspace.cardanotools;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -13,52 +15,20 @@ public class MinOutputCalculatorTest {
 
 	@Test
 	void calculateMinOutputSize1() throws Exception {
-
-		ArrayList<TokenSubmission> tokens = new ArrayList<TokenSubmission>();
-
-		TokenSubmission token1 = new TokenSubmission();
-		token1.setAssetName("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-		tokens.add(token1);
-
-		long calculateMinOutputSize = MinOutputCalculator.calculate(tokens);
-
+		long calculateMinOutputSize = MinOutputCalculator.calculate(Set.of("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), 1);
 		assertEquals(1555554, calculateMinOutputSize);
 	}
 
 	@Test
 	void calculateMinOutputSize2() throws Exception {
-
-		ArrayList<TokenSubmission> tokens = new ArrayList<TokenSubmission>();
-
-		TokenSubmission token1 = new TokenSubmission();
-		token1.setAssetName("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-		tokens.add(token1);
-
-		TokenSubmission token2 = new TokenSubmission();
-		token2.setAssetName("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1");
-		tokens.add(token2);
-
-		long calculateMinOutputSize = MinOutputCalculator.calculate(tokens);
-
+		long calculateMinOutputSize = MinOutputCalculator.calculate(Set.of("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1"), 1);
 		assertEquals(1777776, calculateMinOutputSize);
 	}
 
 	@Test
 	void calculateMinOutputSize3() throws Exception {
-
-		ArrayList<TokenSubmission> tokens = new ArrayList<TokenSubmission>();
-
-		TokenSubmission token1 = new TokenSubmission();
-		token1.setAssetName("A");
-		tokens.add(token1);
-
-		TokenSubmission token2 = new TokenSubmission();
-		token2.setAssetName("A");
-		tokens.add(token2);
-
-		long calculateMinOutputSize = MinOutputCalculator.calculate(tokens);
-
-		assertEquals(1481480, calculateMinOutputSize);
+		long calculateMinOutputSize = MinOutputCalculator.calculate(Set.of("A"), 1);
+		assertEquals(1444443, calculateMinOutputSize);
 	}
 
 }

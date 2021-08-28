@@ -57,7 +57,7 @@ public class ExchangeService {
 							transactionOutputs.add(winningFounding.getAddress(), offerTokenFunding.getPolicy() + "." + offerTokenFunding.getName(), offerTokenFunding.getQuantity());
 						}
 						long minOutput = MinOutputCalculator.calculate(
-								offerTokenFundings.stream().map(f -> f.getName()).distinct().collect(Collectors.toList()),
+								offerTokenFundings.stream().map(f -> f.getName()).collect(Collectors.toSet()),
 								offerTokenFundings.stream().map(f -> f.getPolicy()).distinct().count());
 						transactionOutputs.add(winningFounding.getAddress(), "", minOutput);
 						totalFunds -= minOutput;
