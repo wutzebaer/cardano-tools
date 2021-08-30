@@ -77,7 +77,7 @@ public class CardanoCliTests {
 
 	@Test
 	void getBalanceWithDepositedAccountKey() throws Exception {
-		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip());
+		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip(), 7);
 		// https://developers.cardano.org/en/testnets/cardano/tools/faucet/
 		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
 		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), testAddress, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate()));
@@ -89,7 +89,7 @@ public class CardanoCliTests {
 
 	@Test
 	void calculateFee() throws Exception {
-		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip());
+		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip(), 7);
 
 		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
 		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), testAddress, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate()));
@@ -123,7 +123,7 @@ public class CardanoCliTests {
 	@Test
 	void mintCoin() throws Exception {
 
-		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip());
+		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip(), 7);
 
 		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
 		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), testAddress, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate()));
@@ -169,7 +169,7 @@ public class CardanoCliTests {
 	@Test
 	void sendAda() throws Exception {
 
-		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip());
+		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip(), 7);
 		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
 		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), testAddress, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate()));
 		Account account = accountRepository.findById(key).get();

@@ -96,7 +96,7 @@ public class CardanoCli {
 	public Account createAccount() throws Exception {
 		String key = UUID.randomUUID().toString();
 		Address address = createAddress();
-		Policy policy = createPolicy(address.getVkey(), queryTip());
+		Policy policy = createPolicy(address.getVkey(), queryTip(), 7);
 		Account account = new Account(key, new Date(), address, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate());
 		accountRepository.save(account);
 		return account;
@@ -230,9 +230,9 @@ public class CardanoCli {
 		return mintTransaction;
 	}
 
-	public Policy createPolicy(String vkey, long tip) throws Exception {
+	public Policy createPolicy(String vkey, long tip, int days) throws Exception {
 
-		int secondsToLive = 60 * 60 * 24 * 7;
+		long secondsToLive = 60 * 60 * 24 * days;
 		long dueSlot = tip + secondsToLive;
 
 		String vkeyFilename = filename("vkey");

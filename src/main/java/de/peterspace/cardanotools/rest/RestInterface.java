@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import javax.imageio.ImageIO;
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 
 import org.apache.commons.lang3.StringUtils;
 import org.imgscalr.Scalr;
@@ -81,7 +82,7 @@ public class RestInterface {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-			refreshAccount(account);
+			refreshAccount(account, 7);
 			accountRepository.save(account);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {
@@ -90,12 +91,12 @@ public class RestInterface {
 	}
 
 	@PostMapping("account/{key}/refreshPolicy")
-	public ResponseEntity<Account> refreshPolicy(@PathVariable("key") UUID key) throws Exception {
+	public ResponseEntity<Account> refreshPolicy(@PathVariable("key") UUID key, @RequestBody @Min(1) Integer days) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
 			account.setPolicyDueDate(null);
-			refreshAccount(account);
+			refreshAccount(account, days);
 			accountRepository.save(account);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {
@@ -103,9 +104,9 @@ public class RestInterface {
 		}
 	}
 
-	private void refreshAccount(Account account) throws Exception {
+	private void refreshAccount(Account account, int days) throws Exception {
 		if (account.getPolicyDueDate() == null || System.currentTimeMillis() > account.getPolicyDueDate().getTime()) {
-			Policy policy = cardanoCli.createPolicy(account.getAddress().getVkey(), cardanoCli.queryTip());
+			Policy policy = cardanoCli.createPolicy(account.getAddress().getVkey(), cardanoCli.queryTip(), days);
 			account.setPolicy(policy.getPolicy());
 			account.setPolicyId(policy.getPolicyId());
 			account.setPolicyDueDate(policy.getPolicyDueDate());
