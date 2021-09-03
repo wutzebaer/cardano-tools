@@ -405,7 +405,7 @@ public class CardanoDbSyncClient {
 			if (bits.length == 2 && bits[0].length() == 56) {
 				findTokenQuery += CardanoDbSyncClient.tokenQuery;
 				findTokenQuery += "WHERE ";
-				findTokenQuery += "encode(mtm.policy::bytea, 'hex')=? AND encode(mtm.name::bytea, 'escape') ilike concat('%', ? ,'%') ";
+				findTokenQuery += "encode(mtm.policy::bytea, 'hex')=? AND encode(mtm.name::bytea, 'escape') ilike ? ";
 
 				fillPlaceholders.put(1, bits[0]);
 				fillPlaceholders.put(2, bits[1]);
