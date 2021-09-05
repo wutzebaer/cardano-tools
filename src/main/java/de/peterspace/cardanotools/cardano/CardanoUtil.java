@@ -23,7 +23,7 @@ public class CardanoUtil {
 	}
 
 	public static String createSubject(String policyId, String assetName) {
-		return policyId + encodeBase16(assetName);
+		return policyId + encodeBase16(assetName).toLowerCase();
 	}
 
 	private static String encodeBase16(String content) {
