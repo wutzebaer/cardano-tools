@@ -55,6 +55,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api")
 public class RestInterface {
 
+	private final static long MIN_STAKE = 0;//95000000l;
 	private final CardanoCli cardanoCli;
 	private final IpfsClient ipfsClient;
 	private final MintTransactionRepository mintTransactionRepository;
@@ -238,7 +239,7 @@ public class RestInterface {
 			Account account = accountOptional.get();
 
 			// min stake
-			if (cardanoDbSyncClient.getCurrentStake(account.getAddress().getAddress()) < 95) {
+			if (cardanoDbSyncClient.getCurrentStake(account.getAddress().getAddress()) < MIN_STAKE) {
 				return new ResponseEntity<Void>(HttpStatus.FORBIDDEN);
 			}
 

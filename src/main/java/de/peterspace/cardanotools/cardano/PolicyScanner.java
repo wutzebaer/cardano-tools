@@ -91,7 +91,7 @@ public class PolicyScanner {
                 "-v", workingDir + ":/work",
                 "-w", "/work",
                 "wutzebaer/mantis",
-                "mantis",
+                "mantra",
                 "chain-scripts",
                 "config.mantis",
                 "--output", "/work/policy-scripts",
