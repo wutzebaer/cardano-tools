@@ -404,6 +404,7 @@ public class CardanoCli {
 		if (policyMetadata.length() > 0) {
 			metadata.put(policyId, policyMetadata);
 		}
+		metadata.put("version", "1.0");
 		String metadataJson = new JSONObject().put("721", metadata).toString(3);
 		fileUtil.writeFile(metadataFilename, metadataJson);
 		return metadataFilename;
