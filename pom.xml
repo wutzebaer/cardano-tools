@@ -56,6 +56,10 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+		</dependency>
 
 		<!-- DB -->
 		<dependency>
@@ -96,16 +100,16 @@
 			</exclusions>
 		</dependency>
 
-<dependency>
-	<groupId>org.bitcoinj</groupId>
-	<artifactId>bitcoinj-core</artifactId>
-	<version>0.15.10</version>
-</dependency>
-<dependency>
-	<groupId>com.github.alphazero</groupId>
-	<artifactId>Blake2b</artifactId>
-	<version>bbf094983c</version>
-</dependency>
+		<dependency>
+			<groupId>org.bitcoinj</groupId>
+			<artifactId>bitcoinj-core</artifactId>
+			<version>0.15.10</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.alphazero</groupId>
+			<artifactId>Blake2b</artifactId>
+			<version>bbf094983c</version>
+		</dependency>
 
 		<!-- misc -->
 		<dependency>
