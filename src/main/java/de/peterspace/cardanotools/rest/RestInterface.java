@@ -32,7 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
-import de.peterspace.cardanotools.cardano.Policy;
 import de.peterspace.cardanotools.cardano.PolicyScanner;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
@@ -41,10 +40,11 @@ import de.peterspace.cardanotools.ipfs.IpfsClient;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.Address;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
-import de.peterspace.cardanotools.model.Transaction;
+import de.peterspace.cardanotools.model.Policy;
 import de.peterspace.cardanotools.model.RegistrationMetadata;
 import de.peterspace.cardanotools.model.TokenOffer;
 import de.peterspace.cardanotools.model.TokenOfferPost;
+import de.peterspace.cardanotools.model.Transaction;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintTransactionRepository;
 import de.peterspace.cardanotools.repository.TokenOfferRepository;
@@ -55,7 +55,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api")
 public class RestInterface {
 
-	private final static long MIN_STAKE = 0;//95000000l;
+	private final static long MIN_STAKE = 0;// 95000000l;
 	private final CardanoCli cardanoCli;
 	private final IpfsClient ipfsClient;
 	private final MintTransactionRepository mintTransactionRepository;
@@ -74,6 +74,7 @@ public class RestInterface {
 	@PostMapping("Account")
 	public Account createAccount() throws Exception {
 		Account account = cardanoCli.createAccount();
+		refreshAndSaveAccount(account, 7);
 		return account;
 	}
 
@@ -83,8 +84,7 @@ public class RestInterface {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-			refreshAccount(account, 7);
-			accountRepository.save(account);
+			refreshAndSaveAccount(account, 7);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<Account>(HttpStatus.NOT_FOUND);
@@ -96,27 +96,27 @@ public class RestInterface {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-			account.setPolicyDueDate(null);
-			refreshAccount(account, days);
-			accountRepository.save(account);
+			Policy policy = cardanoCli.createPolicy(account, cardanoCli.queryTip(), days);
+			account.getPolicies().add(0, policy);
+			refreshAndSaveAccount(account, days);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<Account>(HttpStatus.NOT_FOUND);
 		}
 	}
 
-	private void refreshAccount(Account account, int days) throws Exception {
-		if (account.getPolicyDueDate() == null || System.currentTimeMillis() > account.getPolicyDueDate().getTime()) {
-			Policy policy = cardanoCli.createPolicy(account.getAddress().getVkey(), cardanoCli.queryTip(), days);
-			account.setPolicy(policy.getPolicy());
-			account.setPolicyId(policy.getPolicyId());
-			account.setPolicyDueDate(policy.getPolicyDueDate());
+	private void refreshAndSaveAccount(Account account, int days) throws Exception {
+		long tip = cardanoCli.queryTip();
+		if (tip > account.getPolicies().stream().mapToLong(p -> p.getPolicyDueSlot()).max().orElse(0)) {
+			Policy policy = cardanoCli.createPolicy(account, cardanoCli.queryTip(), days);
+			account.getPolicies().add(0, policy);
 		}
 		refreshAddress(account.getAddress());
 		account.setStake(cardanoDbSyncClient.getCurrentStake(account.getAddress().getAddress()));
 		account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress().getAddress()));
 		account.setFundingAddressesHistory(cardanoDbSyncClient.getFundingAddressesHistory(account.getAddress().getAddress()));
 		account.setLastUpdate(new Date());
+		accountRepository.save(account);
 	}
 
 	private void refreshAddress(Address address) throws Exception {
@@ -161,6 +161,11 @@ public class RestInterface {
 	@GetMapping("getRegistrationMetadata/{key}")
 	@Cacheable("getRegistrationMetadata")
 	public ResponseEntity<RegistrationMetadata> getRegistrationMetadata(@PathVariable("key") UUID key) throws Exception {
+		Optional<Account> account = accountRepository.findById(key.toString());
+		if (!account.isPresent()) {
+			return new ResponseEntity<RegistrationMetadata>(HttpStatus.NOT_FOUND);
+		}
+
 		Transaction mintTransaction = mintTransactionRepository.findFirstByAccountKeyOrderByIdDesc(key.toString());
 		RegistrationMetadata registrationMetadata = new RegistrationMetadata();
 
@@ -171,9 +176,10 @@ public class RestInterface {
 			registrationMetadata.setName(tokenMetaData.getString("name"));
 		}
 
-		registrationMetadata.setPolicyId(mintTransaction.getPolicyId());
-		registrationMetadata.setPolicy(mintTransaction.getPolicy());
-		registrationMetadata.setPolicySkey(mintTransaction.getAccount().getAddress().getSkey());
+		Policy policy = account.get().getPolicy(mintTransaction.getMintOrderSubmission().getPolicyId());
+
+		registrationMetadata.setPolicy(policy.getPolicy());
+		registrationMetadata.setPolicySkey(policy.getAddress().getSkey());
 
 		return new ResponseEntity<RegistrationMetadata>(registrationMetadata, HttpStatus.OK);
 	}

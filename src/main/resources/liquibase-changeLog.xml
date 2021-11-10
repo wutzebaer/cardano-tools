@@ -1,7 +1,4 @@
-<databaseChangeLog
-	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-	xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext
    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
    http://www.liquibase.org/xml/ns/dbchangelog
@@ -14,6 +11,64 @@
 			</not>
 		</preConditions>
 		<sqlFile path="schema.sql" />
+	</changeSet>
+
+	<changeSet id="0001" author="peter">
+
+		<!-- create policy table -->
+		<createTable tableName="policy">
+			<column name="id" type="int8">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
+			<column name="policy_id" type="varchar(255)">
+				<constraints nullable="false" unique="true" uniqueConstraintName="uk_ovg3csarwhdux4wx6xp9i3jns" />
+			</column>
+			<column name="policy" type="text">
+				<constraints nullable="false" />
+			</column>
+			<column name="account_key" type="varchar(255)">
+				<constraints nullable="false" referencedTableName="account" referencedColumnNames="key" foreignKeyName="fksbi5f4xmysdl6enia1kh52kua" />
+			</column>
+			<column name="address_id" type="int8">
+				<constraints nullable="false" referencedTableName="address" referencedColumnNames="id" foreignKeyName="fkbfyiclqaqxntrg9epqj7ro3vf" />
+			</column>
+			<column name="policy_due_slot" type="int8">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<!-- copy policies -->
+		<sql>
+			insert into policy(id, policy_id, "policy", account_key, address_id, policy_due_slot)
+			select nextval('hibernate_sequence'), policies.* from (
+			select policy_id, policy, key, address_id, (policy::json->'scripts'->0->>'slot')::bigint from account a
+			union
+			select policy_id, policy, t.account_key,
+			(select address_id from account a2 where a2."key"=t.account_key), (policy::json->'scripts'->0->>'slot')::bigint from "transaction" t
+			) policies
+		</sql>
+
+
+		<addColumn tableName="mint_order_submission">
+			<column name="policy_id" type="varchar(255)">
+			</column>
+		</addColumn>
+		<update tableName="mint_order_submission">
+			<column name="policy_id" valueComputed="(select policy_id from transaction t where t.mint_order_submission_id=mint_order_submission.id)"></column>
+		</update>
+		<addNotNullConstraint tableName="mint_order_submission" columnName="policy_id" />
+
+
+		<dropColumn tableName="account">
+			<column name="policy"></column>
+			<column name="policy_due_date"></column>
+			<column name="policy_id"></column>
+		</dropColumn>
+
+		<dropColumn tableName="transaction">
+			<column name="policy"></column>
+			<column name="policy_id"></column>
+		</dropColumn>
 	</changeSet>
 
 </databaseChangeLog>

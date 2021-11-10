@@ -2,14 +2,11 @@ package de.peterspace.cardanotools;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 import de.peterspace.cardanotools.cardano.MinOutputCalculator;
-import de.peterspace.cardanotools.model.TokenSubmission;
 
 public class MinOutputCalculatorTest {
 

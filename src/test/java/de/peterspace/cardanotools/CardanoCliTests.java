@@ -9,26 +9,23 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 
-import org.bitcoinj.core.TransactionOutPoint;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
-import de.peterspace.cardanotools.cardano.Policy;
 import de.peterspace.cardanotools.cardano.TransactionOutputs;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.Address;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
-import de.peterspace.cardanotools.model.Transaction;
+import de.peterspace.cardanotools.model.Policy;
 import de.peterspace.cardanotools.model.TokenSubmission;
+import de.peterspace.cardanotools.model.Transaction;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintTransactionRepository;
-import lombok.extern.slf4j.Slf4j;
 
 @SpringBootTest
-@Slf4j
 public class CardanoCliTests {
 
 	private static final Address testAddress = new Address("addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x", "{\"type\": \"PaymentSigningKeyShelley_ed25519\", \"description\": \"Payment Signing Key\", \"cborHex\": \"5820a210dfed41a028bb2bf4b9a7569b23c4c19a354ab6c167f7604827e56d145a14\"}", "{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", 0l, "[]");
@@ -75,12 +72,26 @@ public class CardanoCliTests {
 		assertEquals(0, balance);
 	}
 
+	public Account createAccount(String key, Address address) throws Exception {
+		Account account = Account.builder()
+				.key(key)
+				.createdAt(new Date())
+				.address(address)
+				.fundingAddresses(new ArrayList<>())
+				.fundingAddressesHistory(new ArrayList<>())
+				.policies(new ArrayList<>())
+				.stake(0l)
+				.lastUpdate(new Date())
+				.build();
+		accountRepository.save(account);
+		return account;
+	}
+
 	@Test
 	void getBalanceWithDepositedAccountKey() throws Exception {
-		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip(), 7);
-		// https://developers.cardano.org/en/testnets/cardano/tools/faucet/
 		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
-		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), testAddress, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate()));
+		accountRepository.save(createAccount(key, testAddress));
+		// https://developers.cardano.org/en/testnets/cardano/tools/faucet/
 		Account account = accountRepository.findById(key).get();
 		JSONObject utxo = cardanoCli.getUtxo(account.getAddress());
 		long balance = cardanoCli.calculateBalance(utxo);
@@ -89,15 +100,17 @@ public class CardanoCliTests {
 
 	@Test
 	void calculateFee() throws Exception {
-		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip(), 7);
 
 		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
-		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), testAddress, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate()));
+		accountRepository.save(createAccount(key, testAddress));
 		Account account = accountRepository.findById(key).get();
+
+		Policy policy = cardanoCli.createPolicy(account, cardanoCli.queryTip(), 7);
 
 		MintOrderSubmission mintOrder = new MintOrderSubmission();
 		mintOrder.setTip(false);
 		mintOrder.setTargetAddress(account.getAddress().getAddress());
+		mintOrder.setPolicyId(policy.getPolicyId());
 
 		ArrayList<TokenSubmission> tokens = new ArrayList<TokenSubmission>();
 
@@ -123,15 +136,18 @@ public class CardanoCliTests {
 	@Test
 	void mintCoin() throws Exception {
 
-		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip(), 7);
-
 		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
-		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), testAddress, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate()));
+		accountRepository.save(createAccount(key, testAddress));
 		Account account = accountRepository.findById(key).get();
+
+		Policy policy = cardanoCli.createPolicy(account, cardanoCli.queryTip(), 7);
+		account.getPolicies().add(policy);
+		account = accountRepository.save(account);
 
 		MintOrderSubmission mintOrder = new MintOrderSubmission();
 		mintOrder.setTip(false);
 		mintOrder.setTargetAddress(account.getAddress().getAddress());
+		mintOrder.setPolicyId(policy.getPolicyId());
 
 		ArrayList<TokenSubmission> tokens = new ArrayList<TokenSubmission>();
 
@@ -169,9 +185,8 @@ public class CardanoCliTests {
 	@Test
 	void sendAda() throws Exception {
 
-		Policy policy = cardanoCli.createPolicy("{\"type\": \"PaymentVerificationKeyShelley_ed25519\", \"description\": \"Payment Verification Key\", \"cborHex\": \"5820996819facb997e96243124d8717f9fa1867be456c5e649e3bab3d2a68b36e999\"}", cardanoCli.queryTip(), 7);
 		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
-		accountRepository.save(new Account("e69db833-8af7-4bb9-81cf-df04282a41c0", new Date(), testAddress, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate()));
+		accountRepository.save(createAccount(key, testAddress));
 		Account account = accountRepository.findById(key).get();
 
 		JSONObject utxo = cardanoCli.getUtxo(account.getAddress());

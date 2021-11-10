@@ -4,23 +4,25 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.validation.constraints.NotNull;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Data
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class Account {
 
 	@Id
@@ -29,6 +31,11 @@ public class Account {
 
 	@NotNull
 	private Date createdAt;
+
+	@NotNull
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "account", fetch = FetchType.EAGER)
+	@OrderBy("id DESC")
+	private List<Policy> policies;
 
 	@NotNull
 	@ManyToOne(cascade = CascadeType.ALL)
@@ -43,19 +50,13 @@ public class Account {
 	private List<String> fundingAddressesHistory;
 
 	@NotNull
-	@Column(columnDefinition = "int8 NOT NULL DEFAULT 0")
 	private Long stake;
 
 	@NotNull
 	private Date lastUpdate;
 
-	@Column(columnDefinition = "TEXT")
-	@NotBlank
-	private String policy;
+	public Policy getPolicy(String policyId) {
+		return policies.stream().filter(p -> p.getPolicyId().equals(policyId)).findAny().get();
+	}
 
-	@NotBlank
-	private String policyId;
-
-	@NotNull
-	private Date policyDueDate;
 }

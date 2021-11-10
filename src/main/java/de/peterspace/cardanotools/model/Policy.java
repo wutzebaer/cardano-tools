@@ -6,64 +6,46 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Data
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
-public class Transaction {
+@AllArgsConstructor
+public class Policy {
 
 	@Id
 	@GeneratedValue
-	@JsonIgnore
-	private long id;
+	private Long id;
+
+	@NotNull
+	@Column(unique = true)
+	private String policyId;
 
 	@NotNull
 	@JsonIgnore
 	@ManyToOne
 	private Account account;
 
+	@NotBlank
+	@NotNull
 	@Column(columnDefinition = "TEXT")
-	@NotBlank
-	private String signedData;
-
-	@Column(columnDefinition = "TEXT")
-	@NotBlank
-	private String rawData;
-
-	@NotBlank
-	private String txId;
+	private String policy;
 
 	@NotNull
-	private Long fee;
-
-	private Long minOutput;
+	@ManyToOne(cascade = CascadeType.ALL)
+	private Address address;
 
 	@NotNull
-	@Column(columnDefinition = "bigint DEFAULT 0")
-	private Long txSize;
-
-	@Column(columnDefinition = "TEXT")
-	@NotBlank
-	private String outputs;
-
-	@Column(columnDefinition = "TEXT")
-	@NotBlank
-	private String inputs;
-
-	@Column(columnDefinition = "TEXT")
-	private String metaDataJson;
-
-	@OneToOne(cascade = CascadeType.ALL)
-	MintOrderSubmission mintOrderSubmission;
+	private Long policyDueSlot;
 
 }

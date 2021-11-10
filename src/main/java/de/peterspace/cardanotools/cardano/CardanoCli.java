@@ -14,14 +14,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.Address;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
-import de.peterspace.cardanotools.model.Transaction;
+import de.peterspace.cardanotools.model.Policy;
 import de.peterspace.cardanotools.model.TokenSubmission;
+import de.peterspace.cardanotools.model.Transaction;
 import de.peterspace.cardanotools.process.ProcessUtil;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -82,6 +84,7 @@ public class CardanoCli {
 
 	}
 
+	@Cacheable("queryTip")
 	public long queryTip() throws Exception {
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
@@ -96,8 +99,16 @@ public class CardanoCli {
 	public Account createAccount() throws Exception {
 		String key = UUID.randomUUID().toString();
 		Address address = createAddress();
-		Policy policy = createPolicy(address.getVkey(), queryTip(), 7);
-		Account account = new Account(key, new Date(), address, new ArrayList<>(), new ArrayList<>(), 0l, new Date(), policy.getPolicy(), policy.getPolicyId(), policy.getPolicyDueDate());
+		Account account = Account.builder()
+				.key(key)
+				.createdAt(new Date())
+				.address(address)
+				.fundingAddresses(new ArrayList<>())
+				.fundingAddressesHistory(new ArrayList<>())
+				.policies(new ArrayList<>())
+				.stake(0l)
+				.lastUpdate(new Date())
+				.build();
 		accountRepository.save(account);
 		return account;
 	}
@@ -178,41 +189,41 @@ public class CardanoCli {
 			mintOrderSubmission.setTargetAddress(dummyAddress);
 		}
 
-		String metadataFilename = createMetadataFile(mintOrderSubmission, new JSONObject(account.getPolicy()), account.getPolicyId());
-		List<String> mints = createMintList(mintOrderSubmission, account.getPolicyId());
+		Policy policy = account.getPolicy(mintOrderSubmission.getPolicyId());
+
+		String metadataFilename = createMetadataFile(mintOrderSubmission, new JSONObject(policy.getPolicy()), policy.getPolicyId());
+		List<String> mints = createMintList(mintOrderSubmission, policy.getPolicyId());
 		long balance = calculateBalance(utxo);
 		long minOutput = MinOutputCalculator.calculate(
 				mintOrderSubmission.getTokens().stream().map(t -> t.getAssetName()).collect(Collectors.toSet()),
 				1l);
-		long maxSlot = new JSONObject(account.getPolicy()).getJSONArray("scripts").getJSONObject(0).getLong("slot");
+		long maxSlot = policy.getPolicyDueSlot();
 		String scriptFilename = filename("script");
-		fileUtil.writeFile(scriptFilename, account.getPolicy());
-		TransactionOutputs transactionOutputs = createMintTransactionOutputs(mintOrderSubmission, utxo, 0, balance, account.getPolicyId(), minOutput);
+		fileUtil.writeFile(scriptFilename, policy.getPolicy());
+		TransactionOutputs transactionOutputs = createMintTransactionOutputs(mintOrderSubmission, utxo, 0, balance, policy.getPolicyId(), minOutput);
 
 		Transaction mintTransaction = createTransaction(transactionOutputs, utxo, 0l, metadataFilename, mints, scriptFilename, maxSlot);
 
-		long fee = calculateFee(mintTransaction, utxo);
+		long fee = calculateFee(mintTransaction, utxo, 2);
 		long neededBalance = minOutput + fee + (mintOrderSubmission.getTip() ? 1000000 : 0);
 		if (!utxo.has("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0") && account.getAddress().getBalance() < neededBalance) {
 			// simulate a further input, because the user has to make another utxo
 			utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAddress).put("value", new JSONObject().put("lovelace", 1000000000l)));
-			transactionOutputs = createMintTransactionOutputs(mintOrderSubmission, utxo, fee, balance, account.getPolicyId(), minOutput);
+			transactionOutputs = createMintTransactionOutputs(mintOrderSubmission, utxo, fee, balance, policy.getPolicyId(), minOutput);
 			mintTransaction = createTransaction(transactionOutputs, utxo, 0, metadataFilename, mints, scriptFilename, maxSlot);
-			fee = calculateFee(mintTransaction, utxo);
+			fee = calculateFee(mintTransaction, utxo, 2);
 		}
 
-		transactionOutputs = createMintTransactionOutputs(mintOrderSubmission, utxo, fee, balance, account.getPolicyId(), minOutput);
+		transactionOutputs = createMintTransactionOutputs(mintOrderSubmission, utxo, fee, balance, policy.getPolicyId(), minOutput);
 		mintTransaction = createTransaction(transactionOutputs, utxo, fee, metadataFilename, mints, scriptFilename, maxSlot);
 
 		fileUtil.removeFile(scriptFilename);
 		fileUtil.removeFile(metadataFilename);
 
-		signTransaction(mintTransaction, account.getAddress());
+		signTransaction(mintTransaction, account.getAddress(), policy.getAddress());
 
 		mintTransaction.setMintOrderSubmission(mintOrderSubmission);
 		mintTransaction.setMinOutput(minOutput);
-		mintTransaction.setPolicyId(account.getPolicyId());
-		mintTransaction.setPolicy(account.getPolicy());
 		return mintTransaction;
 	}
 
@@ -220,7 +231,7 @@ public class CardanoCli {
 		JSONObject utxo = getUtxo(address);
 
 		Transaction mintTransaction = createTransaction(transactionOutputs, utxo, 0l, null, null, null, null);
-		long fee = calculateFee(mintTransaction, utxo);
+		long fee = calculateFee(mintTransaction, utxo, 1);
 		transactionOutputs.substractFees(fee);
 
 		mintTransaction = createTransaction(transactionOutputs, utxo, fee, null, null, null, null);
@@ -230,13 +241,15 @@ public class CardanoCli {
 		return mintTransaction;
 	}
 
-	public Policy createPolicy(String vkey, long tip, int days) throws Exception {
+	public Policy createPolicy(Account account, long tip, int days) throws Exception {
+
+		Address address = createAddress();
 
 		long secondsToLive = 60 * 60 * 24 * days;
 		long dueSlot = tip + secondsToLive;
 
 		String vkeyFilename = filename("vkey");
-		fileUtil.writeFile(vkeyFilename, vkey);
+		fileUtil.writeFile(vkeyFilename, address.getVkey());
 
 		// address hash
 		ArrayList<String> cmd1 = new ArrayList<String>();
@@ -274,7 +287,14 @@ public class CardanoCli {
 		String policyId = ProcessUtil.runCommand(cmd2.toArray(new String[0]));
 		fileUtil.removeFile(policyFilename);
 
-		return new Policy(policyString, policyId, new Date(System.currentTimeMillis() + secondsToLive * 1000));
+		return Policy.builder()
+				.account(account)
+				.address(address)
+				.policy(policyString)
+				.policyId(policyId)
+				.policyDueSlot(dueSlot)
+				.build();
+
 	}
 
 	private Transaction createTransaction(TransactionOutputs transactionOutputs, JSONObject utxo, long fee, String metadataFilename, List<String> mints, String scriptFilename, Long maxSlot) throws Exception {
@@ -410,7 +430,7 @@ public class CardanoCli {
 		return metadataFilename;
 	}
 
-	private long calculateFee(Transaction mintTransaction, JSONObject utxo) throws Exception {
+	private long calculateFee(Transaction mintTransaction, JSONObject utxo, int witnessCount) throws Exception {
 		String filename = filename("raw");
 		fileUtil.writeFile(filename, mintTransaction.getRawData());
 
@@ -436,7 +456,7 @@ public class CardanoCli {
 		cmd.add(new JSONObject(mintTransaction.getOutputs()).length() + "");
 
 		cmd.add("--witness-count");
-		cmd.add("1");
+		cmd.add("" + witnessCount);
 
 		cmd.addAll(List.of(networkMagicArgs));
 
@@ -451,22 +471,29 @@ public class CardanoCli {
 		return fee;
 	}
 
-	private void signTransaction(Transaction mintTransaction, Address address) throws Exception {
+	private void signTransaction(Transaction mintTransaction, Address... addresses) throws Exception {
 
-		String skeyFilename = filename("skey");
+		List<String> skeyFilenames = new ArrayList<String>();
+		for (Address address : addresses) {
+			String skeyFilename = filename("skey");
+			skeyFilenames.add(skeyFilename);
+			fileUtil.writeFile(skeyFilename, address.getSkey());
+		}
+
 		String rawFilename = filename("raw");
-		String signedFilename = filename("signed");
-
-		fileUtil.writeFile(skeyFilename, address.getSkey());
 		fileUtil.writeFile(rawFilename, mintTransaction.getRawData());
+
+		String signedFilename = filename("signed");
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
 		cmd.add("transaction");
 		cmd.add("sign");
 
-		cmd.add("--signing-key-file");
-		cmd.add(skeyFilename);
+		for (String skeyFilename : skeyFilenames) {
+			cmd.add("--signing-key-file");
+			cmd.add(skeyFilename);
+		}
 
 		cmd.addAll(List.of(networkMagicArgs));
 
@@ -483,7 +510,9 @@ public class CardanoCli {
 		String cborHex = new JSONObject(mintTransaction.getSignedData()).getString("cborHex");
 		mintTransaction.setTxSize((long) (cborHex.length() / 2));
 
-		fileUtil.removeFile(skeyFilename);
+		for (String skeyFilename : skeyFilenames) {
+			fileUtil.removeFile(skeyFilename);
+		}
 		fileUtil.removeFile(rawFilename);
 	}
 

@@ -14,10 +14,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
 import de.peterspace.cardanotools.dbsync.TokenData;
-import lombok.extern.slf4j.Slf4j;
 
 @SpringBootTest
-@Slf4j
 public class CardanoDbSyncTest {
 //34c5cd85eef8101f6c5235e5bbebbd217d671a89c0cce588315de0e9236eca34
 

@@ -22,8 +22,16 @@ public class CardanoUtil {
 		return lockDate;
 	}
 
+	public static long currentSlot() {
+		return System.currentTimeMillis() / 1000 - 1596491091 + 4924800;
+	}
+
 	public static String createSubject(String policyId, String assetName) {
 		return policyId + encodeBase16(assetName).toLowerCase();
+	}
+
+	public static void main(String[] args) {
+		System.out.println(currentSlot() + "");
 	}
 
 	private static String encodeBase16(String content) {

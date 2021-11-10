@@ -13,10 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.repository.AccountRepository;
-import lombok.extern.slf4j.Slf4j;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@Slf4j
 public class RepositoryTest {
 
 	@Autowired
