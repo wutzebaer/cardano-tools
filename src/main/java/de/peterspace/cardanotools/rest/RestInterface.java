@@ -32,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
+import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.PolicyScanner;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
@@ -68,7 +69,7 @@ public class RestInterface {
 	@GetMapping("tip")
 	@Cacheable("getTip")
 	public long getTip() throws Exception {
-		return cardanoCli.queryTip();
+		return CardanoUtil.currentSlot();
 	}
 
 	@PostMapping("Account")
@@ -96,7 +97,7 @@ public class RestInterface {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-			Policy policy = cardanoCli.createPolicy(account, cardanoCli.queryTip(), days);
+			Policy policy = cardanoCli.createPolicy(account, CardanoUtil.currentSlot(), days);
 			account.getPolicies().add(0, policy);
 			refreshAndSaveAccount(account, days);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
@@ -106,9 +107,9 @@ public class RestInterface {
 	}
 
 	private void refreshAndSaveAccount(Account account, int days) throws Exception {
-		long tip = cardanoCli.queryTip();
+		long tip = CardanoUtil.currentSlot();
 		if (tip > account.getPolicies().stream().mapToLong(p -> p.getPolicyDueSlot()).max().orElse(0)) {
-			Policy policy = cardanoCli.createPolicy(account, cardanoCli.queryTip(), days);
+			Policy policy = cardanoCli.createPolicy(account, tip, days);
 			account.getPolicies().add(0, policy);
 		}
 		refreshAddress(account.getAddress());

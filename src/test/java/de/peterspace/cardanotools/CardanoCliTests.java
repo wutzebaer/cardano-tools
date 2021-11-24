@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
+import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.TransactionOutputs;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.Address;
@@ -41,7 +42,7 @@ public class CardanoCliTests {
 
 	@Test
 	void tipQuery() throws Exception {
-		long tip = cardanoCli.queryTip();
+		long tip = CardanoUtil.currentSlot();
 		assertThat(tip).isGreaterThan(0);
 	}
 
@@ -105,7 +106,7 @@ public class CardanoCliTests {
 		accountRepository.save(createAccount(key, testAddress));
 		Account account = accountRepository.findById(key).get();
 
-		Policy policy = cardanoCli.createPolicy(account, cardanoCli.queryTip(), 7);
+		Policy policy = cardanoCli.createPolicy(account, CardanoUtil.currentSlot(), 7);
 
 		MintOrderSubmission mintOrder = new MintOrderSubmission();
 		mintOrder.setTip(false);
@@ -140,7 +141,7 @@ public class CardanoCliTests {
 		accountRepository.save(createAccount(key, testAddress));
 		Account account = accountRepository.findById(key).get();
 
-		Policy policy = cardanoCli.createPolicy(account, cardanoCli.queryTip(), 7);
+		Policy policy = cardanoCli.createPolicy(account, CardanoUtil.currentSlot(), 7);
 		account.getPolicies().add(policy);
 		account = accountRepository.save(account);
 

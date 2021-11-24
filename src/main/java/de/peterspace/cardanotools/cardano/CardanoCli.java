@@ -85,6 +85,7 @@ public class CardanoCli {
 	}
 
 	@Cacheable("queryTip")
+	@Deprecated
 	public long queryTip() throws Exception {
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.addAll(List.of(cardanoCliCmd));
