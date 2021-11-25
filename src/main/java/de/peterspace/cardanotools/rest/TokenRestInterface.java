@@ -42,4 +42,11 @@ public class TokenRestInterface {
 		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
 	}
 
+	@GetMapping("policyTokens")
+	@Cacheable("policyTokens")
+	public ResponseEntity<List<TokenData>> policyTokens(@RequestParam String address) throws Exception {
+		List<TokenData> findTokens = cardanoDbSyncClient.policyTokens(address);
+		return new ResponseEntity<List<TokenData>>(findTokens, HttpStatus.OK);
+	}
+
 }

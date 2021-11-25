@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
@@ -24,6 +25,7 @@ import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.Address;
 import de.peterspace.cardanotools.model.Policy;
+import de.peterspace.cardanotools.model.Views.Private;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -37,6 +39,7 @@ public class AccountRestInterface {
 	private final CardanoDbSyncClient cardanoDbSyncClient;
 
 	@PostMapping
+	@JsonView(Private.class)
 	public Account createAccount() throws Exception {
 		Account account = cardanoCli.createAccount();
 		refreshAndSaveAccount(account, 7);
@@ -45,6 +48,7 @@ public class AccountRestInterface {
 
 	@GetMapping("{key}")
 	@Cacheable("getAccount")
+	@JsonView(Private.class)
 	public ResponseEntity<Account> getAccount(@PathVariable("key") UUID key) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
@@ -57,6 +61,7 @@ public class AccountRestInterface {
 	}
 
 	@PostMapping("{key}/refreshPolicy")
+	@JsonView(Private.class)
 	public ResponseEntity<Account> refreshPolicy(@PathVariable("key") UUID key, @RequestBody @Min(1) Integer days) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {

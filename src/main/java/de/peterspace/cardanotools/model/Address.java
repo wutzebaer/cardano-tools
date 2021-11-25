@@ -8,7 +8,9 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 
+import de.peterspace.cardanotools.model.Views.Private;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -35,11 +37,11 @@ public class Address {
 	private String address;
 
 	@NotBlank
-	@JsonIgnore
+	@JsonView(Private.class)
 	private String skey;
 
 	@NotBlank
-	@JsonIgnore
+	@JsonView(Private.class)
 	private String vkey;
 
 	@NotNull

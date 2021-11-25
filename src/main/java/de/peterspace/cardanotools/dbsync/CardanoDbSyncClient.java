@@ -452,6 +452,33 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
+	public List<TokenData> policyTokens(String policyId) throws DecoderException {
+
+		try (Connection connection = hds.getConnection()) {
+
+			String findTokenQuery = "SELECT * FROM (\r\n";
+			findTokenQuery += "SELECT U.*, row_number() over(PARTITION by  policyId, tokenName order by mintid desc) rn FROM (\r\n";
+
+			findTokenQuery += CardanoDbSyncClient.tokenQuery;
+			findTokenQuery += "WHERE ";
+			findTokenQuery += "encode(mtm.policy::bytea, 'hex')=?";
+			findTokenQuery += ") AS U where U.quantity > 0 ";
+			findTokenQuery += ") as numbered ";
+			findTokenQuery += "where rn = 1 ";
+			findTokenQuery += "order by epoch_no, tokenname ";
+
+			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
+			getTxInput.setObject(1, policyId);
+
+			ResultSet result = getTxInput.executeQuery();
+			List<TokenData> tokenDatas = parseTokenResultset(result);
+			return tokenDatas;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@TrackExecutionTime
 	public List<TokenData> latestTokens(Long fromMintid) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
 			String findTokenQuery = tokenQuery;

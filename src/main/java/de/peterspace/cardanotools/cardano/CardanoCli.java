@@ -18,6 +18,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import de.peterspace.cardanotools.ipfs.IpfsClient;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.Address;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
@@ -43,6 +44,7 @@ public class CardanoCli {
 	private final CardanoNode cardanoNode;
 	private final AccountRepository accountRepository;
 	private final FileUtil fileUtil;
+	private final IpfsClient ipfsClient;
 
 	@Value("${working.dir}")
 	private String workingDir;
@@ -532,6 +534,27 @@ public class CardanoCli {
 			cmd.addAll(List.of(networkMagicArgs));
 
 			ProcessUtil.runCommand(cmd.toArray(new String[0]));
+
+			// pin files
+			for (TokenSubmission tokenSubmission : mintTransaction.getMintOrderSubmission().getTokens()) {
+				JSONObject metadata = new JSONObject(tokenSubmission.getMetaData());
+				if (metadata.has("image")) {
+					try {
+						ipfsClient.pinFile(metadata.getString("image"));
+					} catch (Exception e) {
+						log.warn("Could not pin {}: {}", metadata.get("image"), e.getMessage());
+					}
+				}
+				if (metadata.has("files")) {
+					for (Object file : metadata.getJSONArray("files")) {
+						try {
+							ipfsClient.pinFile(((JSONObject) file).getString("src"));
+						} catch (Exception e) {
+							log.warn("Could not pin {}: {}", file, e.getMessage());
+						}
+					}
+				}
+			}
 
 		} catch (Exception e) {
 			if (e.getMessage().contains("BadInputsUTxO")) {

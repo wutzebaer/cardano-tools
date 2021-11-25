@@ -19,12 +19,15 @@ public class IpfsClientTest {
 
 	@Test
 	void testSaveAndLoadFile() throws Exception {
-
 		String data = UUID.randomUUID().toString();
-
 		ByteArrayInputStream is = new ByteArrayInputStream(data.getBytes());
 		String ipfsHash = ipfsClient.addFile(is);
 		assertThat(ipfsHash).hasSize(46);
+	}
 
+	@Test
+	void testPin() throws Exception {
+		String ipfsUrl = "ipfs://QmT1fJsGrLpZ3sYSsvCdPyQYTrg3mGFX2h1fjKfHvnFp2m";
+		ipfsClient.pinFile(ipfsUrl);
 	}
 }
