@@ -130,6 +130,10 @@ public class TokenRegistry {
 
 	public String createTokenRegistration(RegistrationMetadata registrationMetadata) throws Exception {
 
+		if (registrationMetadataRepository.existsByPolicyIdAndAssetName(registrationMetadata.getPolicyId(), registrationMetadata.getAssetName())) {
+			throw new Exception("Your token is already registered!");
+		}
+
 		String subject = CardanoUtil.createSubject(registrationMetadata.getPolicyId(), registrationMetadata.getAssetName());
 		initDraft(subject);
 		addRequiredFields(subject, registrationMetadata);

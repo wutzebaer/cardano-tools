@@ -8,6 +8,6 @@ import de.peterspace.cardanotools.model.RegistrationMetadata;
 @Repository
 public interface RegistrationMetadataRepository extends PagingAndSortingRepository<RegistrationMetadata, Long> {
 
-	RegistrationMetadata findFirstByPolicyIdAndAssetName(String policyId, String assetName);
+	boolean existsByPolicyIdAndAssetName(String policyId, String assetName);
 
 }

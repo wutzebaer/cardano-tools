@@ -28,7 +28,9 @@ public class RegistrationRestInterface {
 	private final TokenRegistry tokenRegistry;
 
 	@PostMapping(path = "generateTokenRegistration", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public String generateTokenRegistration(@RequestPart RegistrationMetadata registrationMetadata, @RequestPart(required = false) MultipartFile file) throws Exception {
+	public String generateTokenRegistration(@RequestPart String registrationMetadataString, @RequestPart(required = false) MultipartFile file) throws Exception {
+
+		RegistrationMetadata registrationMetadata = new ObjectMapper().readValue(registrationMetadataString, RegistrationMetadata.class);
 
 		if (file != null) {
 			BufferedImage image = ImageIO.read(file.getInputStream());
