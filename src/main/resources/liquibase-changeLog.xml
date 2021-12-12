@@ -71,4 +71,11 @@
 		</dropColumn>
 	</changeSet>
 
+	<changeSet id="0002" author="peter">
+		<addColumn tableName="mint_order_submission">
+			<column name="meta_data" type="text">
+			</column>
+		</addColumn>
+	</changeSet>
+
 </databaseChangeLog>

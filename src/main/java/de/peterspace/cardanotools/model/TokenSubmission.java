@@ -25,14 +25,9 @@ public class TokenSubmission {
 	@JsonIgnore
 	private Long id;
 
-	@NotBlank
 	private String assetName;
 
 	@NotNull
 	private Long amount;
-
-	@Column(columnDefinition = "TEXT DEFAULT '{}'")
-	@NotBlank
-	private String metaData;
 
 }

@@ -2,8 +2,10 @@ package de.peterspace.cardanotools.cardano;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -17,6 +19,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
+
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
 
 import de.peterspace.cardanotools.ipfs.IpfsClient;
 import de.peterspace.cardanotools.model.Account;
@@ -376,7 +381,7 @@ public class CardanoCli {
 			transactionOutputs.add(mintOrderSubmission.getTargetAddress(), "", balance - fee);
 		}
 		for (TokenSubmission token : mintOrderSubmission.getTokens()) {
-			transactionOutputs.add(mintOrderSubmission.getTargetAddress(), policyId + "." + token.getAssetName(), token.getAmount());
+			transactionOutputs.add(mintOrderSubmission.getTargetAddress(), formatCurrency(policyId, token.getAssetName()), token.getAmount());
 		}
 
 		// the account might have other minted tokens, which also has to be sent
@@ -393,7 +398,7 @@ public class CardanoCli {
 					while (otherPolicyTokens.hasNext()) {
 						String otherPolicyToken = otherPolicyTokens.next();
 						long amount = otherPolicy.getLong(otherPolicyToken);
-						transactionOutputs.add(mintOrderSubmission.getTargetAddress(), otherPolicyId + "." + otherPolicyToken, amount);
+						transactionOutputs.add(mintOrderSubmission.getTargetAddress(), formatCurrency(otherPolicyId, otherPolicyToken), amount);
 					}
 				}
 			}
@@ -409,25 +414,22 @@ public class CardanoCli {
 	private List<String> createMintList(MintOrderSubmission mintOrderSubmission, final String policyId) {
 		List<String> mints = new ArrayList<String>();
 		for (TokenSubmission token : mintOrderSubmission.getTokens()) {
-			mints.add(String.format("%d %s.%s", token.getAmount(), policyId, token.getAssetName()));
+			mints.add(String.format("%d %s", token.getAmount(), formatCurrency(policyId, token.getAssetName())));
 		}
 		return mints;
 	}
 
+	private String formatCurrency(String policyId, String assetName) {
+		if (StringUtils.isBlank(assetName)) {
+			return policyId;
+		} else {
+			return policyId + "." + assetName;
+		}
+	}
+
 	private String createMetadataFile(MintOrderSubmission mintOrderSubmission, final JSONObject policyScript, final String policyId) throws Exception {
 		String metadataFilename = filename("metadata");
-		JSONObject metadata = new JSONObject();
-		JSONObject policyMetadata = new JSONObject();
-		for (TokenSubmission token : mintOrderSubmission.getTokens()) {
-			JSONObject cleanedMetadata = new JSONObject(token.getMetaData());
-			policyMetadata.put(token.getAssetName(), cleanedMetadata);
-		}
-		if (policyMetadata.length() > 0) {
-			metadata.put(policyId, policyMetadata);
-		}
-		metadata.put("version", "1.0");
-		String metadataJson = new JSONObject().put("721", metadata).toString(3);
-		fileUtil.writeFile(metadataFilename, metadataJson);
+		fileUtil.writeFile(metadataFilename, mintOrderSubmission.getMetaData());
 		return metadataFilename;
 	}
 
@@ -536,24 +538,23 @@ public class CardanoCli {
 			ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 			// pin files
-			for (TokenSubmission tokenSubmission : mintTransaction.getMintOrderSubmission().getTokens()) {
-				JSONObject metadata = new JSONObject(tokenSubmission.getMetaData());
-				if (metadata.has("image")) {
+			String metaData = mintTransaction.getMintOrderSubmission().getMetaData();
+			if (!StringUtils.isBlank(metaData)) {
+
+				DocumentContext jsonContext = JsonPath.parse(metaData);
+
+				Set<String> images = new HashSet<String>();
+				images.addAll(jsonContext.read("$.*.*.*.image"));
+				images.addAll(jsonContext.read("$.*.*.*.files[*].src"));
+
+				for (String image : images) {
 					try {
-						ipfsClient.pinFile(metadata.getString("image"));
+						ipfsClient.pinFile(image);
 					} catch (Exception e) {
-						log.warn("Could not pin {}: {}", metadata.get("image"), e.getMessage());
+						log.warn("Could not pin {}: {}", image, e.getMessage());
 					}
 				}
-				if (metadata.has("files")) {
-					for (Object file : metadata.getJSONArray("files")) {
-						try {
-							ipfsClient.pinFile(((JSONObject) file).getString("src"));
-						} catch (Exception e) {
-							log.warn("Could not pin {}: {}", file, e.getMessage());
-						}
-					}
-				}
+
 			}
 
 		} catch (Exception e) {

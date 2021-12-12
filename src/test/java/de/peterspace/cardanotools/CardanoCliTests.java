@@ -117,17 +117,16 @@ public class CardanoCliTests {
 
 		TokenSubmission token1 = new TokenSubmission();
 		token1.setAmount(1000000l);
-		token1.setMetaData("{haha: 'hoho'}, hahalist:['list1', 'list2']");
 		token1.setAssetName("AAAAA");
 		tokens.add(token1);
 
 		TokenSubmission token2 = new TokenSubmission();
 		token2.setAmount(1000000l);
 		token2.setAssetName("BBBB");
-		token2.setMetaData("{}");
 		tokens.add(token2);
 
 		mintOrder.setTokens(tokens);
+		mintOrder.setMetaData("{'721':{'" + policy.getPolicyId() + "':{'AAAAA':{haha: 'hoho', hahalist:['list1', 'list2']}, 'BBBB':{}}}}");
 
 		Transaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
 
@@ -154,19 +153,18 @@ public class CardanoCliTests {
 
 		TokenSubmission token1 = new TokenSubmission();
 		token1.setAmount(1000000l);
-		token1.setMetaData("{haha: 'hoho'}, hahalist:['list1', 'list2']");
-		token1.setAssetName("AAAAA");
+		token1.setAssetName("XXXXYYYY");
 		tokens.add(token1);
 
 		TokenSubmission token2 = new TokenSubmission();
 		token2.setAmount(1000000l);
-		token2.setAssetName("BBBB");
-		token2.setMetaData("{}");
+		token2.setAssetName("");
 		tokens.add(token2);
 
 		mintOrder.setTokens(tokens);
 		mintOrder.setTip(false);
 		mintOrder.setTargetAddress(account.getAddress().getAddress());
+		mintOrder.setMetaData("{\"721\":{\"" + policy.getPolicyId() + "\":{\"XXXXYYYY\":{\"haha\": \"hoho\", \"hahalist\":[\"list1\", \"list2\"]}, \"\":{\"name\":\"yay\"}}}}");
 
 		JSONObject utxo = cardanoCli.getUtxo(account.getAddress());
 		account.getAddress().setBalance(cardanoCli.calculateBalance(utxo));
@@ -180,6 +178,48 @@ public class CardanoCliTests {
 		mintTransactionRepository.save(mintTransaction);
 		assertNotNull(token1.getId());
 		assertNotNull(token2.getId());
+
+	}
+
+	@Test
+	void mintCip27() throws Exception {
+
+		String key = "e69db833-8af7-4bb9-81cf-df04282a41c0";
+		accountRepository.save(createAccount(key, testAddress));
+		Account account = accountRepository.findById(key).get();
+
+		Policy policy = cardanoCli.createPolicy(account, CardanoUtil.currentSlot(), 7);
+		account.getPolicies().add(policy);
+		account = accountRepository.save(account);
+
+		MintOrderSubmission mintOrder = new MintOrderSubmission();
+		mintOrder.setTip(false);
+		mintOrder.setTargetAddress(account.getAddress().getAddress());
+		mintOrder.setPolicyId(policy.getPolicyId());
+
+		ArrayList<TokenSubmission> tokens = new ArrayList<TokenSubmission>();
+
+		TokenSubmission token1 = new TokenSubmission();
+		token1.setAmount(1l);
+		token1.setAssetName("");
+		tokens.add(token1);
+
+
+		mintOrder.setTokens(tokens);
+		mintOrder.setTip(false);
+		mintOrder.setTargetAddress(account.getAddress().getAddress());
+		mintOrder.setMetaData("{ \"777\": { \"pct\": \"0.2\", \"addr\": \"addr1v9nevxg9wunfck0gt7hpxuy0elnqygglme3u6l3nn5q5gnq5dc9un\" } }");
+
+		JSONObject utxo = cardanoCli.getUtxo(account.getAddress());
+		account.getAddress().setBalance(cardanoCli.calculateBalance(utxo));
+
+		Transaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
+
+		cardanoCli.submitTransaction(mintTransaction);
+
+		mintTransaction.setAccount(account);
+		mintTransactionRepository.save(mintTransaction);
+		assertNotNull(token1.getId());
 
 	}
 

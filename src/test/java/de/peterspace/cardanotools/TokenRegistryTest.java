@@ -45,17 +45,16 @@ public class TokenRegistryTest {
 
 		TokenSubmission token1 = new TokenSubmission();
 		token1.setAmount(1000000l);
-		token1.setMetaData("{haha: 'hoho'}, hahalist:['list1', 'list2']");
 		token1.setAssetName("AAAAA");
 		tokens.add(token1);
 
 		TokenSubmission token2 = new TokenSubmission();
 		token2.setAmount(1000000l);
 		token2.setAssetName("BBBB");
-		token2.setMetaData("{}");
 		tokens.add(token2);
 
 		mintOrder.setTokens(tokens);
+		mintOrder.setMetaData("{\"721\":{\"" + mintOrder.getPolicyId() + "\":{\"XXXXYYYY\":{\"haha\": \"hoho\", \"hahalist\":[\"list1\", \"list2\"]}, \"\":{\"name\":\"yay\"}}}}");
 
 		Transaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
 		mintTransaction.setAccount(account);
