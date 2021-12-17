@@ -98,6 +98,7 @@ public class PolicyScanner {
         };
         // @formatter:on
 		ProcessUtil.runCommand(cmd);
+		log.info("Extracted {} policies from chain", outputPath.listFiles().length);
 	}
 
 	private void readPolicies() throws IOException {
@@ -113,10 +114,11 @@ public class PolicyScanner {
 				}
 				float progress = (float) count / files.length * 100;
 				if (count % 2000 == 0 || count == files.length) {
-					log.info("updatePolicies read: {}", String.format("%.2f%%", progress));
+					log.trace("updatePolicies read: {}", String.format("%.2f%%", progress));
 				}
 			}
 		}
+		log.info("Read {} policies from files", policies.size());
 	}
 
 }

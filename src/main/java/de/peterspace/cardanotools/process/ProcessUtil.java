@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ProcessUtil {
 
 	public static String runCommand(String... cmd) throws Exception {
-		log.trace(StringUtils.join(cmd, " "));
+		log.info(StringUtils.join(cmd, " "));
 		Process process = Runtime.getRuntime().exec(cmd);
 
 		StringWriter inputStringWriter = logAndCapture(process.getInputStream());
@@ -39,9 +39,18 @@ public class ProcessUtil {
 			synchronized (sw) {
 				String line;
 				try {
+					long linecount = 0;
 					while ((line = reader.readLine()) != null) {
-					log.trace(line);
+						if (linecount < 10) {
+							log.info(line);
+						} else {
+							if (linecount == 10) {
+								log.info("Tracing remaining liney only...");
+							}
+							log.trace(line);
+						}
 						sw.append(line);
+						linecount++;
 					}
 				} catch (IOException e) {
 					log.error("Reading the stream failed", e);

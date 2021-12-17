@@ -106,7 +106,7 @@ public class TokenRegistry {
 
 	@Scheduled(cron = "0 0 0 * * *")
 	public void updateRegistry() throws Exception {
-		tokenRegistryMetadata = fetchRegistry();
+		fetchRegistry();
 	}
 
 	@lombok.Value
@@ -154,7 +154,7 @@ public class TokenRegistry {
 		return url;
 	}
 
-	private Map<String, TokenRegistryMetadata> fetchRegistry() throws Exception {
+	private void fetchRegistry() throws Exception {
 
 		final Map<String, TokenRegistryMetadata> result = new HashMap<>();
 		ZipInputStream zis = new ZipInputStream(new URL("https://github.com/cardano-foundation/cardano-token-registry/archive/refs/heads/master.zip").openStream());
@@ -167,7 +167,7 @@ public class TokenRegistry {
 				continue;
 			}
 
-			log.info("Reading {}", ze.getName());
+			log.trace("Reading {}", ze.getName());
 
 			try {
 				String subject = FilenameUtils.getBaseName(ze.getName());
@@ -188,7 +188,9 @@ public class TokenRegistry {
 			}
 		}
 
-		return result;
+		tokenRegistryMetadata = result;
+
+		log.info("Fetched {} tokens from cardano-token-registry", result.size());
 	}
 
 	private String pushToFork(String tokenname, String filename, byte[] data) throws Exception {

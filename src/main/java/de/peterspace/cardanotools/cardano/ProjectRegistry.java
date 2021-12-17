@@ -43,7 +43,7 @@ public class ProjectRegistry {
 	public void init() throws Exception {
 		taskExecutor.execute(() -> {
 			try {
-				updateRegistry();
+				fetchRegistry();
 			} catch (Exception e) {
 				log.error("Init TokenRegistryMetadata", e);
 			}
@@ -53,7 +53,7 @@ public class ProjectRegistry {
 
 	@Scheduled(cron = "0 0 0 * * *")
 	public void updateRegistry() throws Exception {
-		projectRegistryMetadata = fetchRegistry();
+		fetchRegistry();
 	}
 
 	@Data
@@ -67,7 +67,7 @@ public class ProjectRegistry {
 	 * @return
 	 * @throws Exception
 	 */
-	private Map<String, ProjectMetadata> fetchRegistry() throws Exception {
+	private void fetchRegistry() throws Exception {
 
 		final Map<String, ProjectMetadata> result = new HashMap<>();
 		ZipInputStream zis = new ZipInputStream(new URL("https://github.com/Cardano-NFTs/policyIDs/archive/refs/heads/main.zip").openStream());
@@ -76,8 +76,11 @@ public class ProjectRegistry {
 			if (ze.isDirectory()) {
 				continue;
 			}
+			if(!ze.getName().startsWith("policyIDs-main/projects")) {
+				continue;
+			}
 
-			log.info("Reading {}", ze.getName());
+			log.trace("Reading {}", ze.getName());
 			try {
 
 				String jsonString = IOUtils.toString(zis, StandardCharsets.UTF_8);
@@ -95,7 +98,9 @@ public class ProjectRegistry {
 			}
 		}
 
-		return result;
+		projectRegistryMetadata = result;
+
+		log.info("Fetched {} projects from Cardano-NFTs/policyIDs", result.size());
 	}
 
 	private void processJsonObject(final Map<String, ProjectMetadata> result, JSONObject jsonObject) {
