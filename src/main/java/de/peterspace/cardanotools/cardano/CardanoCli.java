@@ -1,5 +1,6 @@
 package de.peterspace.cardanotools.cardano;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -423,7 +425,7 @@ public class CardanoCli {
 		if (StringUtils.isBlank(assetName)) {
 			return policyId;
 		} else {
-			return policyId + "." + assetName;
+			return policyId + "." + Hex.encodeHexString(assetName.getBytes(StandardCharsets.UTF_8));
 		}
 	}
 
@@ -543,17 +545,17 @@ public class CardanoCli {
 
 				DocumentContext jsonContext = JsonPath.parse(metaData);
 
-				Set<String> images = new HashSet<String>();
+				Set<Object> images = new HashSet<Object>();
 				images.addAll(jsonContext.read("$.*.*.*.image"));
 				images.addAll(jsonContext.read("$.*.*.*.files[*].src"));
 
-				for (String image : images) {
+				images.stream().filter(String.class::isInstance).map(String.class::cast).forEach(image -> {
 					try {
 						ipfsClient.pinFile(image);
 					} catch (Exception e) {
 						log.warn("Could not pin {}: {}", image, e.getMessage());
 					}
-				}
+				});
 
 			}
 
