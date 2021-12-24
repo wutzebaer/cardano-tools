@@ -400,7 +400,8 @@ public class CardanoCli {
 					while (otherPolicyTokens.hasNext()) {
 						String otherPolicyToken = otherPolicyTokens.next();
 						long amount = otherPolicy.getLong(otherPolicyToken);
-						transactionOutputs.add(mintOrderSubmission.getTargetAddress(), formatCurrency(otherPolicyId, otherPolicyToken), amount);
+						// readUtxo already returns hex asset names
+						transactionOutputs.add(mintOrderSubmission.getTargetAddress(), otherPolicyId + "." + otherPolicyToken, amount);
 					}
 				}
 			}
