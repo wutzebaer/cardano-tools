@@ -1,5 +1,6 @@
 package de.peterspace.cardanotools.dbsync;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -85,7 +86,7 @@ public class CardanoDbSyncClient {
 
 	private static final String tokenQuery = "select\r\n"
 			+ "encode(mtm.policy::bytea, 'hex') policyId,\r\n"
-			+ "encode(mtm.name::bytea, 'escape') tokenName,\r\n"
+			+ "mtm.name tokenName,\r\n"
 			+ "mtm.quantity,\r\n"
 			+ "encode(t.hash ::bytea, 'hex') txId,\r\n"
 			+ "tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape') json,\r\n"
@@ -128,7 +129,7 @@ public class CardanoDbSyncClient {
 			+ ")\r\n"
 			+ "select\r\n"
 			+ "encode(ot.policy::bytea, 'hex') policyId,\r\n"
-			+ "encode(ot.name::bytea, 'escape') tokenName,\r\n"
+			+ "ot.name tokenName,\r\n"
 			+ "max(ot.quantity) quantity,\r\n"
 			+ "max(encode(t.hash ::bytea, 'hex')) txId,\r\n"
 			+ "jsonb_agg(tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape'))->-1 json,\r\n"
@@ -159,7 +160,7 @@ public class CardanoDbSyncClient {
 			+ ")\r\n"
 			+ "select\r\n"
 			+ "encode(ot.policy::bytea, 'hex') policyId,\r\n"
-			+ "encode(ot.name::bytea, 'escape') tokenName,\r\n"
+			+ "ot.name tokenName,\r\n"
 			+ "max(ot.quantity) quantity,\r\n"
 			+ "max(encode(t.hash ::bytea, 'hex')) txId,\r\n"
 			+ "jsonb_agg(tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape'))->-1 json,\r\n"
@@ -202,7 +203,7 @@ public class CardanoDbSyncClient {
 			+ ")\r\n"
 			+ "select\r\n"
 			+ "encode(ot.policy::bytea, 'hex') policyId,\r\n"
-			+ "encode(ot.name::bytea, 'escape') tokenName,\r\n"
+			+ "ot.name tokenName,\r\n"
 			+ "max(ot.quantity) quantity,\r\n"
 			+ "max(encode(t.hash ::bytea, 'hex')) txId,\r\n"
 			+ "jsonb_agg(tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape'))->-1 json,\r\n"
@@ -399,19 +400,19 @@ public class CardanoDbSyncClient {
 			if (bits.length == 2 && bits[0].length() == 56) {
 				findTokenQuery += CardanoDbSyncClient.tokenQuery;
 				findTokenQuery += "WHERE ";
-				findTokenQuery += "encode(mtm.policy::bytea, 'hex')=? AND encode(mtm.name::bytea, 'escape') ilike ? ";
+				findTokenQuery += "mtm.policy=? AND mtm.name=? ";
 
-				fillPlaceholders.put(1, bits[0]);
-				fillPlaceholders.put(2, bits[1]);
+				fillPlaceholders.put(1, Hex.decodeHex(bits[0]));
+				fillPlaceholders.put(2, bits[1].getBytes(StandardCharsets.UTF_8));
 				if (fromMintid != null)
 					fillPlaceholders.put(3, fromMintid);
 
 			} else if (bits.length == 1 && bits[0].length() == 56) {
 				findTokenQuery += CardanoDbSyncClient.tokenQuery;
 				findTokenQuery += "WHERE ";
-				findTokenQuery += "encode(mtm.policy::bytea, 'hex')=?";
+				findTokenQuery += "mtm.policy=?";
 
-				fillPlaceholders.put(1, bits[0]);
+				fillPlaceholders.put(1, Hex.decodeHex(bits[0]));
 				if (fromMintid != null)
 					fillPlaceholders.put(2, fromMintid);
 
@@ -419,7 +420,7 @@ public class CardanoDbSyncClient {
 				findTokenQuery += CardanoDbSyncClient.tokenQuery;
 				findTokenQuery += "WHERE ";
 				findTokenQuery += "to_tsvector('english',json) @@ to_tsquery(?) ";
-				findTokenQuery += "and to_tsvector('english',tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape')) @@ to_tsquery(?) ";
+				findTokenQuery += "and to_tsvector('english',tm.json->encode(mtm.policy::bytea, 'hex')->convert_from(mtm.name, 'UTF8')) @@ to_tsquery(?) ";
 
 				String tsquery = string.trim().replaceAll("[^A-Za-z0-9]+", " & ");
 				fillPlaceholders.put(1, tsquery);
@@ -600,7 +601,7 @@ public class CardanoDbSyncClient {
 		while (result.next()) {
 			TokenData tokenData = new TokenData();
 			tokenData.setPolicyId(result.getString(1));
-			tokenData.setName(result.getString(2));
+			tokenData.setName(new String(result.getBytes(2), StandardCharsets.UTF_8));
 			tokenData.setQuantity(result.getLong(3));
 			tokenData.setTxId(result.getString(4));
 			tokenData.setJson(result.getString(5));
