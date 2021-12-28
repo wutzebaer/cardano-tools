@@ -34,7 +34,8 @@ public class MinOutputCalculator {
 
 		double other = (double) (Math.floor(minUTxOValue / adaOnlyUTxOSize) * (utxoEntrySizeWithoutVal + size));
 
-		return (long) Math.max(minUTxOValue, other);
+		// add 100_000 fund tolerance for additional utxos
+		return (long) Math.max(minUTxOValue, other) + 100_000;
 	}
 
 }
