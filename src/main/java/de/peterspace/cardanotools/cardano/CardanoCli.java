@@ -204,9 +204,9 @@ public class CardanoCli {
 		String metadataFilename = createMetadataFile(mintOrderSubmission, new JSONObject(policy.getPolicy()), policy.getPolicyId());
 		List<String> mints = createMintList(mintOrderSubmission, policy.getPolicyId());
 		long balance = calculateBalance(utxo);
-		long minOutput = MinOutputCalculator.calculate(
-				mintOrderSubmission.getTokens().stream().map(t -> t.getAssetName()).collect(Collectors.toSet()),
-				1l);
+		long minOutput = mintOrderSubmission.getTokens().stream().filter(t -> t.getAmount() > 0).findAny().isPresent() ? MinOutputCalculator.calculate(
+				mintOrderSubmission.getTokens().stream().filter(t -> t.getAmount() > 0).map(t -> t.getAssetName()).collect(Collectors.toSet()),
+				1l) : 0l;
 		long maxSlot = policy.getPolicyDueSlot();
 		String scriptFilename = filename("script");
 		fileUtil.writeFile(scriptFilename, policy.getPolicy());
