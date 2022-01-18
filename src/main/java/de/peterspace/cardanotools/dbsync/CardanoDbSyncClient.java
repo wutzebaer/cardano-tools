@@ -308,7 +308,8 @@ public class CardanoDbSyncClient {
 		taskExecutor.execute(() -> {
 			try (Connection connection = hds.getConnection()) {
 				log.debug("Create json index");
-				connection.createStatement().executeUpdate("CREATE INDEX if not exists jsonmetadata_fts ON tx_metadata USING gin (( to_tsvector('english',json) ));");
+				connection.createStatement().execute("CREATE INDEX if not exists jsonmetadata_fts ON tx_metadata USING gin (( to_tsvector('english',json) ));");
+				connection.commit();
 				log.debug("Create json index finshed");
 			} catch (SQLException e) {
 				log.error("Create json index", e);
