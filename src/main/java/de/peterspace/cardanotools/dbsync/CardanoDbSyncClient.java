@@ -85,11 +85,11 @@ public class CardanoDbSyncClient {
 			+ "group by stake_address_id, \"policy\", \"name\"";
 
 	private static final String tokenQuery = "select\r\n"
-			+ "encode(mtm.policy::bytea, 'hex') policyId,\r\n"
-			+ "mtm.name tokenName,\r\n"
+			+ "encode(ma.policy::bytea, 'hex') policyId,\r\n"
+			+ "ma.name tokenName,\r\n"
 			+ "mtm.quantity,\r\n"
 			+ "encode(t.hash ::bytea, 'hex') txId,\r\n"
-			+ "tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape') json,\r\n"
+			+ "tm.json->encode(ma.policy::bytea, 'hex')->encode(ma.name::bytea, 'escape') json,\r\n"
 			+ "t.invalid_before,\r\n"
 			+ "t.invalid_hereafter,\r\n"
 			+ "b.block_no,\r\n"
@@ -98,11 +98,12 @@ public class CardanoDbSyncClient {
 			+ "t.id tid, \r\n"
 			+ "mtm.id mintid,\r\n"
 			+ "b.slot_no,\r\n"
-			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.\"policy\"=mtm.\"policy\" and mtm2.\"name\"=mtm.\"name\") total_supply\r\n"
+			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident = mtm.ident) total_supply\r\n"
 			+ "from ma_tx_mint mtm\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
 			+ "left join tx_metadata tm on tm.tx_id = t.id \r\n"
-			+ "join block b on b.id = t.block_id ";
+			+ "join block b on b.id = t.block_id \r\n"
+			+ "join multi_asset ma on ma.id = mtm.ident ";
 
 	private static final String offerTokenQuery = "with\r\n"
 			+ "addresses as (\r\n"
@@ -152,18 +153,19 @@ public class CardanoDbSyncClient {
 
 	private static final String addressTokenQuery = "with  \r\n"
 			+ "owned_tokens as (\r\n"
-			+ "	SELECT mto.policy \"policy\", mto.name \"name\", quantity quantity, to2.id txId\r\n"
+			+ "	SELECT mto.ident ident, sum(quantity) quantity\r\n"
 			+ "	FROM utxo_view uv \r\n"
 			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\" \r\n"
 			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id \r\n"
 			+ "	where uv.address = ?\r\n"
+			+ "	group by mto.ident\r\n"
 			+ ")\r\n"
 			+ "select\r\n"
-			+ "encode(ot.policy::bytea, 'hex') policyId,\r\n"
-			+ "ot.name tokenName,\r\n"
+			+ "encode(ma.policy::bytea, 'hex') policyId,\r\n"
+			+ "ma.name tokenName,\r\n"
 			+ "max(ot.quantity) quantity,\r\n"
 			+ "max(encode(t.hash ::bytea, 'hex')) txId,\r\n"
-			+ "jsonb_agg(tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape'))->-1 json,\r\n"
+			+ "jsonb_agg(tm.json->encode(ma.policy::bytea, 'hex')->encode(ma.name::bytea, 'escape'))->-1 json,\r\n"
 			+ "max(t.invalid_before) invalid_before,\r\n"
 			+ "max(t.invalid_hereafter) invalid_hereafter,\r\n"
 			+ "max(b.block_no) block_no,\r\n"
@@ -172,14 +174,15 @@ public class CardanoDbSyncClient {
 			+ "max(t.id) tid, \r\n"
 			+ "max(mtm.id) mintid, \r\n"
 			+ "max(b.slot_no), \r\n"
-			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.\"policy\"=ot.\"policy\" and mtm2.\"name\"=ot.\"name\") total_supply \r\n"
+			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident=ma.id) total_supply \r\n"
 			+ "from owned_tokens ot\r\n"
-			+ "join ma_tx_mint mtm on mtm.\"policy\"=ot.policy and mtm.\"name\"=ot.name\r\n"
+			+ "join ma_tx_mint mtm on mtm.ident = ot.ident\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
 			+ "left join tx_metadata tm on tm.tx_id = t.id \r\n"
 			+ "join block b on b.id = t.block_id\r\n"
-			+ "group by ot.policy, ot.name\r\n"
-			+ "order by (select min(id) from ma_tx_mint sorter where sorter.policy = ot.policy and sorter.name = ot.name) desc";
+			+ "join multi_asset ma on ma.id = ot.ident\r\n"
+			+ "group by ma.id\r\n"
+			+ "order by (select min(id) from ma_tx_mint sorter where sorter.ident=ma.id) desc";
 
 	private static final String walletTokenQuery = "with  \r\n"
 			+ "stake_address_id as (\r\n"
@@ -195,18 +198,19 @@ public class CardanoDbSyncClient {
 			+ "	limit 1\r\n"
 			+ "),\r\n"
 			+ "owned_tokens as (\r\n"
-			+ "	SELECT mto.policy \"policy\", mto.name \"name\", quantity quantity, to2.id txId\r\n"
+			+ "	SELECT mto.ident ident, sum(quantity) quantity\r\n"
 			+ "	FROM utxo_view uv \r\n"
 			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\" \r\n"
 			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id \r\n"
 			+ "	where uv.stake_address_id = (select * from stake_address_id)\r\n"
+			+ "	group by mto.ident\r\n"
 			+ ")\r\n"
 			+ "select\r\n"
-			+ "encode(ot.policy::bytea, 'hex') policyId,\r\n"
-			+ "ot.name tokenName,\r\n"
+			+ "encode(ma.policy::bytea, 'hex') policyId,\r\n"
+			+ "ma.name tokenName,\r\n"
 			+ "max(ot.quantity) quantity,\r\n"
 			+ "max(encode(t.hash ::bytea, 'hex')) txId,\r\n"
-			+ "jsonb_agg(tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape'))->-1 json,\r\n"
+			+ "jsonb_agg(tm.json->encode(ma.policy::bytea, 'hex')->encode(ma.name::bytea, 'escape'))->-1 json,\r\n"
 			+ "max(t.invalid_before) invalid_before,\r\n"
 			+ "max(t.invalid_hereafter) invalid_hereafter,\r\n"
 			+ "max(b.block_no) block_no,\r\n"
@@ -215,14 +219,15 @@ public class CardanoDbSyncClient {
 			+ "max(t.id) tid, \r\n"
 			+ "max(mtm.id) mintid, \r\n"
 			+ "max(b.slot_no), \r\n"
-			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.\"policy\"=ot.\"policy\" and mtm2.\"name\"=ot.\"name\") total_supply \r\n"
+			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident=ma.id) total_supply \r\n"
 			+ "from owned_tokens ot\r\n"
-			+ "join ma_tx_mint mtm on mtm.\"policy\"=ot.policy and mtm.\"name\"=ot.name\r\n"
+			+ "join ma_tx_mint mtm on mtm.ident = ot.ident\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
 			+ "left join tx_metadata tm on tm.tx_id = t.id \r\n"
 			+ "join block b on b.id = t.block_id\r\n"
-			+ "group by ot.policy, ot.name\r\n"
-			+ "order by (select min(id) from ma_tx_mint sorter where sorter.policy = ot.policy and sorter.name = ot.name) desc";
+			+ "join multi_asset ma on ma.id = ot.ident\r\n"
+			+ "group by ma.id\r\n"
+			+ "order by (select min(id) from ma_tx_mint sorter where sorter.ident=ma.id) desc";
 
 	private static final String currentDelegateQuery = "with \r\n"
 			+ "potential_delegates as (\r\n"
@@ -400,7 +405,7 @@ public class CardanoDbSyncClient {
 			if (bits.length == 2 && bits[0].length() == 56) {
 				findTokenQuery += CardanoDbSyncClient.tokenQuery;
 				findTokenQuery += "WHERE ";
-				findTokenQuery += "mtm.policy=? AND mtm.name=? ";
+				findTokenQuery += "ma.policy=? AND ma.name=? ";
 
 				fillPlaceholders.put(1, Hex.decodeHex(bits[0]));
 				fillPlaceholders.put(2, bits[1].getBytes(StandardCharsets.UTF_8));
@@ -410,7 +415,7 @@ public class CardanoDbSyncClient {
 			} else if (bits.length == 1 && bits[0].length() == 56) {
 				findTokenQuery += CardanoDbSyncClient.tokenQuery;
 				findTokenQuery += "WHERE ";
-				findTokenQuery += "mtm.policy=?";
+				findTokenQuery += "ma.policy=?";
 
 				fillPlaceholders.put(1, Hex.decodeHex(bits[0]));
 				if (fromMintid != null)
@@ -420,7 +425,7 @@ public class CardanoDbSyncClient {
 				findTokenQuery += CardanoDbSyncClient.tokenQuery;
 				findTokenQuery += "WHERE ";
 				findTokenQuery += "to_tsvector('english',json) @@ to_tsquery(?) ";
-				findTokenQuery += "and to_tsvector('english',tm.json->encode(mtm.policy::bytea, 'hex')->convert_from(mtm.name, 'UTF8')) @@ to_tsquery(?) ";
+				findTokenQuery += "and to_tsvector('english',tm.json->encode(ma.policy::bytea, 'hex')->convert_from(ma.name, 'UTF8')) @@ to_tsquery(?) ";
 
 				String tsquery = string.trim().replaceAll("[^A-Za-z0-9]+", " & ");
 				fillPlaceholders.put(1, tsquery);
@@ -462,7 +467,7 @@ public class CardanoDbSyncClient {
 
 			findTokenQuery += CardanoDbSyncClient.tokenQuery;
 			findTokenQuery += "WHERE ";
-			findTokenQuery += "encode(mtm.policy::bytea, 'hex')=?";
+			findTokenQuery += "encode(ma.policy::bytea, 'hex')=?";
 			findTokenQuery += ") AS U where U.quantity > 0 ";
 			findTokenQuery += ") as numbered ";
 			findTokenQuery += "where rn = 1 ";
