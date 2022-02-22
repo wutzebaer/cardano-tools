@@ -37,9 +37,12 @@ public class TokenRegistryTest {
 
 		Account account = cardanoCli.createAccount();
 
+		account.getPolicies().add(0, cardanoCli.createPolicy(account, 0, 1));
+
 		MintOrderSubmission mintOrder = new MintOrderSubmission();
 		mintOrder.setTip(false);
 		mintOrder.setTargetAddress(account.getAddress().getAddress());
+		mintOrder.setPolicyId(account.getPolicies().get(0).getPolicyId());
 
 		ArrayList<TokenSubmission> tokens = new ArrayList<TokenSubmission>();
 
