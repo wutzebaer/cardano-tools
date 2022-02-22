@@ -1,5 +1,6 @@
 package de.peterspace.cardanotools.rest;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -66,6 +67,7 @@ public class MintRestInterface {
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		}
 		mintTransaction.setAccount(account.get());
+		mintTransaction.setSubmitDate(new Date());
 		cardanoCli.submitTransaction(mintTransaction);
 		mintTransactionRepository.save(mintTransaction);
 		return new ResponseEntity<Void>(HttpStatus.OK);

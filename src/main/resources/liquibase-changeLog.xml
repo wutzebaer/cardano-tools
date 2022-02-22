@@ -78,4 +78,11 @@
 		</addColumn>
 	</changeSet>
 
+	<changeSet id="0003" author="peter">
+		<addColumn tableName="transaction">
+			<column name="submit_date" type="timestamp">
+			</column>
+		</addColumn>
+	</changeSet>
+
 </databaseChangeLog>

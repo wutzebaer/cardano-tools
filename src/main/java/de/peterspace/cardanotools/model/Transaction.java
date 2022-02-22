@@ -1,5 +1,7 @@
 package de.peterspace.cardanotools.model;
 
+import java.util.Date;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -31,6 +33,9 @@ public class Transaction {
 	@JsonIgnore
 	@ManyToOne
 	private Account account;
+
+	@JsonIgnore
+	private Date submitDate;
 
 	@Column(columnDefinition = "TEXT")
 	@NotBlank
