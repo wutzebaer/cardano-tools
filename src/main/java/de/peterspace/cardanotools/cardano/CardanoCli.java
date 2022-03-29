@@ -117,6 +117,7 @@ public class CardanoCli {
 				.fundingAddressesHistory(new ArrayList<>())
 				.policies(new ArrayList<>())
 				.stake(0l)
+				.stakePositions(List.of())
 				.lastUpdate(new Date())
 				.build();
 		accountRepository.save(account);
