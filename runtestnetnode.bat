@@ -1,1 +1,1 @@
-docker run --name testnet-node --rm -v testenet-data:/data -v %cd%\cardano-minter-workdir:/work -v testnet-ipc:/ipc -e NETWORK=testnet inputoutput/cardano-node:1.33.1
+docker run --name testnet-node --rm -v testenet-data:/data -v %cd%\cardano-minter-workdir:/work -v testnet-ipc:/ipc -e NETWORK=testnet inputoutput/cardano-node:1.34.1

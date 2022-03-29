@@ -1,6 +1,8 @@
 package de.peterspace.cardanotools.ipfs;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +35,11 @@ public class IpfsClient {
 		IPFS ipfs = new IPFS(apiUrl);
 		// Map<Multihash, Object> ls = ipfs.pin.ls(PinType.recursive);
 		ipfs.pin.add(Multihash.fromBase58(StringUtils.right(ipfsUrl, 46)));
+	}
+
+	public Integer getSize(String ipfsUrl) throws IOException {
+		IPFS ipfs = new IPFS(apiUrl);
+		return (Integer) ipfs.object.stat(Multihash.fromBase58(StringUtils.right(ipfsUrl, 46))).get("CumulativeSize");
 	}
 
 }

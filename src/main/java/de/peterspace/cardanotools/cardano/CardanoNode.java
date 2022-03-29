@@ -116,7 +116,7 @@ public class CardanoNode {
 	}
 
 	private void startContainer() throws Exception {
-		ProcessUtil.runCommand(new String[] { "docker", "pull", "inputoutput/cardano-node:1.33.1" });
+		ProcessUtil.runCommand(new String[] { "docker", "pull", "inputoutput/cardano-node:1.34.1" });
 
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.add("docker");
@@ -140,7 +140,7 @@ public class CardanoNode {
 		cmd.add("-e");
 		cmd.add("NETWORK=" + network);
 
-		cmd.add("inputoutput/cardano-node");
+		cmd.add("inputoutput/cardano-node:1.34.1");
 
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
 	}

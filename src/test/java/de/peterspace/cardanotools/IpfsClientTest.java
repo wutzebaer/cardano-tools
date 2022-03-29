@@ -30,4 +30,12 @@ public class IpfsClientTest {
 		String ipfsUrl = "ipfs://QmT1fJsGrLpZ3sYSsvCdPyQYTrg3mGFX2h1fjKfHvnFp2m";
 		ipfsClient.pinFile(ipfsUrl);
 	}
+
+	@Test
+	void testSize() throws Exception {
+		String ipfsUrl = "ipfs://QmV5SkozRyQJD9facdup9fKqynAu4omjmLm4iTKiM5nSM1";
+		Integer size = ipfsClient.getSize(ipfsUrl);
+		assertThat(size).isEqualTo(9513);
+	}
+
 }

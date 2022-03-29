@@ -37,7 +37,7 @@ public class TokenRegistryTest {
 
 		Account account = cardanoCli.createAccount();
 
-		account.getPolicies().add(0, cardanoCli.createPolicy(account, 0, 1));
+		account.getPolicies().add(0, cardanoCli.createPolicy(account, cardanoCli.queryTip(), 1));
 
 		MintOrderSubmission mintOrder = new MintOrderSubmission();
 		mintOrder.setTip(false);
@@ -65,7 +65,7 @@ public class TokenRegistryTest {
 
 
 		Policy policy = account.getPolicy(mintTransaction.getMintOrderSubmission().getPolicyId());
-		String url = tokenRegistry.createTokenRegistration(new RegistrationMetadata(null, "AAAAA", policy.getPolicyId(), policy.getPolicy(), mintTransaction.getAccount().getAddress().getSkey(), "AAANAME", "AAADESC", "AAATI", null, logoData));
+		String url = tokenRegistry.createTokenRegistration(new RegistrationMetadata(null, "AAAAA", policy.getPolicyId(), policy.getPolicy(), mintTransaction.getAccount().getAddress().getSkey(), "AAANAME", "AAADESC", "AAATICKER", null, logoData));
 
 		log.debug(url);
 

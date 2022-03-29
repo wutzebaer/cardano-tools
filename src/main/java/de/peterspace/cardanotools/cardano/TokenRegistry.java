@@ -84,18 +84,6 @@ public class TokenRegistry {
 	public void init() throws Exception {
 		taskExecutor.execute(() -> {
 			try {
-				File repoDir = Paths.get(workingDir, "cardano-token-registry").toFile();
-				if (repoDir.exists()) {
-					Git git = Git.open(repoDir);
-					git
-							.fetch()
-							.call();
-				} else {
-					Git.cloneRepository()
-							.setURI(githubRegistryFork)
-							.setDirectory(repoDir)
-							.call();
-				}
 				updateRegistry();
 			} catch (Exception e) {
 				log.error("Init TokenRegistryMetadata", e);
@@ -135,11 +123,7 @@ public class TokenRegistry {
 		}
 
 		String subject = CardanoUtil.createSubject(registrationMetadata.getPolicyId(), registrationMetadata.getAssetName());
-		initDraft(subject);
 		addRequiredFields(subject, registrationMetadata);
-		addOptionalFields(subject, registrationMetadata);
-		sign(subject, registrationMetadata);
-		finalize(subject, registrationMetadata);
 
 		try {
 			registrationMetadataRepository.save(registrationMetadata);
@@ -244,113 +228,10 @@ public class TokenRegistry {
 		return new JSONObject(result).getString("html_url");
 	}
 
-	private void initDraft(String subject) throws Exception {
-		ArrayList<String> cmd = new ArrayList<String>();
-		cmd.add("docker");
-
-		cmd.add("run");
-		cmd.add("--rm");
-
-		cmd.add("-v");
-		cmd.add(workingDir + ":/work");
-
-		cmd.add("-w");
-		cmd.add("/work");
-
-		cmd.add("wutzebaer/cardano-tools-token-metadata-creator");
-		cmd.add("token-metadata-creator");
-		cmd.add("entry");
-
-		cmd.add("--init");
-		cmd.add(subject);
-
-		ProcessUtil.runCommand(cmd.toArray(new String[0]));
-	}
 
 	private void addRequiredFields(String subject, RegistrationMetadata registrationMetadata) throws Exception {
 		String temporaryFilePrefix = UUID.randomUUID().toString();
 		fileUtil.writeFile(temporaryFilePrefix + ".script", registrationMetadata.getPolicy());
-
-		ArrayList<String> cmd = new ArrayList<String>();
-		cmd.add("docker");
-
-		cmd.add("run");
-		cmd.add("--rm");
-
-		cmd.add("-v");
-		cmd.add(workingDir + ":/work");
-
-		cmd.add("-w");
-		cmd.add("/work");
-
-		cmd.add("wutzebaer/cardano-tools-token-metadata-creator");
-		cmd.add("token-metadata-creator");
-
-		cmd.add("entry");
-		cmd.add(subject);
-
-		cmd.add("--name");
-		cmd.add(registrationMetadata.getName());
-
-		cmd.add("--description");
-		cmd.add(registrationMetadata.getDescription());
-
-		cmd.add("--policy");
-		cmd.add(temporaryFilePrefix + ".script");
-
-		ProcessUtil.runCommand(cmd.toArray(new String[0]));
-
-		fileUtil.removeFile(temporaryFilePrefix + ".script");
-	}
-
-	private void addOptionalFields(String subject, RegistrationMetadata registrationMetadata) throws Exception {
-		String temporaryFilePrefix = UUID.randomUUID().toString();
-		fileUtil.writeFile(temporaryFilePrefix + ".script", registrationMetadata.getPolicy());
-
-		ArrayList<String> cmd = new ArrayList<String>();
-		cmd.add("docker");
-
-		cmd.add("run");
-		cmd.add("--rm");
-
-		cmd.add("-v");
-		cmd.add(workingDir + ":/work");
-
-		cmd.add("-w");
-		cmd.add("/work");
-
-		cmd.add("wutzebaer/cardano-tools-token-metadata-creator");
-		cmd.add("token-metadata-creator");
-
-		cmd.add("entry");
-		cmd.add(subject);
-
-		if (!StringUtils.isBlank(registrationMetadata.getTicker())) {
-			cmd.add("--ticker");
-			cmd.add(registrationMetadata.getTicker());
-		}
-
-		if (!StringUtils.isBlank(registrationMetadata.getUrl())) {
-			cmd.add("--url");
-			cmd.add(registrationMetadata.getUrl());
-		}
-
-		if (registrationMetadata.getLogo() != null) {
-			fileUtil.writeFile(temporaryFilePrefix + ".png", registrationMetadata.getLogo());
-			cmd.add("--logo");
-			cmd.add(temporaryFilePrefix + ".png");
-		}
-
-		ProcessUtil.runCommand(cmd.toArray(new String[0]));
-
-		fileUtil.removeFile(temporaryFilePrefix + ".script");
-		if (registrationMetadata.getLogo() != null) {
-			fileUtil.removeFile(temporaryFilePrefix + ".png");
-		}
-	}
-
-	private void sign(String subject, RegistrationMetadata registrationMetadata) throws Exception {
-		String temporaryFilePrefix = UUID.randomUUID().toString();
 		fileUtil.writeFile(temporaryFilePrefix + ".skey", registrationMetadata.getPolicySkey());
 
 		ArrayList<String> cmd = new ArrayList<String>();
@@ -369,39 +250,51 @@ public class TokenRegistry {
 		cmd.add("token-metadata-creator");
 
 		cmd.add("entry");
+
+		cmd.add("--init");
 		cmd.add(subject);
+
+		cmd.add("--name");
+		cmd.add(registrationMetadata.getName());
+
+		cmd.add("--description");
+		cmd.add(registrationMetadata.getDescription());
+
+		cmd.add("--policy");
+		cmd.add(temporaryFilePrefix + ".script");
+
+		if (!StringUtils.isBlank(registrationMetadata.getTicker())) {
+			cmd.add("--ticker");
+			cmd.add(registrationMetadata.getTicker());
+		}
+
+		if (!StringUtils.isBlank(registrationMetadata.getUrl())) {
+			cmd.add("--url");
+			cmd.add(registrationMetadata.getUrl());
+		}
+
+		if (registrationMetadata.getLogo() != null) {
+			fileUtil.writeFile(temporaryFilePrefix + ".png", registrationMetadata.getLogo());
+			cmd.add("--logo");
+			cmd.add(temporaryFilePrefix + ".png");
+		}
 
 		cmd.add("-a");
 		cmd.add(temporaryFilePrefix + ".skey");
 
-		ProcessUtil.runCommand(cmd.toArray(new String[0]));
-
-		fileUtil.removeFile(temporaryFilePrefix + ".skey");
-	}
-
-	private void finalize(String subject, RegistrationMetadata registrationMetadata) throws Exception {
-		ArrayList<String> cmd = new ArrayList<String>();
-		cmd.add("docker");
-
-		cmd.add("run");
-		cmd.add("--rm");
-
-		cmd.add("-v");
-		cmd.add(workingDir + ":/work");
-
-		cmd.add("-w");
-		cmd.add("/work");
-
-		cmd.add("wutzebaer/cardano-tools-token-metadata-creator");
-		cmd.add("token-metadata-creator");
-
-		cmd.add("entry");
-		cmd.add(subject);
-
 		cmd.add("--finalize");
 
 		ProcessUtil.runCommand(cmd.toArray(new String[0]));
+
+		fileUtil.removeFile(temporaryFilePrefix + ".script");
+		fileUtil.removeFile(temporaryFilePrefix + ".skey");
+		if (registrationMetadata.getLogo() != null) {
+			fileUtil.removeFile(temporaryFilePrefix + ".png");
+		}
 	}
+
+
+
 
 	public static void mainBAK(String[] args) throws Exception {
 		final String branchname = UUID.randomUUID().toString();
