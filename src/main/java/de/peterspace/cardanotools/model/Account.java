@@ -47,6 +47,10 @@ public class Account {
 
 	@NotNull
 	@ElementCollection
+	private List<StakePosition> stakePositions;
+
+	@NotNull
+	@ElementCollection
 	private List<String> fundingAddressesHistory;
 
 	@NotNull

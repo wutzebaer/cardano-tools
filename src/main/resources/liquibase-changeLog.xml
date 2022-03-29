@@ -85,4 +85,24 @@
 		</addColumn>
 	</changeSet>
 
+	<changeSet id="0004" author="peter">
+		<createTable tableName="account_stake_positions">
+			<column name="account_key" type="varchar(255)">
+				<constraints nullable="false" referencedTableName="account" referencedColumnNames="key" foreignKeyName="fk393nrk2t6qhsbif4p3k0u9yhc" />
+			</column>
+			<column name="funds" type="int8">
+				<constraints nullable="false" />
+			</column>
+			<column name="pool_hash" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="ticker_name" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="total_stake" type="int8">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+	</changeSet>
+
 </databaseChangeLog>

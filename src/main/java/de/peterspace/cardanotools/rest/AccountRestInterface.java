@@ -83,6 +83,7 @@ public class AccountRestInterface {
 		}
 		refreshAddress(account.getAddress());
 		account.setStake(cardanoDbSyncClient.getCurrentStake(account.getAddress().getAddress()));
+		account.setStakePositions(cardanoDbSyncClient.allStakes(account.getAddress().getAddress()));
 		account.setFundingAddresses(cardanoDbSyncClient.getFundingAddresses(account.getAddress().getAddress()));
 		account.setFundingAddressesHistory(cardanoDbSyncClient.getFundingAddressesHistory(account.getAddress().getAddress()));
 		account.setLastUpdate(new Date());

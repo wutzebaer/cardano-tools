@@ -78,7 +78,7 @@ public class TokenRegistry {
 	private final TaskExecutor taskExecutor;
 
 	@Getter
-	private Map<String, TokenRegistryMetadata> tokenRegistryMetadata;
+	private Map<String, TokenRegistryMetadata> tokenRegistryMetadata = new HashMap<>();
 
 	@PostConstruct
 	public void init() throws Exception {

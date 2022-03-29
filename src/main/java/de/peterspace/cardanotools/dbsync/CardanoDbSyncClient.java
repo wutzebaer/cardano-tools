@@ -28,6 +28,7 @@ import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.PolicyScanner;
 import de.peterspace.cardanotools.cardano.ProjectRegistry;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
+import de.peterspace.cardanotools.model.StakePosition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -258,6 +259,43 @@ public class CardanoDbSyncClient {
 			+ "	group by utxo.stake_address_id\r\n"
 			+ ")\r\n"
 			+ "select coalesce(sum(sum),0) from stakeamounts";
+
+	private static final String allDelegateQuery = "with \r\n"
+			+ "potential_delegates as (\r\n"
+			+ "	select to2.stake_address_id\r\n"
+			+ "	from tx_out to1\r\n"
+			+ "	join tx t on t.id = to1.tx_id\r\n"
+			+ "	join tx_in ti on ti.tx_in_id = t.id\r\n"
+			+ "	join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index\r\n"
+			+ "	where to1.address = ?\r\n"
+			+ "	and to2.address != ?\r\n"
+			+ ")\r\n"
+			+ ",delegates as (\r\n"
+			+ "	select stake_address_id, pool_id from (\r\n"
+			+ "		select row_number() over(PARTITION BY d.addr_id order by d.addr_id, d.id desc) row_number, ph.id pool_id, d.addr_id stake_address_id\r\n"
+			+ "		from delegation d \r\n"
+			+ "		join pool_hash ph on ph.id = d.pool_hash_id\r\n"
+			+ "		join stake_address sa on sa.id = d.addr_id \r\n"
+			+ "		join potential_delegates on potential_delegates.stake_address_id=d.addr_id\r\n"
+			+ "	) inner_query\r\n"
+			+ "	where row_number=1 \r\n"
+			+ ")\r\n"
+			+ ",stakeamounts as (\r\n"
+			+ "	select \r\n"
+			+ "	(select view from stake_address sa where sa.id=utxo.stake_address_id),\r\n"
+			+ "	max(d.pool_id) pool_id,\r\n"
+			+ "	sum(value)\r\n"
+			+ "	from utxo_view utxo \r\n"
+			+ "	join delegates d on d.stake_address_id = utxo.stake_address_id\r\n"
+			+ "	group by utxo.stake_address_id\r\n"
+			+ ")\r\n"
+			+ "select \r\n"
+			+ "coalesce(sum(sum),0) funds,\r\n"
+			+ "(select view from pool_hash ph where ph.id=sa.pool_id order by id desc limit 1) pool_hash,\r\n"
+			+ "(select ticker_name from pool_offline_data pod where pod.pool_id=sa.pool_id order by id desc limit 1) ticker_name,\r\n"
+			+ "(select sum(amount) from epoch_stake es where es.pool_id=sa.pool_id group by es.epoch_no order by es.epoch_no desc limit 1) total_stake\r\n"
+			+ "from stakeamounts sa\r\n"
+			+ "group by (sa.view, sa.pool_id)";
 
 	private static final String delegatorsQuery = "with \r\n"
 			+ "potential_delegates as (\r\n"
@@ -544,6 +582,19 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
+	public List<StakePosition> allStakes(String address) throws DecoderException {
+		try (Connection connection = hds.getConnection()) {
+			PreparedStatement getTxInput = connection.prepareStatement(allDelegateQuery);
+			getTxInput.setString(1, address);
+			getTxInput.setString(2, address);
+			ResultSet result = getTxInput.executeQuery();
+			return parseStakePositionResultset(result);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@TrackExecutionTime
 	public List<TokenData> walletTokens(String address) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
 			PreparedStatement getTxInput = connection.prepareStatement(walletTokenQuery);
@@ -600,6 +651,20 @@ public class CardanoDbSyncClient {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private List<StakePosition> parseStakePositionResultset(ResultSet result) throws SQLException {
+		List<StakePosition> stakePositions = new ArrayList<>();
+		while (result.next()) {
+			StakePosition stakePosition = new StakePosition();
+			stakePosition.setFunds(result.getLong(1));
+			stakePosition.setPoolHash(result.getString(2));
+			stakePosition.setTickerName(result.getString(3));
+			stakePosition.setTotalStake(result.getLong(4));
+			stakePositions.add(stakePosition);
+		}
+
+		return stakePositions;
 	}
 
 	private List<TokenData> parseTokenResultset(ResultSet result) throws SQLException {
