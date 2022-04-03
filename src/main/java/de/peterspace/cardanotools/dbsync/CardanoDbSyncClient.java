@@ -102,7 +102,7 @@ public class CardanoDbSyncClient {
 			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident = mtm.ident) total_supply\r\n"
 			+ "from ma_tx_mint mtm\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
-			+ "left join tx_metadata tm on tm.tx_id = t.id \r\n"
+			+ "left join tx_metadata tm on tm.tx_id = t.id and tm.key=721 \r\n"
 			+ "join block b on b.id = t.block_id \r\n"
 			+ "join multi_asset ma on ma.id = mtm.ident ";
 
@@ -526,16 +526,19 @@ public class CardanoDbSyncClient {
 	@TrackExecutionTime
 	public List<TokenData> latestTokens(Long fromMintid) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
-			String findTokenQuery = tokenQuery;
+			String findTokenQuery = tokenQuery + " WHERE ";
 
 			if (fromMintid == null) {
-				// no where
+				findTokenQuery += "true ";
 			} else if (fromMintid > 0) {
-				findTokenQuery += "WHERE mtm.id < ? ";
+				findTokenQuery += "mtm.id < ? ";
 			} else {
 				fromMintid = -fromMintid;
-				findTokenQuery += "WHERE mtm.id > ? ";
+				findTokenQuery += "mtm.id > ? ";
 			}
+
+			findTokenQuery += "AND tm.json->encode(ma.policy::bytea, 'hex')->encode(ma.name::bytea, 'escape') IS NOT NULL ";
+
 
 			findTokenQuery += "order by mtm.id desc ";
 
