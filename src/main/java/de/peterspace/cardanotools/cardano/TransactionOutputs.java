@@ -1,29 +1,18 @@
 package de.peterspace.cardanotools.cardano;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Data
 @Slf4j
-@NoArgsConstructor
 public class TransactionOutputs {
 
 	private Map<String, Map<String, Long>> outputs = new HashMap<>();
-
-	public TransactionOutputs(Map<String, Map<String, Long>> outputs) {
-		this.outputs = outputs;
-	}
 
 	public void add(String address, String currency, long amount) {
 		Map<String, Long> addressMap = outputs.computeIfAbsent(address, k -> new HashMap<>());
@@ -49,24 +38,6 @@ public class TransactionOutputs {
 
 				)
 				.collect(Collectors.toList());
-	}
-
-	public void substractFees(long fees) throws Exception {
-		while (fees > 0) {
-			Optional<Map<String, Long>> highestOutputOptional = outputs.values()
-					.stream()
-					.filter(m -> m.keySet().equals(Set.of("")))
-					.filter(m -> m.getOrDefault("", 0l) > 1000000)
-					.sorted(Comparator.comparingLong(m -> ((Map<String, Long>) m).getOrDefault("", 0l)).reversed())
-					.findFirst();
-			if (highestOutputOptional.isEmpty()) {
-				throw new Exception("Not enough ada to substract fees: " + outputs);
-			} else {
-				Map<String, Long> highestOutput = highestOutputOptional.get();
-				highestOutput.put("", highestOutputOptional.get().get("") - 1);
-			}
-			fees--;
-		}
 	}
 
 }

@@ -243,7 +243,6 @@ public class CardanoCli {
 
 		Transaction mintTransaction = createTransaction(transactionOutputs, utxo, 0l, null, null, null, null);
 		long fee = calculateFee(mintTransaction, utxo, 1);
-		transactionOutputs.substractFees(fee);
 
 		mintTransaction = createTransaction(transactionOutputs, utxo, fee, null, null, null, null);
 
