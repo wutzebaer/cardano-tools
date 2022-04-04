@@ -1,5 +1,8 @@
 package de.peterspace.cardanotools.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.validation.constraints.NotNull;
 
 import lombok.Data;

@@ -11,13 +11,19 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Data
 @Slf4j
+@NoArgsConstructor
 public class TransactionOutputs {
 
 	private Map<String, Map<String, Long>> outputs = new HashMap<>();
+
+	public TransactionOutputs(Map<String, Map<String, Long>> outputs) {
+		this.outputs = outputs;
+	}
 
 	public void add(String address, String currency, long amount) {
 		Map<String, Long> addressMap = outputs.computeIfAbsent(address, k -> new HashMap<>());
