@@ -63,9 +63,8 @@ public class TokenRegistryTest {
 		mintTransaction.setAccount(account);
 		byte[] logoData = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("mini.png"));
 
-
 		Policy policy = account.getPolicy(mintTransaction.getMintOrderSubmission().getPolicyId());
-		String url = tokenRegistry.createTokenRegistration(new RegistrationMetadata(null, "AAAAA", policy.getPolicyId(), policy.getPolicy(), mintTransaction.getAccount().getAddress().getSkey(), "AAANAME", "AAADESC", "AAATICKER", null, logoData));
+		String url = tokenRegistry.createTokenRegistration(new RegistrationMetadata(null, "AAAAA", policy.getPolicyId(), policy.getPolicy(), mintTransaction.getAccount().getAddress().getSkey(), "AAANAME", "AAADESC", "AAATICKER", null, logoData, 0));
 
 		log.debug(url);
 

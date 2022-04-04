@@ -105,4 +105,11 @@
 		</createTable>
 	</changeSet>
 
+	<changeSet id="0005" author="peter">
+		<addColumn tableName="registration_metadata">
+			<column name="decimals" type="int4">
+			</column>
+		</addColumn>
+	</changeSet>
+
 </databaseChangeLog>

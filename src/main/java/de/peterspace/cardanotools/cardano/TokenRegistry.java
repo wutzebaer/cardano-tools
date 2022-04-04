@@ -228,7 +228,6 @@ public class TokenRegistry {
 		return new JSONObject(result).getString("html_url");
 	}
 
-
 	private void addRequiredFields(String subject, RegistrationMetadata registrationMetadata) throws Exception {
 		String temporaryFilePrefix = UUID.randomUUID().toString();
 		fileUtil.writeFile(temporaryFilePrefix + ".script", registrationMetadata.getPolicy());
@@ -263,6 +262,9 @@ public class TokenRegistry {
 		cmd.add("--policy");
 		cmd.add(temporaryFilePrefix + ".script");
 
+		cmd.add("--decimals");
+		cmd.add(registrationMetadata.getDecimals() + "");
+
 		if (!StringUtils.isBlank(registrationMetadata.getTicker())) {
 			cmd.add("--ticker");
 			cmd.add(registrationMetadata.getTicker());
@@ -292,9 +294,6 @@ public class TokenRegistry {
 			fileUtil.removeFile(temporaryFilePrefix + ".png");
 		}
 	}
-
-
-
 
 	public static void mainBAK(String[] args) throws Exception {
 		final String branchname = UUID.randomUUID().toString();

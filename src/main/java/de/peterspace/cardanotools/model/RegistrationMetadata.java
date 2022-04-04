@@ -57,4 +57,5 @@ public class RegistrationMetadata {
 	//@Column(columnDefinition = "VARBINARY(52428800)")
 	byte[] logo;
 
+	int decimals;
 }
