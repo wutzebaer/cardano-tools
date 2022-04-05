@@ -241,9 +241,12 @@ public class CardanoCli {
 	public Transaction buildTransaction(Address address, TransactionOutputs transactionOutputs) throws Exception {
 		JSONObject utxo = getUtxo(address);
 
+		if (utxo.length() == 0) {
+			utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAddress).put("value", new JSONObject().put("lovelace", 1000000000l)));
+		}
+
 		Transaction mintTransaction = createTransaction(transactionOutputs, utxo, 0l, null, null, null, null);
 		long fee = calculateFee(mintTransaction, utxo, 1);
-		transactionOutputs.substractFees(fee);
 
 		mintTransaction = createTransaction(transactionOutputs, utxo, fee, null, null, null, null);
 
@@ -542,29 +545,28 @@ public class CardanoCli {
 			ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 			// pin files
-			String metaData = mintTransaction.getMintOrderSubmission().getMetaData();
-			if (!StringUtils.isBlank(metaData)) {
-
-				DocumentContext jsonContext = JsonPath.parse(metaData);
-
-				Set<Object> images = new HashSet<Object>();
-				images.addAll(jsonContext.read("$.*.*.*.image"));
-				images.addAll(jsonContext.read("$.*.*.*.files[*].src"));
-
-				images.stream().filter(String.class::isInstance).map(String.class::cast).forEach(image -> {
-					try {
-						ipfsClient.pinFile(image);
-					} catch (Exception e) {
-						log.warn("Could not pin {}: {}", image, e.getMessage());
-					}
-				});
-
+			if (mintTransaction.getMintOrderSubmission() != null) {
+				String metaData = mintTransaction.getMintOrderSubmission().getMetaData();
+				if (!StringUtils.isBlank(metaData)) {
+					DocumentContext jsonContext = JsonPath.parse(metaData);
+					Set<Object> images = new HashSet<Object>();
+					images.addAll(jsonContext.read("$.*.*.*.image"));
+					images.addAll(jsonContext.read("$.*.*.*.files[*].src"));
+					images.stream().filter(String.class::isInstance).map(String.class::cast).forEach(image -> {
+						try {
+							ipfsClient.pinFile(image);
+						} catch (Exception e) {
+							log.warn("Could not pin {}: {}", image, e.getMessage());
+						}
+					});
+				}
 			}
 
 		} catch (Exception e) {
-			if (e.getMessage().contains("BadInputsUTxO")) {
+			String message = StringUtils.defaultIfEmpty(e.getMessage(), "");
+			if (message.contains("BadInputsUTxO")) {
 				throw new Exception("You have unprocessed transactions, please wait a minute.");
-			} else if (e.getMessage().contains("OutsideValidityIntervalUTxO")) {
+			} else if (message.contains("OutsideValidityIntervalUTxO")) {
 				throw new Exception("You policy has expired. Confirm to generate a new one.");
 			} else {
 				throw e;

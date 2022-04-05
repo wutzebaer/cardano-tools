@@ -28,6 +28,7 @@ import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.PolicyScanner;
 import de.peterspace.cardanotools.cardano.ProjectRegistry;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
+import de.peterspace.cardanotools.model.EpochStakePosition;
 import de.peterspace.cardanotools.model.StakePosition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -322,6 +323,17 @@ public class CardanoDbSyncClient {
 			+ "join delegates d on d.stake_address_id = utxo.stake_address_id\r\n"
 			+ "group by utxo.stake_address_id";
 
+	private static final String epochStakeQuery = "select \r\n"
+			+ "sa.\"view\" stake_address,\r\n"
+			+ "(select to2.address from tx_out to2 where to2.stake_address_id=es.addr_id limit 1),\r\n"
+			+ "es.amount\r\n"
+			+ "from pool_hash ph\r\n"
+			+ "join epoch_stake es on es.pool_id=ph.id\r\n"
+			+ "join stake_address sa on sa.id=es.addr_id \r\n"
+			+ "where \r\n"
+			+ "ph.view=?\r\n"
+			+ "and epoch_no=?";
+
 	@Value("${cardano-db-sync.url}")
 	String url;
 
@@ -539,7 +551,6 @@ public class CardanoDbSyncClient {
 
 			findTokenQuery += "AND tm.json->encode(ma.policy::bytea, 'hex')->encode(ma.name::bytea, 'escape') IS NOT NULL ";
 
-
 			findTokenQuery += "order by mtm.id desc ";
 
 			findTokenQuery += "limit 100 ";
@@ -592,6 +603,19 @@ public class CardanoDbSyncClient {
 			getTxInput.setString(2, address);
 			ResultSet result = getTxInput.executeQuery();
 			return parseStakePositionResultset(result);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@TrackExecutionTime
+	public List<EpochStakePosition> epochStake(String pool, int epoch) throws DecoderException {
+		try (Connection connection = hds.getConnection()) {
+			PreparedStatement getTxInput = connection.prepareStatement(epochStakeQuery);
+			getTxInput.setString(1, pool);
+			getTxInput.setInt(2, epoch);
+			ResultSet result = getTxInput.executeQuery();
+			return parseEpochStakePositionResultset(result);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -654,6 +678,19 @@ public class CardanoDbSyncClient {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private List<EpochStakePosition> parseEpochStakePositionResultset(ResultSet result) throws SQLException {
+		List<EpochStakePosition> stakePositions = new ArrayList<>();
+		while (result.next()) {
+			EpochStakePosition stakePosition = new EpochStakePosition();
+			stakePosition.setStakeAddress(result.getString(1));
+			stakePosition.setAddress(result.getString(2));
+			stakePosition.setAmount(result.getLong(3));
+			stakePositions.add(stakePosition);
+		}
+
+		return stakePositions;
 	}
 
 	private List<StakePosition> parseStakePositionResultset(ResultSet result) throws SQLException {

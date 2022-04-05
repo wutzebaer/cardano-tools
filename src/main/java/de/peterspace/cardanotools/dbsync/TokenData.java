@@ -5,12 +5,15 @@ import javax.validation.constraints.NotNull;
 
 import org.apache.commons.codec.DecoderException;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.ProjectRegistry.ProjectMetadata;
 import de.peterspace.cardanotools.cardano.TokenRegistry.TokenRegistryMetadata;
 import lombok.Data;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TokenData {
 
 	@NotBlank
