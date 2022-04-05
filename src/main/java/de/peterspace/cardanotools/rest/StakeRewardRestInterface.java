@@ -80,6 +80,7 @@ public class StakeRewardRestInterface {
 	private List<EpochStakePosition> distributeFunds(boolean tip, List<TokenData> tokenData, Long lovelace, String poolHash, int epoch, long minStake) throws DecoderException {
 		List<EpochStakePosition> epochStake = cardanoDbSyncClient.epochStake(poolHash, epoch).stream().sorted(Comparator.comparing(EpochStakePosition::getAmount).reversed()).collect(Collectors.toList());
 		epochStake.removeIf(es -> es.getAmount() < minStake);
+		epochStake.removeIf(es -> StringUtils.isBlank(es.getAddress()));
 
 		if (tip) {
 			lovelace -= ONE_ADA;
