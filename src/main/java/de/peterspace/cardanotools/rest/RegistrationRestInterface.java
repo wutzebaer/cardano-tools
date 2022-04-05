@@ -33,11 +33,15 @@ public class RegistrationRestInterface {
 		RegistrationMetadata registrationMetadata = new ObjectMapper().readValue(registrationMetadataString, RegistrationMetadata.class);
 
 		if (file != null) {
-			BufferedImage image = ImageIO.read(file.getInputStream());
-			BufferedImage resized = Scalr.resize(image, Scalr.Mode.AUTOMATIC, 150, 150);
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			ImageIO.write(resized, "png", bos);
-			registrationMetadata.setLogo(bos.toByteArray());
+			if (file.getSize() > 65536 || !ImageIO.getImageReaders(ImageIO.createImageInputStream(file.getInputStream())).next().getFormatName().equals("png")) {
+				BufferedImage image = ImageIO.read(file.getInputStream());
+				BufferedImage resized = Scalr.resize(image, Scalr.Mode.AUTOMATIC, 150, 150);
+				ByteArrayOutputStream bos = new ByteArrayOutputStream();
+				ImageIO.write(resized, "png", bos);
+				registrationMetadata.setLogo(bos.toByteArray());
+			} else {
+				registrationMetadata.setLogo(file.getBytes());
+			}
 		}
 
 		String pullRequestUrl = tokenRegistry.createTokenRegistration(registrationMetadata);
