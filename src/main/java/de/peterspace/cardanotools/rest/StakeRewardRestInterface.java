@@ -31,6 +31,7 @@ import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.cardano.MinOutputCalculator;
 import de.peterspace.cardanotools.cardano.TransactionOutputs;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
+import de.peterspace.cardanotools.dbsync.PoolInfo;
 import de.peterspace.cardanotools.dbsync.TokenData;
 import de.peterspace.cardanotools.ipfs.IpfsClient;
 import de.peterspace.cardanotools.model.Account;
@@ -75,6 +76,11 @@ public class StakeRewardRestInterface {
 		epochStake = distributeFunds(tip, tokenData, lovelace - transaction.getBody().getFee(), poolHash, epoch, minStake);
 
 		return new ResponseEntity<List<EpochStakePosition>>(epochStake, HttpStatus.OK);
+	}
+
+	@GetMapping("pools")
+	public List<PoolInfo> getPoolList() {
+		return cardanoDbSyncClient.getPoolList();
 	}
 
 	private List<EpochStakePosition> distributeFunds(boolean tip, List<TokenData> tokenData, Long lovelace, String poolHash, int epoch, long minStake) throws DecoderException {

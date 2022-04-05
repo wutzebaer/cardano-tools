@@ -334,6 +334,11 @@ public class CardanoDbSyncClient {
 			+ "ph.view=?\r\n"
 			+ "and epoch_no=?";
 
+	private static final String poolListQuery = "select pod.ticker_name, ph.\"view\" \r\n"
+			+ "from pool_offline_data pod \r\n"
+			+ "join pool_hash ph on ph.id=pod.pool_id\r\n"
+			+ "order by pod.ticker_name";
+
 	@Value("${cardano-db-sync.url}")
 	String url;
 
@@ -675,6 +680,21 @@ public class CardanoDbSyncClient {
 				offerFundings.add(new OfferTokenFunding(result.getString(1), result.getString(2), result.getString(3), result.getLong(4)));
 			}
 			return offerFundings;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@TrackExecutionTime
+	public List<PoolInfo> getPoolList() {
+		try (Connection connection = hds.getConnection()) {
+			PreparedStatement getTxInput = connection.prepareStatement(poolListQuery);
+			ResultSet result = getTxInput.executeQuery();
+			List<PoolInfo> polInfos = new ArrayList<>();
+			while (result.next()) {
+				polInfos.add(new PoolInfo(result.getString(1), result.getString(2)));
+			}
+			return polInfos;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
