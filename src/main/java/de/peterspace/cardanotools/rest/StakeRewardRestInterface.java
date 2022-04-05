@@ -58,7 +58,7 @@ public class StakeRewardRestInterface {
 	private final CardanoDbSyncClient cardanoDbSyncClient;
 
 	@GetMapping("{key}/{poolHash}/{epoch}")
-	public ResponseEntity<List<EpochStakePosition>> getEpochStakes(@PathVariable("key") UUID key, @PathVariable("poolHash") String poolHash, @PathVariable int epoch, @RequestParam boolean tip, @RequestParam long minStake) throws Exception {
+	public ResponseEntity<List<EpochStakePosition>> getEpochStakes(@PathVariable("key") UUID key, @PathVariable("poolHash") String poolHash, @PathVariable int epoch, @RequestParam boolean tip, @RequestParam long minStake, @RequestParam boolean excludePledge) throws Exception {
 
 		Optional<Account> account = accountRepository.findById(key.toString());
 		if (!account.isPresent()) {
@@ -69,11 +69,11 @@ public class StakeRewardRestInterface {
 		});
 		Long lovelace = account.get().getAddress().getBalance();
 
-		List<EpochStakePosition> epochStake = distributeFunds(tip, tokenData, lovelace, poolHash, epoch, minStake);
+		List<EpochStakePosition> epochStake = distributeFunds(tip, tokenData, lovelace, poolHash, epoch, minStake, excludePledge);
 
 		ResponseEntity<Transaction> transaction = buildTransaction(key, epochStake);
 
-		epochStake = distributeFunds(tip, tokenData, lovelace - transaction.getBody().getFee(), poolHash, epoch, minStake);
+		epochStake = distributeFunds(tip, tokenData, lovelace - transaction.getBody().getFee(), poolHash, epoch, minStake, excludePledge);
 
 		return new ResponseEntity<List<EpochStakePosition>>(epochStake, HttpStatus.OK);
 	}
@@ -83,8 +83,8 @@ public class StakeRewardRestInterface {
 		return cardanoDbSyncClient.getPoolList();
 	}
 
-	private List<EpochStakePosition> distributeFunds(boolean tip, List<TokenData> tokenData, Long lovelace, String poolHash, int epoch, long minStake) throws DecoderException {
-		List<EpochStakePosition> epochStake = cardanoDbSyncClient.epochStake(poolHash, epoch).stream().sorted(Comparator.comparing(EpochStakePosition::getAmount).reversed()).collect(Collectors.toList());
+	private List<EpochStakePosition> distributeFunds(boolean tip, List<TokenData> tokenData, Long lovelace, String poolHash, int epoch, long minStake, boolean excludePledge) throws DecoderException {
+		List<EpochStakePosition> epochStake = cardanoDbSyncClient.epochStake(poolHash, epoch, excludePledge).stream().sorted(Comparator.comparing(EpochStakePosition::getAmount).reversed()).collect(Collectors.toList());
 		epochStake.removeIf(es -> es.getAmount() < minStake);
 		epochStake.removeIf(es -> StringUtils.isBlank(es.getAddress()));
 

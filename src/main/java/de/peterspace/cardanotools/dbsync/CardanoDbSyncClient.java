@@ -323,18 +323,19 @@ public class CardanoDbSyncClient {
 			+ "join delegates d on d.stake_address_id = utxo.stake_address_id\r\n"
 			+ "group by utxo.stake_address_id";
 
-	private static final String epochStakeQuery = "select \r\n"
+	private static final String epochStakeQuery = "select distinct \r\n"
 			+ "sa.\"view\" stake_address,\r\n"
 			+ "(select to2.address from tx_out to2 where to2.stake_address_id=es.addr_id limit 1),\r\n"
 			+ "es.amount\r\n"
 			+ "from pool_hash ph\r\n"
 			+ "join epoch_stake es on es.pool_id=ph.id\r\n"
 			+ "join stake_address sa on sa.id=es.addr_id \r\n"
+			+ "left join pool_owner po on po.pool_hash_id=ph.id and po.addr_id=sa.id \r\n"
 			+ "where \r\n"
 			+ "ph.view=?\r\n"
 			+ "and epoch_no=?";
 
-	private static final String poolListQuery = "select pod.ticker_name, ph.\"view\" \r\n"
+	private static final String poolListQuery = "select distinct pod.ticker_name, ph.\"view\" \r\n"
 			+ "from pool_offline_data pod \r\n"
 			+ "join pool_hash ph on ph.id=pod.pool_id\r\n"
 			+ "order by pod.ticker_name";
@@ -614,9 +615,9 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
-	public List<EpochStakePosition> epochStake(String pool, int epoch) throws DecoderException {
+	public List<EpochStakePosition> epochStake(String pool, int epoch, boolean excludePledge) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
-			PreparedStatement getTxInput = connection.prepareStatement(epochStakeQuery);
+			PreparedStatement getTxInput = connection.prepareStatement(epochStakeQuery + (excludePledge ? " and po.id is null" : ""));
 			getTxInput.setString(1, pool);
 			getTxInput.setInt(2, epoch);
 			ResultSet result = getTxInput.executeQuery();
