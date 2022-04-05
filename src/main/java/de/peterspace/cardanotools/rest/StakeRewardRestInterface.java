@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,7 +60,7 @@ public class StakeRewardRestInterface {
 	private final CardanoDbSyncClient cardanoDbSyncClient;
 
 	@GetMapping("{key}/{poolHash}/{epoch}")
-	public ResponseEntity<List<EpochStakePosition>> getEpochStakes(@PathVariable("key") UUID key, @PathVariable("poolHash") String poolHash, @PathVariable int epoch, @RequestParam boolean tip, @RequestParam long minStake, @RequestParam boolean excludePledge) throws Exception {
+	public ResponseEntity<List<EpochStakePosition>> getEpochStakes(@PathVariable("key") UUID key, @PathVariable("poolHash") String poolHash, @PathVariable int epoch, @RequestParam boolean tip, @RequestParam long minStake, @RequestParam boolean excludePledge, @RequestParam String message) throws Exception {
 
 		Optional<Account> account = accountRepository.findById(key.toString());
 		if (!account.isPresent()) {
@@ -71,7 +73,7 @@ public class StakeRewardRestInterface {
 
 		List<EpochStakePosition> epochStake = distributeFunds(tip, tokenData, lovelace, poolHash, epoch, minStake, excludePledge);
 
-		ResponseEntity<Transaction> transaction = buildTransaction(key, epochStake);
+		ResponseEntity<Transaction> transaction = buildTransaction(key, epochStake, message);
 
 		epochStake = distributeFunds(tip, tokenData, lovelace - transaction.getBody().getFee(), poolHash, epoch, minStake, excludePledge);
 
@@ -163,7 +165,7 @@ public class StakeRewardRestInterface {
 	}
 
 	@PostMapping("{key}/buildTransaction")
-	public ResponseEntity<Transaction> buildTransaction(@PathVariable("key") UUID key, @RequestBody List<EpochStakePosition> epochStakePositions) throws Exception {
+	public ResponseEntity<Transaction> buildTransaction(@PathVariable("key") UUID key, @RequestBody List<EpochStakePosition> epochStakePositions, @RequestParam String message) throws Exception {
 
 		Optional<Account> account = accountRepository.findById(key.toString());
 		if (!account.isPresent()) {
@@ -183,7 +185,12 @@ public class StakeRewardRestInterface {
 			}
 		}
 
-		Transaction transaction = cardanoCli.buildTransaction(account.get().getAddress(), transactionOutputs);
+		String messageJson = null;
+		if (!StringUtils.isBlank(message)) {
+			messageJson = new JSONObject().put("674", new JSONObject().put("msg", new JSONArray().put(message))).toString();
+		}
+
+		Transaction transaction = cardanoCli.buildTransaction(account.get().getAddress(), transactionOutputs, messageJson);
 
 		transaction.setMinOutput(epochStakePositions.stream().mapToLong(es -> es.getOutputs().getOrDefault("", 0l)).sum());
 

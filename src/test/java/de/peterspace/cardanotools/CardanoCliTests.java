@@ -255,7 +255,7 @@ public class CardanoCliTests {
 			}
 		}
 
-		Transaction transaction = cardanoCli.buildTransaction(account.getAddress(), transactionOutputs);
+		Transaction transaction = cardanoCli.buildTransaction(account.getAddress(), transactionOutputs, null);
 
 		cardanoCli.submitTransaction(transaction);
 

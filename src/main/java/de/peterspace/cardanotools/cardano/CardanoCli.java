@@ -238,17 +238,28 @@ public class CardanoCli {
 		return mintTransaction;
 	}
 
-	public Transaction buildTransaction(Address address, TransactionOutputs transactionOutputs) throws Exception {
+	public Transaction buildTransaction(Address address, TransactionOutputs transactionOutputs, String metadataJson) throws Exception {
 		JSONObject utxo = getUtxo(address);
 
 		if (utxo.length() == 0) {
 			utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAddress).put("value", new JSONObject().put("lovelace", 1000000000l)));
 		}
 
-		Transaction mintTransaction = createTransaction(transactionOutputs, utxo, 0l, null, null, null, null);
+		String metadataFilename = null;
+
+		if (!StringUtils.isBlank(metadataJson)) {
+			metadataFilename = filename("metadata");
+			fileUtil.writeFile(metadataFilename, metadataJson);
+		}
+
+		Transaction mintTransaction = createTransaction(transactionOutputs, utxo, 0l, metadataFilename, null, null, null);
 		long fee = calculateFee(mintTransaction, utxo, 1);
 
-		mintTransaction = createTransaction(transactionOutputs, utxo, fee, null, null, null, null);
+		mintTransaction = createTransaction(transactionOutputs, utxo, fee, metadataFilename, null, null, null);
+
+		if (!StringUtils.isBlank(metadataJson)) {
+			fileUtil.removeFile(metadataFilename);
+		}
 
 		signTransaction(mintTransaction, address);
 

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -65,7 +66,8 @@ public class ExchangeService {
 						// token founder gets ada
 						transactionOutputs.add(optionalTokenFounder.get().getAddress(), "", totalFunds);
 
-						Transaction buildTransaction = cardanoCli.buildTransaction(offer.getAddress(), transactionOutputs);
+
+						Transaction buildTransaction = cardanoCli.buildTransaction(offer.getAddress(), transactionOutputs, null);
 						buildTransaction.setAccount(offer.getAccount());
 						offer.setTransaction(buildTransaction);
 
