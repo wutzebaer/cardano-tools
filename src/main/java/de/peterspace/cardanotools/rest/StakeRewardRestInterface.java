@@ -1,6 +1,7 @@
 package de.peterspace.cardanotools.rest;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -77,7 +78,7 @@ public class StakeRewardRestInterface {
 	}
 
 	private List<EpochStakePosition> distributeFunds(boolean tip, List<TokenData> tokenData, Long lovelace, String poolHash, int epoch, long minStake) throws DecoderException {
-		List<EpochStakePosition> epochStake = cardanoDbSyncClient.epochStake(poolHash, epoch);
+		List<EpochStakePosition> epochStake = cardanoDbSyncClient.epochStake(poolHash, epoch).stream().sorted(Comparator.comparing(EpochStakePosition::getAmount).reversed()).collect(Collectors.toList());
 		epochStake.removeIf(es -> es.getAmount() < minStake);
 
 		if (tip) {
@@ -86,15 +87,16 @@ public class StakeRewardRestInterface {
 
 		long totalStake = epochStake.stream().mapToLong(es -> es.getAmount()).sum();
 
+		// distribute tokens
 		for (EpochStakePosition es : epochStake) {
 			double share = (double) es.getAmount() / totalStake;
 			es.getOutputs().clear();
 
-			// distribute tokens
 			for (TokenData td : tokenData) {
 				long tokenAmount = (long) (td.getQuantity() * share);
 				if (tokenAmount > 0) {
-					es.getOutputs().put(td.getPolicyId() + "." + td.getName(), tokenAmount);
+					String tokenKey = td.getPolicyId() + "." + td.getName();
+					es.getOutputs().put(tokenKey, tokenAmount);
 				}
 			}
 
@@ -111,10 +113,33 @@ public class StakeRewardRestInterface {
 			}
 		}
 
+		// distribute remaining tokens
+		if (!epochStake.isEmpty()) {
+			EpochStakePosition epochStakePosition = epochStake.get(0);
+
+			for (TokenData td : tokenData) {
+				String tokenKey = td.getPolicyId() + "." + td.getName();
+				long tokenLeft = td.getQuantity() - epochStake.stream().mapToLong(es -> es.getOutputs().getOrDefault(tokenKey, 0l)).sum();
+				if (tokenLeft > 0) {
+					epochStakePosition.getOutputs().put(tokenKey, epochStakePosition.getOutputs().getOrDefault(tokenKey, 0l) + tokenLeft);
+				}
+			}
+
+			Set<String> assetNames = epochStakePosition.getOutputs().keySet().stream().filter(k -> !StringUtils.isEmpty(k)).map(k -> k.split("\\.")[1]).collect(Collectors.toSet());
+			if (!assetNames.isEmpty()) {
+				int policies = epochStakePosition.getOutputs().keySet().stream().filter(k -> !StringUtils.isEmpty(k)).map(k -> k.split("\\.")[0]).collect(Collectors.toSet()).size();
+				long minOutput = MinOutputCalculator.calculate(assetNames, policies);
+				Long currentOutput = epochStakePosition.getOutputs().getOrDefault("", 0l);
+				long missingOutput = Math.max(minOutput - currentOutput, 0l);
+				epochStakePosition.getOutputs().put("", currentOutput + missingOutput);
+				lovelace -= missingOutput;
+			}
+		}
+
+		// distribute ada
 		long lovelaceDistributed = 0;
 		for (EpochStakePosition es : epochStake) {
 			double share = (double) es.getAmount() / totalStake;
-			// distribute ada
 			long additionalLovelaces = Math.max((long) (lovelace * share), 0);
 			es.getOutputs().put("", es.getOutputs().getOrDefault("", 0l) + additionalLovelaces);
 			lovelaceDistributed += additionalLovelaces;

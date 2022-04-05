@@ -545,29 +545,28 @@ public class CardanoCli {
 			ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 			// pin files
-			String metaData = mintTransaction.getMintOrderSubmission().getMetaData();
-			if (!StringUtils.isBlank(metaData)) {
-
-				DocumentContext jsonContext = JsonPath.parse(metaData);
-
-				Set<Object> images = new HashSet<Object>();
-				images.addAll(jsonContext.read("$.*.*.*.image"));
-				images.addAll(jsonContext.read("$.*.*.*.files[*].src"));
-
-				images.stream().filter(String.class::isInstance).map(String.class::cast).forEach(image -> {
-					try {
-						ipfsClient.pinFile(image);
-					} catch (Exception e) {
-						log.warn("Could not pin {}: {}", image, e.getMessage());
-					}
-				});
-
+			if (mintTransaction.getMintOrderSubmission() != null) {
+				String metaData = mintTransaction.getMintOrderSubmission().getMetaData();
+				if (!StringUtils.isBlank(metaData)) {
+					DocumentContext jsonContext = JsonPath.parse(metaData);
+					Set<Object> images = new HashSet<Object>();
+					images.addAll(jsonContext.read("$.*.*.*.image"));
+					images.addAll(jsonContext.read("$.*.*.*.files[*].src"));
+					images.stream().filter(String.class::isInstance).map(String.class::cast).forEach(image -> {
+						try {
+							ipfsClient.pinFile(image);
+						} catch (Exception e) {
+							log.warn("Could not pin {}: {}", image, e.getMessage());
+						}
+					});
+				}
 			}
 
 		} catch (Exception e) {
-			if (e.getMessage().contains("BadInputsUTxO")) {
+			String message = StringUtils.defaultIfEmpty(e.getMessage(), "");
+			if (message.contains("BadInputsUTxO")) {
 				throw new Exception("You have unprocessed transactions, please wait a minute.");
-			} else if (e.getMessage().contains("OutsideValidityIntervalUTxO")) {
+			} else if (message.contains("OutsideValidityIntervalUTxO")) {
 				throw new Exception("You policy has expired. Confirm to generate a new one.");
 			} else {
 				throw e;
