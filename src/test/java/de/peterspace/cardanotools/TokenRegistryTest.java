@@ -61,7 +61,7 @@ public class TokenRegistryTest {
 
 		Transaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
 		mintTransaction.setAccount(account);
-		byte[] logoData = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("mini.png"));
+		byte[] logoData = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("43dff6dc96b32060.png"));
 
 		Policy policy = account.getPolicy(mintTransaction.getMintOrderSubmission().getPolicyId());
 		String url = tokenRegistry.createTokenRegistration(new RegistrationMetadata(null, "AAAAA", policy.getPolicyId(), policy.getPolicy(), mintTransaction.getAccount().getAddress().getSkey(), "AAANAME", "AAADESC", "AAATICKER", null, logoData, 0));

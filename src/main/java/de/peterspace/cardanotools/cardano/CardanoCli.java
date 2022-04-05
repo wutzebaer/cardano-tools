@@ -241,6 +241,10 @@ public class CardanoCli {
 	public Transaction buildTransaction(Address address, TransactionOutputs transactionOutputs) throws Exception {
 		JSONObject utxo = getUtxo(address);
 
+		if (utxo.length() == 0) {
+			utxo.put("0f4533c49ee25821af3c2597876a1e9a9cc63ad5054dc453c4e4dc91a9cd7210#0", new JSONObject().put("address", dummyAddress).put("value", new JSONObject().put("lovelace", 1000000000l)));
+		}
+
 		Transaction mintTransaction = createTransaction(transactionOutputs, utxo, 0l, null, null, null, null);
 		long fee = calculateFee(mintTransaction, utxo, 1);
 
