@@ -100,7 +100,8 @@ public class CardanoDbSyncClient {
 			+ "t.id tid, \r\n"
 			+ "mtm.id mintid,\r\n"
 			+ "b.slot_no,\r\n"
-			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident = mtm.ident) total_supply\r\n"
+			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident = mtm.ident) total_supply,\r\n"
+			+ "ma.fingerprint\r\n"
 			+ "from ma_tx_mint mtm\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
 			+ "left join tx_metadata tm on tm.tx_id = t.id and tm.key=721 \r\n"
@@ -176,7 +177,8 @@ public class CardanoDbSyncClient {
 			+ "max(t.id) tid, \r\n"
 			+ "max(mtm.id) mintid, \r\n"
 			+ "max(b.slot_no), \r\n"
-			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident=ma.id) total_supply \r\n"
+			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident=ma.id) total_supply, \r\n"
+			+ "ma.fingerprint \r\n"
 			+ "from owned_tokens ot\r\n"
 			+ "join ma_tx_mint mtm on mtm.ident = ot.ident\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
@@ -221,7 +223,8 @@ public class CardanoDbSyncClient {
 			+ "max(t.id) tid, \r\n"
 			+ "max(mtm.id) mintid, \r\n"
 			+ "max(b.slot_no), \r\n"
-			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident=ma.id) total_supply \r\n"
+			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident=ma.id) total_supply, \r\n"
+			+ "ma.fingerprint \r\n"
 			+ "from owned_tokens ot\r\n"
 			+ "join ma_tx_mint mtm on mtm.ident = ot.ident\r\n"
 			+ "join tx t on t.id = mtm.tx_id \r\n"
@@ -478,6 +481,14 @@ public class CardanoDbSyncClient {
 				if (fromMintid != null)
 					fillPlaceholders.put(2, fromMintid);
 
+			} else if (string.length() == 44 && string.startsWith("asset")) {
+				System.err.println("");
+				findTokenQuery += CardanoDbSyncClient.tokenQuery;
+				findTokenQuery += "WHERE ";
+				findTokenQuery += "ma.fingerprint=?";
+				fillPlaceholders.put(1, string);
+				if (fromMintid != null)
+					fillPlaceholders.put(2, fromMintid);
 			} else {
 				findTokenQuery += CardanoDbSyncClient.tokenQuery;
 				findTokenQuery += "WHERE ";
@@ -752,6 +763,7 @@ public class CardanoDbSyncClient {
 			tokenData.setMintid(result.getLong(12));
 			tokenData.setSlotNo(result.getLong(13));
 			tokenData.setTotalSupply(result.getLong(14));
+			tokenData.setFingerprint(result.getString(15));
 			tokenData.setProjectMetadata(projectRegistry.getProjectRegistryMetadata().get(tokenData.getPolicyId()));
 			tokenDatas.add(tokenData);
 
