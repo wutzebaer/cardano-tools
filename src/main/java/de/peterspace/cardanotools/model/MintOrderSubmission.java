@@ -34,12 +34,14 @@ public class MintOrderSubmission {
 	private List<TokenSubmission> tokens;
 
 	@NotBlank
+	@Column(nullable = false)
 	private String targetAddress;
 
 	@NotNull
 	private Boolean tip;
 
 	@NotBlank
+	@Column(nullable = false)
 	private String policyId;
 
 	@Column(columnDefinition = "TEXT")
