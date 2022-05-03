@@ -115,11 +115,53 @@
 		<addNotNullConstraint columnDataType="varchar(255)" columnName="asset_name" tableName="token_submission" validate="true" />
 		<update tableName="registration_metadata">
 			<column name="decimals" valueNumeric="0" />
-			 <where>decimals is null</where>
+			<where>decimals is null</where>
 		</update>
 		<addNotNullConstraint columnDataType="int" columnName="decimals" tableName="registration_metadata" validate="true" />
 		<dropDefaultValue columnDataType="bigint" columnName="stake" tableName="account" />
 		<addNotNullConstraint columnDataType="varchar(255)" columnName="target_address" tableName="mint_order_submission" validate="true" />
+	</changeSet>
+
+	<changeSet id="0007" author="peter">
+		<createTable tableName="mint_on_demand">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="mint_on_demandPK" />
+			</column>
+			<column name="height" type="INTEGER">
+				<constraints nullable="false" />
+			</column>
+			<column name="metadata_string" type="TEXT">
+				<constraints nullable="false" />
+			</column>
+			<column name="width" type="INTEGER">
+				<constraints nullable="false" />
+			</column>
+			<column name="policy_id" type="BIGINT" />
+			<column name="amount" type="int8">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<createTable tableName="mint_on_demand_layer">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="mint_on_demand_layerPK" />
+			</column>
+			<column name="name" type="VARCHAR(255)" />
+			<column name="layers_id" type="BIGINT" />
+		</createTable>
+		<createTable tableName="mint_on_demand_layer_file">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="mint_on_demand_layer_filePK" />
+			</column>
+			<column name="name" type="VARCHAR(255)" />
+			<column name="weight" type="FLOAT8">
+				<constraints nullable="false" />
+			</column>
+			<column name="files_id" type="BIGINT" />
+		</createTable>
+		<addUniqueConstraint columnNames="policy_id" constraintName="UKpcr4usnmnrd8sje0ebewjimcg" tableName="mint_on_demand" />
+		<addForeignKeyConstraint baseColumnNames="layers_id" baseTableName="mint_on_demand_layer" constraintName="FK5asjkg361uo8s7tq3s7dr0inp" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="mint_on_demand" validate="true" />
+		<addForeignKeyConstraint baseColumnNames="files_id" baseTableName="mint_on_demand_layer_file" constraintName="FKhwmtm8qufww9of56jnsmkl7nu" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="mint_on_demand_layer" validate="true" />
+		<addForeignKeyConstraint baseColumnNames="policy_id" baseTableName="mint_on_demand" constraintName="FKsifhckpw7uf0rgp9i7rgwgmc2" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="policy" validate="true" />
 	</changeSet>
 
 </databaseChangeLog>
