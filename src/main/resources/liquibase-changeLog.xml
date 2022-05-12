@@ -123,45 +123,63 @@
 	</changeSet>
 
 	<changeSet id="0007" author="peter">
-		<createTable tableName="mint_on_demand">
+		<createTable tableName="drop">
 			<column autoIncrement="true" name="id" type="BIGINT">
-				<constraints nullable="false" primaryKey="true" primaryKeyName="mint_on_demandPK" />
+				<constraints nullable="false" primaryKey="true" primaryKeyName="dropPK" />
 			</column>
-			<column name="height" type="INTEGER">
+			<column name="max_per_transaction" type="INTEGER">
 				<constraints nullable="false" />
 			</column>
-			<column name="metadata_string" type="TEXT">
+			<column name="name" type="VARCHAR(255)">
 				<constraints nullable="false" />
 			</column>
-			<column name="width" type="INTEGER">
+			<column name="price" type="BIGINT">
 				<constraints nullable="false" />
 			</column>
-			<column name="policy_id" type="BIGINT" />
-			<column name="amount" type="int8">
+			<column name="profit_address" type="VARCHAR(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="running" type="BOOLEAN">
+				<constraints nullable="false" />
+			</column>
+			<column name="whitelist" type="TEXT">
+				<constraints nullable="false" />
+			</column>
+			<column name="address_id" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+			<column name="policy_id" type="BIGINT">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
-		<createTable tableName="mint_on_demand_layer">
-			<column autoIncrement="true" name="id" type="BIGINT">
-				<constraints nullable="false" primaryKey="true" primaryKeyName="mint_on_demand_layerPK" />
+		<createTable tableName="drop_drop_nfts">
+			<column name="drop_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true" />
 			</column>
-			<column name="name" type="VARCHAR(255)" />
-			<column name="layers_id" type="BIGINT" />
+			<column name="asset_name" type="VARCHAR(255)" />
+			<column name="metadata" type="TEXT" />
+			<column name="sequence" type="INTEGER">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
 		</createTable>
-		<createTable tableName="mint_on_demand_layer_file">
-			<column autoIncrement="true" name="id" type="BIGINT">
-				<constraints nullable="false" primaryKey="true" primaryKeyName="mint_on_demand_layer_filePK" />
-			</column>
-			<column name="name" type="VARCHAR(255)" />
-			<column name="weight" type="FLOAT8">
+		<createTable tableName="drop_drop_nfts_available_asset_names">
+			<column name="drop_id" type="BIGINT">
 				<constraints nullable="false" />
 			</column>
-			<column name="files_id" type="BIGINT" />
+			<column name="drop_nfts_available_asset_names" type="VARCHAR(255)" />
 		</createTable>
-		<addUniqueConstraint columnNames="policy_id" constraintName="UKpcr4usnmnrd8sje0ebewjimcg" tableName="mint_on_demand" />
-		<addForeignKeyConstraint baseColumnNames="layers_id" baseTableName="mint_on_demand_layer" constraintName="FK5asjkg361uo8s7tq3s7dr0inp" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="mint_on_demand" validate="true" />
-		<addForeignKeyConstraint baseColumnNames="files_id" baseTableName="mint_on_demand_layer_file" constraintName="FKhwmtm8qufww9of56jnsmkl7nu" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="mint_on_demand_layer" validate="true" />
-		<addForeignKeyConstraint baseColumnNames="policy_id" baseTableName="mint_on_demand" constraintName="FKsifhckpw7uf0rgp9i7rgwgmc2" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="policy" validate="true" />
+		<createTable tableName="drop_drop_nfts_sold_asset_names">
+			<column name="drop_id" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+			<column name="drop_nfts_sold_asset_names" type="VARCHAR(255)" />
+		</createTable>
+		<addForeignKeyConstraint baseColumnNames="address_id" baseTableName="drop" constraintName="FK80w65fl1r2meeg8vi1mfktyvn" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="address" validate="true" />
+		<addForeignKeyConstraint baseColumnNames="policy_id" baseTableName="drop" constraintName="FKdtw63scvqledgdb4v2l3p84w5" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="policy" validate="true" />
+		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_drop_nfts" constraintName="FKg2a3govenndtebyoqbjp22jgi" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
+		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_drop_nfts_sold_asset_names" constraintName="FKlqbe33dd1ts7hll2kmdmqcujv" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
+		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_drop_nfts_available_asset_names" constraintName="FKp0mldgolk9lktlyagnrv0o0a5" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
 	</changeSet>
+
 
 </databaseChangeLog>

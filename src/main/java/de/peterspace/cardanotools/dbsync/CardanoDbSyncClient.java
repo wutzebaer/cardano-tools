@@ -1,6 +1,7 @@
 package de.peterspace.cardanotools.dbsync;
 
 import java.nio.charset.StandardCharsets;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -233,6 +234,16 @@ public class CardanoDbSyncClient {
 			+ "join multi_asset ma on ma.id = ot.ident\r\n"
 			+ "group by ma.id\r\n"
 			+ "order by (select min(id) from ma_tx_mint sorter where sorter.ident=ma.id) desc";
+
+	private static final String findStakeAddressIds = "select to2.stake_address_id\r\n"
+			+ "from tx_out to2 \r\n"
+			+ "where \r\n"
+			+ "to2.address IN (?)\r\n"
+			+ "union\r\n"
+			+ "select sa.id \r\n"
+			+ "from stake_address sa \r\n"
+			+ "where \r\n"
+			+ "sa.\"view\" IN (?)";
 
 	private static final String currentDelegateQuery = "with \r\n"
 			+ "potential_delegates as (\r\n"
@@ -647,6 +658,26 @@ public class CardanoDbSyncClient {
 			ResultSet result = getTxInput.executeQuery();
 			List<TokenData> tokenDatas = parseTokenResultset(result);
 			return tokenDatas;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@TrackExecutionTime
+	public List<Long> findStakeAddressIds(String[] address) throws DecoderException {
+		try (Connection connection = hds.getConnection()) {
+			PreparedStatement getTxInput = connection.prepareStatement(findStakeAddressIds);
+			Array addressArray = connection.createArrayOf("VARCHAR", address);
+			getTxInput.setArray(1, addressArray);
+			getTxInput.setArray(2, addressArray);
+			ResultSet result = getTxInput.executeQuery();
+
+			List<Long> stakeAddressIds = new ArrayList<>();
+			while (result.next()) {
+				stakeAddressIds.add(result.getLong(1));
+			}
+			return stakeAddressIds;
+
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
