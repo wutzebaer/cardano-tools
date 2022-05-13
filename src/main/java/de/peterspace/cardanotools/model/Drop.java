@@ -57,8 +57,8 @@ public class Drop {
 	private String profitAddress;
 
 	@NotNull
-	@Column(columnDefinition = "TEXT")
-	private String whitelist;
+	@ElementCollection
+	private Set<String> whitelist;
 
 	@NotNull
 	@ElementCollection

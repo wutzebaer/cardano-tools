@@ -40,4 +40,18 @@ public class TransactionOutputs {
 				.collect(Collectors.toList());
 	}
 
+	public String toCliFormat(String address) {
+		return outputs
+				.entrySet().stream()
+				.filter(addressEntry -> addressEntry.getKey().equals(address))
+				.map(addressEntry -> addressEntry.getKey().split("#")[0] + "+" +
+						addressEntry.getValue()
+								.entrySet().stream()
+								.map(currencyEntry -> (currencyEntry.getValue() + " " + currencyEntry.getKey()).trim())
+								.collect(Collectors.joining("+"))
+
+				)
+				.findFirst().orElse("");
+	}
+
 }

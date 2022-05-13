@@ -48,13 +48,17 @@ public class CardanoCli {
 
 	@Value("${pledge-address}")
 	private String pledgeAddress;
+
+	@Value("${working.dir}")
+	private String workingDir;
+
+	@Value("${cardano-node.ipc-volume-name}")
+	private String ipcVolumeName;
+
 	private final CardanoNode cardanoNode;
 	private final AccountRepository accountRepository;
 	private final FileUtil fileUtil;
 	private final IpfsClient ipfsClient;
-
-	@Value("${working.dir}")
-	private String workingDir;
 
 	private String[] cardanoCliCmd;
 	private String[] networkMagicArgs;
@@ -65,11 +69,14 @@ public class CardanoCli {
 
 		// @formatter:off
         cardanoCliCmd = new String[] {
-                "docker", "exec",
+                "docker", "run",
+                "--rm",
+                "--entrypoint", "cardano-cli",
                 "-w", "/work",
                 "-e", "CARDANO_NODE_SOCKET_PATH=/ipc/node.socket",
-                cardanoNode.getContainerName(),
-                "cardano-cli"
+                "-v", ipcVolumeName + ":/ipc",
+                "-v", workingDir + ":/work",
+                "inputoutput/cardano-node:1.34.1"
         };
         // @formatter:on
 		this.networkMagicArgs = cardanoNode.getNetworkMagicArgs();
@@ -104,6 +111,25 @@ public class CardanoCli {
 		String jsonString = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 		JSONObject jsonObject = new JSONObject(jsonString);
 		return jsonObject.getLong("slot");
+	}
+
+	public long calculateMinUtxo(String addressValue) throws Exception {
+		ArrayList<String> cmd = new ArrayList<String>();
+		cmd.addAll(List.of(cardanoCliCmd));
+
+		cmd.add("transaction");
+		cmd.add("calculate-min-required-utxo");
+
+		cmd.add("--protocol-params-file");
+		cmd.add("protocol.json");
+
+		cmd.add("--tx-out");
+		cmd.add(addressValue);
+
+		String feeString = ProcessUtil.runCommand(cmd.toArray(new String[0]));
+		long fee = Long.valueOf(feeString.split(" ")[1]);
+
+		return fee;
 	}
 
 	public Account createAccount() throws Exception {
