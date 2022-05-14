@@ -142,9 +142,6 @@
 			<column name="running" type="BOOLEAN">
 				<constraints nullable="false" />
 			</column>
-			<column name="whitelist" type="TEXT">
-				<constraints nullable="false" />
-			</column>
 			<column name="address_id" type="BIGINT">
 				<constraints nullable="false" />
 			</column>
@@ -174,7 +171,22 @@
 			</column>
 			<column name="drop_nfts_sold_asset_names" type="VARCHAR(255)" />
 		</createTable>
+		<createTable tableName="drop_whitelist">
+			<column name="drop_id" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+			<column name="whitelist" type="VARCHAR(255)" />
+		</createTable>
+		<createTable tableName="wallet">
+			<column name="stake_address_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="walletPK" />
+			</column>
+			<column name="tokens_minted" type="INTEGER">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
 		<addForeignKeyConstraint baseColumnNames="address_id" baseTableName="drop" constraintName="FK80w65fl1r2meeg8vi1mfktyvn" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="address" validate="true" />
+		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_whitelist" constraintName="FKb0nq30wqe93d2rsaxoyq08ci6" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
 		<addForeignKeyConstraint baseColumnNames="policy_id" baseTableName="drop" constraintName="FKdtw63scvqledgdb4v2l3p84w5" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="policy" validate="true" />
 		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_drop_nfts" constraintName="FKg2a3govenndtebyoqbjp22jgi" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
 		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_drop_nfts_sold_asset_names" constraintName="FKlqbe33dd1ts7hll2kmdmqcujv" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />

@@ -42,7 +42,7 @@ public class AccountRestInterface {
 	@JsonView(Private.class)
 	public Account createAccount() throws Exception {
 		Account account = cardanoCli.createAccount();
-		refreshAndSaveAccount(account, 7);
+		refreshAndSaveAccount(account, 365);
 		return account;
 	}
 
@@ -53,7 +53,7 @@ public class AccountRestInterface {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-			refreshAndSaveAccount(account, 7);
+			refreshAndSaveAccount(account, 365);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<Account>(HttpStatus.NOT_FOUND);

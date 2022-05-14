@@ -241,12 +241,12 @@ public class CardanoDbSyncClient {
 	private static final String findStakeAddressIds = "select to2.stake_address_id\r\n"
 			+ "from tx_out to2 \r\n"
 			+ "where \r\n"
-			+ "to2.address IN (?)\r\n"
+			+ "to2.address = ANY (?)\r\n"
 			+ "union\r\n"
 			+ "select sa.id \r\n"
 			+ "from stake_address sa \r\n"
 			+ "where \r\n"
-			+ "sa.\"view\" IN (?)";
+			+ "sa.\"view\" = ANY (?)";
 
 	private static final String currentDelegateQuery = "with \r\n"
 			+ "potential_delegates as (\r\n"

@@ -14,6 +14,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import javax.transaction.Transactional;
+
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -57,8 +59,9 @@ public class DropperService {
 	private final Cache<Long, Boolean> blacklist = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
 
 	@Scheduled(cron = "*/1 * * * * *")
+	@Transactional
 	public void dropNfts() {
-		List<Drop> drops = dropRepository.findByRunningIsTrue();
+		List<Drop> drops = dropRepository.findAll();
 
 		for (Drop drop : drops) {
 
@@ -74,7 +77,7 @@ public class DropperService {
 					Set<Long> whitelist = cardanoDbSyncClient.findStakeAddressIds(drop.getWhitelist().toArray(new String[] {}));
 					long lockedFunds = calculateLockedFunds(transactionInputs);
 
-					if (!whitelist.isEmpty() && !whitelist.contains(transactionInputs.get(0).getStakeAddressId())) {
+					if (!whitelist.isEmpty() && !whitelist.contains(transactionInputs.get(0).getStakeAddressId()) || !drop.isRunning()) {
 						refund(fundAddress, transactionInputs, lockedFunds);
 					} else {
 
@@ -102,6 +105,11 @@ public class DropperService {
 								walletRepository.save(wallet.get());
 								log.info("Wallet {} has {} tokens left", wallet.get().getStakeAddressId(), drop.getMaxPerTransaction() - wallet.get().getTokensMinted());
 							}
+
+							List<String> usedAssets = tokens.stream().map(t -> t.getAssetName()).collect(Collectors.toList());
+							drop.getDropNftsAvailableAssetNames().removeAll(usedAssets);
+							drop.getDropNftsSoldAssetNames().addAll(usedAssets);
+							dropRepository.save(drop);
 
 							sell(drop, transactionInputs, tokens, totalPrice, lockedFunds);
 						}

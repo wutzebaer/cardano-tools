@@ -15,6 +15,6 @@ public interface DropRepository extends PagingAndSortingRepository<Drop, Long> {
 
 	Drop findByPolicyAndId(Policy policy, Long id);
 
-	List<Drop> findByRunningIsTrue();
+	List<Drop> findAll();
 
 }
