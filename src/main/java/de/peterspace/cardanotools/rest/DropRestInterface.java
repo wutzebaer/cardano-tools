@@ -22,7 +22,7 @@ import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.Drop;
 import de.peterspace.cardanotools.model.Policy;
-import de.peterspace.cardanotools.model.Views.Persisted;
+import de.peterspace.cardanotools.model.PublicDropInfo;
 import de.peterspace.cardanotools.model.Views.Transient;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.DropRepository;
@@ -48,7 +48,10 @@ public class DropRestInterface {
 		drop.setPolicy(policy);
 		drop.setAddress(cardanoCli.createAddress());
 		drop.setDropNftsAvailableAssetNames(drop.getDropNfts().stream().map(n -> n.getAssetName()).collect(Collectors.toSet()));
-		dropRepository.save(drop);
+		drop.setPrettyUrl(encodeForUrl(drop.getName()) + "-" + drop.getId());
+		drop = dropRepository.save(drop);
+		drop.setPrettyUrl(encodeForUrl(drop.getName()) + "-" + drop.getId());
+		drop = dropRepository.save(drop);
 		return new ResponseEntity<Void>(HttpStatus.ACCEPTED);
 	}
 
@@ -68,6 +71,7 @@ public class DropRestInterface {
 		persistentDrop.setProfitAddress(drop.getProfitAddress());
 		persistentDrop.setWhitelist(drop.getWhitelist());
 		persistentDrop.setDropNfts(drop.getDropNfts());
+		persistentDrop.setPrettyUrl(drop.getPrettyUrl());
 
 		persistentDrop.setDropNftsAvailableAssetNames(drop.getDropNfts().stream().map(n -> n.getAssetName()).collect(Collectors.toSet()));
 		persistentDrop.getDropNftsAvailableAssetNames().removeAll(persistentDrop.getDropNftsSoldAssetNames());
@@ -87,6 +91,17 @@ public class DropRestInterface {
 		List<Drop> drops = dropRepository.findByPolicy(policy);
 
 		return new ResponseEntity<List<Drop>>(drops, HttpStatus.OK);
+	}
+
+	@GetMapping("{prettyUrl}")
+	public ResponseEntity<PublicDropInfo> getDrop(@PathVariable("prettyUrl") String prettyUrl) throws Exception {
+		Drop drop = dropRepository.findByPrettyUrl(prettyUrl);
+		PublicDropInfo publicDropInfo = new PublicDropInfo(drop.getName(), drop.getDropNfts().size(), drop.getDropNftsAvailableAssetNames().size(), drop.getAddress().getAddress(), drop.getMaxPerTransaction(), drop.getPrice(), drop.isRunning(), drop.getPolicy().getPolicyId());
+		return new ResponseEntity<PublicDropInfo>(publicDropInfo, HttpStatus.OK);
+	}
+
+	private static String encodeForUrl(String input) {
+		return input.toLowerCase().replaceAll("[^a-z\\s0-9]", "").replaceAll("\\s", "-");
 	}
 
 }

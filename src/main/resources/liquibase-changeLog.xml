@@ -133,6 +133,9 @@
 			<column name="name" type="VARCHAR(255)">
 				<constraints nullable="false" />
 			</column>
+			<column name="pretty_url" type="VARCHAR(255)">
+				<constraints nullable="false" />
+			</column>
 			<column name="price" type="BIGINT">
 				<constraints nullable="false" />
 			</column>
@@ -185,6 +188,9 @@
 				<constraints nullable="false" />
 			</column>
 		</createTable>
+		<createIndex indexName="IDXtexdow2lk823ec5k4yowtwgoi" tableName="drop">
+			<column name="pretty_url" />
+		</createIndex>
 		<addForeignKeyConstraint baseColumnNames="address_id" baseTableName="drop" constraintName="FK80w65fl1r2meeg8vi1mfktyvn" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="address" validate="true" />
 		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_whitelist" constraintName="FKb0nq30wqe93d2rsaxoyq08ci6" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
 		<addForeignKeyConstraint baseColumnNames="policy_id" baseTableName="drop" constraintName="FKdtw63scvqledgdb4v2l3p84w5" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="policy" validate="true" />

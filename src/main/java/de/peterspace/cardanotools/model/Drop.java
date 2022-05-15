@@ -4,13 +4,14 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.ManyToOne;
 import javax.persistence.OrderColumn;
+import javax.persistence.Table;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
@@ -21,6 +22,7 @@ import lombok.Data;
 
 @Entity
 @Data
+@Table(indexes = @Index(columnList = "prettyUrl", unique = true))
 public class Drop {
 
 	@Id
@@ -62,7 +64,7 @@ public class Drop {
 
 	@NotNull
 	@ElementCollection
-	@OrderColumn(name="sequence")
+	@OrderColumn(name = "sequence")
 	private List<DropNft> dropNfts;
 
 	@NotNull
@@ -72,5 +74,9 @@ public class Drop {
 	@NotNull
 	@ElementCollection
 	private Set<String> dropNftsAvailableAssetNames;
+
+	@NotNull
+	@NotEmpty
+	private String prettyUrl;
 
 }

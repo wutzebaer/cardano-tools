@@ -17,4 +17,6 @@ public interface DropRepository extends PagingAndSortingRepository<Drop, Long> {
 
 	List<Drop> findAll();
 
+	Drop findByPrettyUrl(String prettyUrl);
+
 }
