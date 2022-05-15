@@ -521,8 +521,6 @@ public class CardanoCli {
 
 			cmd.addAll(List.of(networkMagicArgs));
 
-			ProcessUtil.runCommand(cmd.toArray(new String[0]));
-
 			// pin files
 			if (mintTransaction.getMintOrderSubmission() != null && mintTransaction.getMintOrderSubmission().getPin()) {
 				String metaData = mintTransaction.getMintOrderSubmission().getMetaData();
@@ -537,6 +535,8 @@ public class CardanoCli {
 					});
 				}
 			}
+
+			ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 		} catch (Exception e) {
 			String message = StringUtils.defaultIfEmpty(e.getMessage(), "");
