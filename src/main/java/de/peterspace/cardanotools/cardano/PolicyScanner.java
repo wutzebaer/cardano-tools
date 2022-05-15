@@ -38,6 +38,9 @@ public class PolicyScanner {
 	@Value("${working.dir}")
 	private String workingDir;
 
+	@Value("${cardano-node.ipc-volume-name}")
+	private String ipcVolumeName;
+
 	private final FileUtil fileUtil;
 	private final CardanoNode cardanoNode;
 	private final TaskExecutor taskExecutor;
@@ -87,7 +90,7 @@ public class PolicyScanner {
         String[] cmd = new String[] {
                 "docker", "run",
                 "--rm",
-                "-v", cardanoNode.getIpcVolumeName() + ":/ipc",
+                "-v", ipcVolumeName + ":/ipc",
                 "-v", workingDir + ":/work",
                 "-w", "/work",
                 "wutzebaer/mantis",

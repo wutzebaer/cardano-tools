@@ -6,6 +6,9 @@ import java.util.UUID;
 
 import javax.validation.constraints.Min;
 
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +31,7 @@ import de.peterspace.cardanotools.model.Policy;
 import de.peterspace.cardanotools.model.Views.Private;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 
 @RestController
 @RequiredArgsConstructor
@@ -42,7 +46,7 @@ public class AccountRestInterface {
 	@JsonView(Private.class)
 	public Account createAccount() throws Exception {
 		Account account = cardanoCli.createAccount();
-		refreshAndSaveAccount(account, 7);
+		refreshAndSaveAccount(account, 365);
 		return account;
 	}
 
@@ -53,22 +57,51 @@ public class AccountRestInterface {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-			refreshAndSaveAccount(account, 7);
+			refreshAndSaveAccount(account, 365);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<Account>(HttpStatus.NOT_FOUND);
 		}
 	}
 
+	@Value
+	public static class PolicyConfig {
+		private int days;
+		private String name;
+		private String policyId;
+		private String policy;
+		private String skey;
+	}
+
 	@PostMapping("{key}/refreshPolicy")
 	@JsonView(Private.class)
-	public ResponseEntity<Account> refreshPolicy(@PathVariable("key") UUID key, @RequestBody @Min(1) Integer days) throws Exception {
+	public ResponseEntity<Account> createNewPolicy(@PathVariable("key") UUID key, @RequestBody PolicyConfig policyConfig) throws Exception {
 		Optional<Account> accountOptional = accountRepository.findById(key.toString());
 		if (accountOptional.isPresent()) {
 			Account account = accountOptional.get();
-			Policy policy = cardanoCli.createPolicy(account, CardanoUtil.currentSlot(), days);
+			Policy policy;
+			if (StringUtils.isBlank(policyConfig.getSkey())) {
+				policy = cardanoCli.createPolicy(account, CardanoUtil.currentSlot(), policyConfig.days);
+				policy.setName(policyConfig.getName());
+			} else {
+				policy = new Policy();
+				policy.setAccount(account);
+				policy.setAddress(new Address("???", policyConfig.getSkey(), "???", 0l, "[]"));
+				policy.setName(policyConfig.getName());
+				policy.setPolicy(policyConfig.getPolicy());
+				policy.setPolicyId(policyConfig.getPolicyId());
+
+				JSONArray scriptsArray = new JSONObject(policyConfig.getPolicy()).getJSONArray("scripts");
+				for (int i = 0; i < scriptsArray.length(); i++) {
+					JSONObject scriptOnject = scriptsArray.getJSONObject(i);
+					if (scriptOnject.getString("type").equals("before")) {
+						policy.setPolicyDueSlot(scriptOnject.getLong("slot"));
+					}
+				}
+
+			}
 			account.getPolicies().add(0, policy);
-			refreshAndSaveAccount(account, days);
+			refreshAndSaveAccount(account, policyConfig.days);
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<Account>(HttpStatus.NOT_FOUND);

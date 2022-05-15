@@ -28,7 +28,6 @@ public class Policy {
 	private Long id;
 
 	@NotNull
-	@Column(unique = true)
 	private String policyId;
 
 	@NotNull
@@ -47,5 +46,8 @@ public class Policy {
 
 	@NotNull
 	private Long policyDueSlot;
+
+	@Column(columnDefinition = "TEXT")
+	private String name;
 
 }

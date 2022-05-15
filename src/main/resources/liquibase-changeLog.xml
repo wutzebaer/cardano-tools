@@ -1,8 +1,6 @@
-<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext
-   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
-   http://www.liquibase.org/xml/ns/dbchangelog
-   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
 
 	<changeSet id="0000" author="peter">
 		<preConditions onFail="MARK_RAN">
@@ -111,5 +109,106 @@
 			</column>
 		</addColumn>
 	</changeSet>
+
+	<changeSet id="0006" author="peter">
+		<dropColumn columnName="meta_data" tableName="token_submission" />
+		<addNotNullConstraint columnDataType="varchar(255)" columnName="asset_name" tableName="token_submission" validate="true" />
+		<update tableName="registration_metadata">
+			<column name="decimals" valueNumeric="0" />
+			<where>decimals is null</where>
+		</update>
+		<addNotNullConstraint columnDataType="int" columnName="decimals" tableName="registration_metadata" validate="true" />
+		<dropDefaultValue columnDataType="bigint" columnName="stake" tableName="account" />
+		<addNotNullConstraint columnDataType="varchar(255)" columnName="target_address" tableName="mint_order_submission" validate="true" />
+	</changeSet>
+
+	<changeSet id="0007" author="peter">
+
+		<createTable tableName="drop">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="dropPK" />
+			</column>
+			<column name="max_per_transaction" type="INTEGER">
+				<constraints nullable="false" />
+			</column>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="pretty_url" type="VARCHAR(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="price" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+			<column name="profit_address" type="VARCHAR(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="running" type="BOOLEAN">
+				<constraints nullable="false" />
+			</column>
+			<column name="address_id" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+			<column name="policy_id" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<createTable tableName="drop_drop_nfts">
+			<column name="drop_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
+			<column name="asset_name" type="VARCHAR(255)" />
+			<column name="metadata" type="TEXT" />
+			<column name="sequence" type="INTEGER">
+				<constraints nullable="false" primaryKey="true" />
+			</column>
+		</createTable>
+		<createTable tableName="drop_drop_nfts_available_asset_names">
+			<column name="drop_id" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+			<column name="drop_nfts_available_asset_names" type="VARCHAR(255)" />
+		</createTable>
+		<createTable tableName="drop_drop_nfts_sold_asset_names">
+			<column name="drop_id" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+			<column name="drop_nfts_sold_asset_names" type="VARCHAR(255)" />
+		</createTable>
+		<createTable tableName="drop_whitelist">
+			<column name="drop_id" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+			<column name="whitelist" type="VARCHAR(255)" />
+		</createTable>
+		<createTable tableName="wallet">
+			<column name="stake_address_id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="walletPK" />
+			</column>
+			<column name="tokens_minted" type="INTEGER">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addColumn tableName="policy">
+			<column name="name" type="TEXT" />
+		</addColumn>
+		<addColumn tableName="mint_order_submission">
+			<column defaultValueBoolean="true" name="pin" type="bool">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+		<addColumn tableName="transaction">
+			<column name="pin_fee" type="int8" />
+		</addColumn>
+		<addUniqueConstraint columnNames="pretty_url" constraintName="UKtexdow2lk823ec5k4yowtwgoi" tableName="drop" />
+		<addForeignKeyConstraint baseColumnNames="address_id" baseTableName="drop" constraintName="FK80w65fl1r2meeg8vi1mfktyvn" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="address" validate="true" />
+		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_whitelist" constraintName="FKb0nq30wqe93d2rsaxoyq08ci6" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
+		<addForeignKeyConstraint baseColumnNames="policy_id" baseTableName="drop" constraintName="FKdtw63scvqledgdb4v2l3p84w5" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="policy" validate="true" />
+		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_drop_nfts" constraintName="FKg2a3govenndtebyoqbjp22jgi" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
+		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_drop_nfts_sold_asset_names" constraintName="FKlqbe33dd1ts7hll2kmdmqcujv" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
+		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_drop_nfts_available_asset_names" constraintName="FKp0mldgolk9lktlyagnrv0o0a5" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
+
+	</changeSet>
+
 
 </databaseChangeLog>

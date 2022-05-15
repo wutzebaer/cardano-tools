@@ -51,6 +51,8 @@ public class Transaction {
 	@NotNull
 	private Long fee;
 
+	private Long pinFee;
+
 	private Long minOutput;
 
 	@NotNull
