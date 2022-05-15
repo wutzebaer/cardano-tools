@@ -189,6 +189,9 @@
 				<constraints nullable="false" />
 			</column>
 		</createTable>
+		<addColumn tableName="policy">
+			<column name="name" type="TEXT" />
+		</addColumn>
 		<addColumn tableName="mint_order_submission">
 			<column defaultValueBoolean="true" name="pin" type="bool">
 				<constraints nullable="false" />
@@ -204,6 +207,7 @@
 		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_drop_nfts" constraintName="FKg2a3govenndtebyoqbjp22jgi" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
 		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_drop_nfts_sold_asset_names" constraintName="FKlqbe33dd1ts7hll2kmdmqcujv" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
 		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="drop_drop_nfts_available_asset_names" constraintName="FKp0mldgolk9lktlyagnrv0o0a5" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
+
 	</changeSet>
 
 
