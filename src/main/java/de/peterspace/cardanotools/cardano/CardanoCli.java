@@ -98,7 +98,7 @@ public class CardanoCli {
 			dummyUtxo = new TransactionInputs("1d14a530b72a46b7d747f41941e9a923c29d19298dc643d1dca059507be303ab", 0, 0, 0, "", "", "", "");
 		} else if (network.equals("mainnet")) {
 			dummyAddress = "addr1q9h7988xmmpz2y50rg2n9fw6jd5rq95t8q84k4q6ne403nxahea9slntm5n8f06nlsynyf4m6sa0qd05agra0qgk09nq96rqh9";
-			dummyUtxo = new TransactionInputs("1d14a530b72a46b7d747f41941e9a923c29d19298dc643d1dca059507be303ab", 0, 0, 0, "", "", "", "");
+			dummyUtxo = new TransactionInputs("51eb82530805662ebc0c9ace186f5ab136daed7e4d428d909a1e47b59cd349fe", 0, 0, 0, "", "", "", "");
 		} else {
 			throw new RuntimeException("Network must be testnet or mainnet");
 		}
@@ -526,13 +526,9 @@ public class CardanoCli {
 				String metaData = mintTransaction.getMintOrderSubmission().getMetaData();
 				if (!StringUtils.isBlank(metaData)) {
 					Set<String> ipfsUrls = getIpfsUrls(metaData);
-					ipfsUrls.forEach(image -> {
-						try {
-							ipfsClient.pinFile(image);
-						} catch (Exception e) {
-							log.warn("Could not pin {}: {}", image, e.getMessage());
-						}
-					});
+					for (String image : ipfsUrls) {
+						ipfsClient.pinFile(image);
+					}
 				}
 			}
 

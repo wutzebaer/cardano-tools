@@ -27,6 +27,7 @@ public class IpfsClient {
 		IPFS ipfs = new IPFS(apiUrl);
 		NamedStreamable.InputStreamWrapper data = new NamedStreamable.InputStreamWrapper(is);
 		MerkleNode result = ipfs.add(data).get(0);
+		ipfs.pin.rm(result.hash, true);
 		// ipfs.pin.add(result.hash);
 		return result.hash.toBase58();
 	}
