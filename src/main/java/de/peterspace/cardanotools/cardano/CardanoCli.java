@@ -277,7 +277,7 @@ public class CardanoCli {
 
 		// tip
 		String changeAddress;
-		if (mintOrderSubmission.getTip()) {
+		if (mintOrderSubmission.getTip() || mintOrderSubmission.getPin()) {
 			changeAddress = pledgeAddress;
 		} else {
 			changeAddress = mintOrderSubmission.getTargetAddress();
@@ -285,7 +285,22 @@ public class CardanoCli {
 
 		Transaction mintTransaction = buildTransaction(transactionInputs, transactionOutputs, mintOrderSubmission.getMetaData(), policy, changeAddress);
 
-		long neededBalance = minUtxo + mintTransaction.getFee() + (mintOrderSubmission.getTip() ? 1000000 : 0);
+		long tip = 0;
+		if (mintOrderSubmission.getTip()) {
+			tip += 1000000;
+		}
+		long pinFee = 0;
+		if (mintOrderSubmission.getPin()) {
+			Set<String> ipfsUrls = getIpfsUrls(mintOrderSubmission.getMetaData());
+			long size = 0;
+			for (String url : ipfsUrls) {
+				size += ipfsClient.getSize(url);
+			}
+
+			pinFee += (long) Math.max(size * 0.04, 1_000_000);
+		}
+
+		long neededBalance = minUtxo + mintTransaction.getFee() + tip + pinFee;
 		if (account.getAddress().getBalance() < neededBalance) {
 			if (!transactionInputs.contains(dummyUtxo)) {
 				// simulate a further input, because the user has to make another utxo
@@ -298,6 +313,7 @@ public class CardanoCli {
 
 		mintTransaction.setMintOrderSubmission(mintOrderSubmission);
 		mintTransaction.setMinOutput(minUtxo);
+		mintTransaction.setPinFee(pinFee);
 		return mintTransaction;
 	}
 
@@ -319,6 +335,12 @@ public class CardanoCli {
 
 	public String mint(List<TransactionInputs> transactionInputs, TransactionOutputs transactionOutputs, JSONObject metaData, Address paymentAddress, Policy policy, String changeAddress) throws Exception {
 		Transaction tx = buildTransaction(transactionInputs, transactionOutputs, metaData != null ? metaData.toString(3) : null, policy, changeAddress);
+
+		MintOrderSubmission mintOrderSubmission = new MintOrderSubmission();
+		mintOrderSubmission.setMetaData(metaData != null ? metaData.toString(3) : null);
+		mintOrderSubmission.setPin(true);
+		tx.setMintOrderSubmission(mintOrderSubmission);
+
 		if (policy != null) {
 			signTransaction(tx, paymentAddress, policy.getAddress());
 		} else {
@@ -502,14 +524,11 @@ public class CardanoCli {
 			ProcessUtil.runCommand(cmd.toArray(new String[0]));
 
 			// pin files
-			if (mintTransaction.getMintOrderSubmission() != null) {
+			if (mintTransaction.getMintOrderSubmission() != null && mintTransaction.getMintOrderSubmission().getPin()) {
 				String metaData = mintTransaction.getMintOrderSubmission().getMetaData();
 				if (!StringUtils.isBlank(metaData)) {
-					DocumentContext jsonContext = JsonPath.parse(metaData);
-					Set<Object> images = new HashSet<Object>();
-					images.addAll(jsonContext.read("$.*.*.*.image"));
-					images.addAll(jsonContext.read("$.*.*.*.files[*].src"));
-					images.stream().filter(String.class::isInstance).map(String.class::cast).forEach(image -> {
+					Set<String> ipfsUrls = getIpfsUrls(metaData);
+					ipfsUrls.forEach(image -> {
 						try {
 							ipfsClient.pinFile(image);
 						} catch (Exception e) {
@@ -531,6 +550,14 @@ public class CardanoCli {
 		} finally {
 			fileUtil.removeFile(filename);
 		}
+	}
+
+	Set<String> getIpfsUrls(String metaData) {
+		DocumentContext jsonContext = JsonPath.parse(metaData);
+		Set<Object> images = new HashSet<Object>();
+		images.addAll(jsonContext.read("$.*.*.*.image"));
+		images.addAll(jsonContext.read("$.*.*.*.files[*].src"));
+		return images.stream().filter(String.class::isInstance).map(String.class::cast).collect(Collectors.toSet());
 	}
 
 	private String getTxId(Transaction mintTransaction) throws Exception {

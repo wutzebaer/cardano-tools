@@ -40,6 +40,10 @@ public class MintOrderSubmission {
 	@NotNull
 	private Boolean tip;
 
+	@NotNull
+	@Column(columnDefinition = "bool default true")
+	private Boolean pin;
+
 	@NotBlank
 	@Column(nullable = false)
 	private String policyId;
