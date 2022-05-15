@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Index;
@@ -68,11 +69,11 @@ public class Drop {
 	private List<DropNft> dropNfts;
 
 	@NotNull
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.EAGER)
 	private Set<String> dropNftsSoldAssetNames;
 
 	@NotNull
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.EAGER)
 	private Set<String> dropNftsAvailableAssetNames;
 
 	@NotNull

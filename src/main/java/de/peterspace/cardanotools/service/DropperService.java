@@ -179,6 +179,12 @@ public class DropperService {
 				log.info("Successfully sold {} for {}, txid: {}", tokens.size(), totalPrice, txId);
 			} catch (Exception e) {
 				log.error("sell failed", e);
+				Drop returnDrop = dropRepository.findById(drop.getId()).get();
+				List<String> usedAssets = tokens.stream().map(t -> t.getAssetName()).collect(Collectors.toList());
+				returnDrop.getDropNftsAvailableAssetNames().addAll(usedAssets);
+				returnDrop.getDropNftsSoldAssetNames().removeAll(usedAssets);
+				dropRepository.save(returnDrop);
+				log.error("returned tokens {}", usedAssets);
 			}
 		});
 
