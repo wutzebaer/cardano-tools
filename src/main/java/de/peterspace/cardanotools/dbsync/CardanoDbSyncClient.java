@@ -11,8 +11,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -21,6 +21,7 @@ import javax.annotation.PreDestroy;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 
@@ -389,6 +390,18 @@ public class CardanoDbSyncClient {
 			+ "uv.address = ? \r\n"
 			+ "group by uv.id, ma.id\r\n"
 			+ "order by uvid, policyId, assetName";
+
+	private static final String tokenAmountByAddress = "SELECT\r\n"
+			+ "   utxo_view.address,\r\n"
+			+ "   sum(ma_tx_out.quantity) as qty\r\n"
+			+ "   from utxo_view\r\n"
+			+ "   inner join tx_out on utxo_view.tx_id = tx_out.tx_id and tx_out.index = utxo_view.index\r\n"
+			+ "   inner join ma_tx_out on ma_tx_out.tx_out_id = tx_out.id\r\n"
+			+ "   inner join multi_asset on ma_tx_out.ident = multi_asset.id\r\n"
+			+ "   where multi_asset.policy = decode(?, 'hex')\r\n"
+			+ "group by utxo_view.address\r\n"
+			+ "order by  sum(ma_tx_out.quantity) DESC;\r\n"
+			+ "";
 
 	@Value("${cardano-db-sync.url}")
 	String url;
@@ -854,6 +867,28 @@ public class CardanoDbSyncClient {
 				offerFundings.add(new TransactionInputs(result.getString(2), result.getInt(3), result.getLong(4), result.getLong(5), result.getString(6), result.getString(7), result.getString(8), result.getString(9)));
 			}
 			return offerFundings;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@lombok.Value
+	public static class TokenAmountByAddress {
+		private String address;
+		private long qty;
+	}
+
+	@Cacheable("getTokenAmountByAddress")
+	public List<TokenAmountByAddress> getTokenAmountByAddress(String policyId) {
+		try (Connection connection = hds.getConnection()) {
+			PreparedStatement getTxInput = connection.prepareStatement(tokenAmountByAddress);
+			getTxInput.setString(1, policyId);
+			ResultSet result = getTxInput.executeQuery();
+			List<TokenAmountByAddress> tokenAmountByAddress = new ArrayList<>();
+			while (result.next()) {
+				tokenAmountByAddress.add(new TokenAmountByAddress(result.getString(1), result.getLong(2)));
+			}
+			return tokenAmountByAddress;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

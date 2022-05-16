@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,7 +57,8 @@ public class DropperService {
 	private final TaskExecutor taskExecutor;
 	private final WalletRepository walletRepository;
 
-	private final Cache<Long, Boolean> blacklist = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
+	private final Cache<Long, Boolean> temporaryBlacklist = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
+	private final Set<TransactionInputs> permanentBlacklist = new HashSet<>();
 
 	@Scheduled(cron = "*/1 * * * * *")
 	@Transactional
@@ -68,7 +70,8 @@ public class DropperService {
 			Address fundAddress = drop.getAddress();
 			List<TransactionInputs> offerFundings = cardanoDbSyncClient.getAddressUtxos(fundAddress.getAddress());
 			Map<Long, List<TransactionInputs>> transactionInputGroups = offerFundings.stream()
-					.filter(of -> blacklist.getIfPresent(of.getStakeAddressId()) == null)
+					.filter(of -> temporaryBlacklist.getIfPresent(of.getStakeAddressId()) == null)
+					.filter(of -> !permanentBlacklist.contains(of))
 					.collect(Collectors.groupingBy(of -> of.getStakeAddressId(), LinkedHashMap::new, Collectors.toList()));
 
 			for (List<TransactionInputs> transactionInputs : transactionInputGroups.values()) {
@@ -119,7 +122,7 @@ public class DropperService {
 				} catch (Exception e) {
 					log.error("TransactionInputs failed to process", e);
 				} finally {
-					blacklist.put(transactionInputs.get(0).getStakeAddressId(), true);
+					temporaryBlacklist.put(transactionInputs.get(0).getStakeAddressId(), true);
 				}
 			}
 
@@ -176,6 +179,7 @@ public class DropperService {
 
 				// submit transaction
 				String txId = cardanoCli.mint(transactionInputs, transactionOutputs, metaData, drop.getAddress(), drop.getPolicy(), drop.getProfitAddress());
+				permanentBlacklist.addAll(transactionInputs);
 				log.info("Successfully sold {} for {}, txid: {}", tokens.size(), totalPrice, txId);
 			} catch (Exception e) {
 				log.error("sell failed", e);
@@ -207,6 +211,7 @@ public class DropperService {
 				transactionOutputs.add(buyerAddress, "", lockedFunds);
 
 				String txId = cardanoCli.mint(transactionInputs, transactionOutputs, null, fundAddress, null, buyerAddress);
+				permanentBlacklist.addAll(transactionInputs);
 				log.info("Successfully refunded, txid: {}", txId);
 
 			} catch (Exception e) {
