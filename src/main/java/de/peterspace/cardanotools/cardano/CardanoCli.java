@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -43,6 +45,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class CardanoCli {
+
+	private static final Pattern lovelacePattern = Pattern.compile("Lovelace (\\d+)");
 
 	@Value("${network}")
 	private String network;
@@ -294,7 +298,9 @@ public class CardanoCli {
 			Set<String> ipfsUrls = getIpfsUrls(mintOrderSubmission.getMetaData());
 			long size = 0;
 			for (String url : ipfsUrls) {
-				size += ipfsClient.getSize(url);
+				if (!StringUtils.isBlank(url)) {
+					size += ipfsClient.getSize(url);
+				}
 			}
 
 			pinFee += (long) Math.max(size * 0.04, 1_000_000);
@@ -427,13 +433,26 @@ public class CardanoCli {
 
 		cmd.addAll(List.of(networkMagicArgs));
 
-		String feeString = ProcessUtil.runCommand(cmd.toArray(new String[0]));
-
-		if (metaData != null) {
-			fileUtil.removeFile(metadataFilename);
-		}
-		if (mints.size() > 0) {
-			fileUtil.removeFile(policyScriptFilename);
+		String feeString;
+		try {
+			feeString = ProcessUtil.runCommand(cmd.toArray(new String[0]));
+		} catch (Exception e) {
+			if (StringUtils.trimToEmpty(e.getMessage()).contains("(change output)")) {
+				Matcher matcher = lovelacePattern.matcher(e.getMessage());
+				matcher.find();
+				Long missingFunds = Long.valueOf(matcher.group(1));
+				transactionOutputs.add(transactionOutputs.getOutputs().keySet().iterator().next(), "", missingFunds);
+				return buildTransaction(transactionInputs, transactionOutputs, metaData, policy, changeAddress);
+			} else {
+				throw e;
+			}
+		} finally {
+			if (metaData != null) {
+				fileUtil.removeFile(metadataFilename);
+			}
+			if (mints.size() > 0) {
+				fileUtil.removeFile(policyScriptFilename);
+			}
 		}
 
 		Transaction transaction = new Transaction();
@@ -527,7 +546,9 @@ public class CardanoCli {
 				if (!StringUtils.isBlank(metaData)) {
 					Set<String> ipfsUrls = getIpfsUrls(metaData);
 					for (String image : ipfsUrls) {
-						ipfsClient.pinFile(image);
+						if (!StringUtils.isBlank(image)) {
+							ipfsClient.pinFile(image);
+						}
 					}
 				}
 				ipfsClient.updatePins();
