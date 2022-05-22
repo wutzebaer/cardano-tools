@@ -47,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CardanoCli {
 
 	private static final Pattern lovelacePattern = Pattern.compile("Lovelace (\\d+)");
+	private static final Pattern ipfsPattern = Pattern.compile("Qm[1-9A-Za-z]{44}");
 
 	@Value("${network}")
 	private String network;
@@ -572,7 +573,20 @@ public class CardanoCli {
 		Set<Object> images = new HashSet<Object>();
 		images.addAll(jsonContext.read("$.*.*.*.image"));
 		images.addAll(jsonContext.read("$.*.*.*.files[*].src"));
-		return images.stream().filter(String.class::isInstance).map(String.class::cast).collect(Collectors.toSet());
+
+		return images.stream()
+				.filter(String.class::isInstance)
+				.map(String.class::cast)
+				.map(s -> {
+					Matcher matcher = ipfsPattern.matcher(s);
+					if (matcher.find()) {
+						return matcher.group();
+					} else {
+						return null;
+					}
+				})
+				.filter(Objects::nonNull)
+				.collect(Collectors.toSet());
 	}
 
 	private String getTxId(Transaction mintTransaction) throws Exception {

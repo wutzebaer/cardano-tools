@@ -38,4 +38,30 @@ public class IpfsClientTest {
 		assertThat(size).isEqualTo(9513);
 	}
 
+	@Test
+	void testSize2() throws Exception {
+		String ipfsUrl = "ipfs://QmaVd5KyBcTJim42MTYK8enu6DXkYEzCqeNHxXBAZ8bmdX";
+		Integer size = ipfsClient.getSize(ipfsUrl);
+		assertThat(size).isEqualTo(901707);
+	}
+
+	@Test
+	void testSizeFolder() throws Exception {
+		String ipfsUrl = "ipfs://QmWLwAgLKwELWq6aggrwKTzCaeHqDQaz5otjN6XChsBjCo";
+		Integer size = ipfsClient.getSize(ipfsUrl);
+		assertThat(size).isEqualTo(29954961);
+	}
+
+	@Test
+	void testPinFolder() throws Exception {
+		String ipfsUrl = "ipfs://QmWLwAgLKwELWq6aggrwKTzCaeHqDQaz5otjN6XChsBjCo";
+		ipfsClient.pinFile(ipfsUrl);
+	}
+
+	@Test
+	void testUnPinFolder() throws Exception {
+		String ipfsUrl = "ipfs://QmWLwAgLKwELWq6aggrwKTzCaeHqDQaz5otjN6XChsBjCo";
+		ipfsClient.unpinFile(ipfsUrl);
+	}
+
 }
