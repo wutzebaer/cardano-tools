@@ -281,18 +281,14 @@ public class CardanoCli {
 
 		// tip
 		String changeAddress;
-		if (mintOrderSubmission.getTip() || mintOrderSubmission.getPin()) {
+		long tip = 0;
+		if (mintOrderSubmission.getTip()) {
 			changeAddress = pledgeAddress;
+			tip += 1_000_000;
 		} else {
 			changeAddress = mintOrderSubmission.getTargetAddress();
 		}
 
-		Transaction mintTransaction = buildTransaction(transactionInputs, transactionOutputs, mintOrderSubmission.getMetaData(), policy, changeAddress);
-
-		long tip = 0;
-		if (mintOrderSubmission.getTip()) {
-			tip += 1000000;
-		}
 		long pinFee = 0;
 		if (mintOrderSubmission.getPin()) {
 			Set<String> ipfsUrls = getIpfsUrls(mintOrderSubmission.getMetaData());
@@ -302,10 +298,11 @@ public class CardanoCli {
 					size += ipfsClient.getSize(url);
 				}
 			}
-
 			pinFee += (long) Math.max(size * 0.04, 1_000_000);
+			transactionOutputs.add(pledgeAddress, "", pinFee);
 		}
 
+		Transaction mintTransaction = buildTransaction(transactionInputs, transactionOutputs, mintOrderSubmission.getMetaData(), policy, changeAddress);
 		long neededBalance = minUtxo + mintTransaction.getFee() + tip + pinFee;
 		if (account.getAddress().getBalance() < neededBalance) {
 			if (!transactionInputs.contains(dummyUtxo)) {
