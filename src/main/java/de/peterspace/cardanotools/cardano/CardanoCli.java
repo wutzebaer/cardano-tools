@@ -101,7 +101,7 @@ public class CardanoCli {
 
 		if (network.equals("testnet")) {
 			dummyAddress = "addr_test1qpqxjsh6jx0mumxgw5nc5jeu5xy07k35v6h2zutyka72yua578p0hapx37mcflefvvwyhwtwn4kt83nkf7wqwx9tvsdsv8p9ac";
-			dummyUtxo = new TransactionInputs("1d14a530b72a46b7d747f41941e9a923c29d19298dc643d1dca059507be303ab", 0, 10_000_000, 0, "", "", "", "");
+			dummyUtxo = new TransactionInputs("ece82f3f9e1af88ee07fd6be680594c1e357d8e5641afba18e0cd2fda54daedd", 0, 1000_000_000, 0, "", "", "", "");
 		} else if (network.equals("mainnet")) {
 			dummyAddress = "addr1q9h7988xmmpz2y50rg2n9fw6jd5rq95t8q84k4q6ne403nxahea9slntm5n8f06nlsynyf4m6sa0qd05agra0qgk09nq96rqh9";
 			dummyUtxo = new TransactionInputs("b13ff6b216a7dc8e41ea87035407bcadc604d72645e8b41ad40577fbfb54d51a", 0, 43784400235l, 0, "", "", "", "");
@@ -346,7 +346,14 @@ public class CardanoCli {
 		}
 
 		String changeAddress = transactionOutputs.getOutputs().keySet().iterator().next();
-		Transaction mintTransaction = buildTransaction(transactionInputs, transactionOutputs, metaData, null, changeAddress);
+
+		Transaction mintTransaction;
+		try {
+			mintTransaction = buildTransaction(transactionInputs, transactionOutputs, metaData, null, changeAddress);
+		} catch (MissingLovelaceException e) {
+			transactionInputs.add(dummyUtxo);
+			mintTransaction = buildTransaction(transactionInputs, transactionOutputs, metaData, null, changeAddress);
+		}
 
 		signTransaction(mintTransaction, address);
 
