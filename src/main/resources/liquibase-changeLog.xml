@@ -210,5 +210,12 @@
 
 	</changeSet>
 
+	<changeSet id="0008" author="peter">
+		<addColumn tableName="account">
+			<column defaultValueBoolean="false" name="free_pin" type="bool">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+	</changeSet>
 
 </databaseChangeLog>

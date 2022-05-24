@@ -47,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CardanoCli {
 
 	private static final Pattern lovelacePattern = Pattern.compile("Lovelace (\\d+)");
+	private static final Pattern missingLovelacePattern = Pattern.compile("Lovelace \\(-(\\d+)\\)");
 	private static final Pattern ipfsPattern = Pattern.compile("Qm[1-9A-Za-z]{44}");
 
 	@Value("${network}")
@@ -100,10 +101,10 @@ public class CardanoCli {
 
 		if (network.equals("testnet")) {
 			dummyAddress = "addr_test1qpqxjsh6jx0mumxgw5nc5jeu5xy07k35v6h2zutyka72yua578p0hapx37mcflefvvwyhwtwn4kt83nkf7wqwx9tvsdsv8p9ac";
-			dummyUtxo = new TransactionInputs("1d14a530b72a46b7d747f41941e9a923c29d19298dc643d1dca059507be303ab", 0, 0, 0, "", "", "", "");
+			dummyUtxo = new TransactionInputs("1d14a530b72a46b7d747f41941e9a923c29d19298dc643d1dca059507be303ab", 0, 10_000_000, 0, "", "", "", "");
 		} else if (network.equals("mainnet")) {
 			dummyAddress = "addr1q9h7988xmmpz2y50rg2n9fw6jd5rq95t8q84k4q6ne403nxahea9slntm5n8f06nlsynyf4m6sa0qd05agra0qgk09nq96rqh9";
-			dummyUtxo = new TransactionInputs("8dcd3442673883aa3a2fff55d9b79347e27a14330ec3eb8e6a39a444a13318e1", 0, 0, 0, "", "", "", "");
+			dummyUtxo = new TransactionInputs("8dcd3442673883aa3a2fff55d9b79347e27a14330ec3eb8e6a39a444a13318e1", 0, 10_000_000, 0, "", "", "", "");
 		} else {
 			throw new RuntimeException("Network must be testnet or mainnet");
 		}
@@ -155,6 +156,7 @@ public class CardanoCli {
 				.stake(0l)
 				.stakePositions(List.of())
 				.lastUpdate(new Date())
+				.freePin(false)
 				.build();
 		accountRepository.save(account);
 		return account;
@@ -291,7 +293,7 @@ public class CardanoCli {
 		}
 
 		long pinFee = 0;
-		if (mintOrderSubmission.getPin()) {
+		if (mintOrderSubmission.getPin() && !account.getFreePin()) {
 			Set<String> ipfsUrls = getIpfsUrls(mintOrderSubmission.getMetaData());
 			long size = 0;
 			for (String url : ipfsUrls) {
@@ -303,16 +305,23 @@ public class CardanoCli {
 			transactionOutputs.add(pledgeAddress, "", pinFee);
 		}
 
-		Transaction mintTransaction = buildTransaction(transactionInputs, transactionOutputs, mintOrderSubmission.getMetaData(), policy, changeAddress);
-		long neededBalance = minUtxo + mintTransaction.getFee() + tip + pinFee;
-		if (account.getAddress().getBalance() < neededBalance) {
+		Transaction mintTransaction;
+		try {
+			mintTransaction = buildTransaction(transactionInputs, transactionOutputs, mintOrderSubmission.getMetaData(), policy, changeAddress);
 			if (!transactionInputs.contains(dummyUtxo)) {
-				// simulate a further input, because the user has to make another utxo
+				signTransaction(mintTransaction, account.getAddress(), policy.getAddress());
+			}
+		} catch (MissingLovelaceException e) {
+			if (transactionInputs.contains(dummyUtxo)) {
+				mintTransaction = new Transaction();
+				long availableFunds = calculateAvailableFunds(transactionInputs);
+				long calculatedMissing = minUtxo + pinFee - availableFunds;
+				long missingDifference = e.getAmount() - calculatedMissing;
+				mintTransaction.setFee(missingDifference);
+			} else {
 				transactionInputs.add(dummyUtxo);
 				mintTransaction = buildTransaction(transactionInputs, transactionOutputs, mintOrderSubmission.getMetaData(), policy, changeAddress);
 			}
-		} else {
-			signTransaction(mintTransaction, account.getAddress(), policy.getAddress());
 		}
 
 		mintTransaction.setMintOrderSubmission(mintOrderSubmission);
@@ -435,12 +444,18 @@ public class CardanoCli {
 		try {
 			feeString = ProcessUtil.runCommand(cmd.toArray(new String[0]));
 		} catch (Exception e) {
-			if (StringUtils.trimToEmpty(e.getMessage()).contains("(change output)")) {
+			String message = StringUtils.trimToEmpty(e.getMessage());
+			if (message.contains("(change output)")) {
 				Matcher matcher = lovelacePattern.matcher(e.getMessage());
 				matcher.find();
 				Long missingFunds = Long.valueOf(matcher.group(1));
 				transactionOutputs.add(transactionOutputs.getOutputs().keySet().iterator().next(), "", missingFunds);
 				return buildTransaction(transactionInputs, transactionOutputs, metaData, policy, changeAddress);
+			} else if (message.contains("The net balance of the transaction is negative")) {
+				Matcher matcher = missingLovelacePattern.matcher(e.getMessage());
+				matcher.find();
+				long missingFunds = Long.parseLong(matcher.group(1));
+				throw new MissingLovelaceException(missingFunds, e.getMessage(), e);
 			} else {
 				throw e;
 			}

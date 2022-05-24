@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -12,6 +13,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -58,6 +61,11 @@ public class Account {
 
 	@NotNull
 	private Date lastUpdate;
+
+	@NotNull
+	@JsonIgnore
+	@Column(columnDefinition = "bool default false")
+	private Boolean freePin;
 
 	public Policy getPolicy(String policyId) {
 		return policies.stream().filter(p -> p.getPolicyId().equals(policyId)).findAny().get();

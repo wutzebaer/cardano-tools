@@ -66,9 +66,9 @@ public class IpfsClient {
 		ipfs.pin.add(Multihash.fromBase58(StringUtils.right(ipfsUrl, 46)));
 	}
 
-	public Integer getSize(String ipfsUrl) throws IOException {
+	public long getSize(String ipfsUrl) throws IOException {
 		IPFS ipfs = buildIpfsClient();
-		return (Integer) ipfs.object.stat(Multihash.fromBase58(StringUtils.right(ipfsUrl, 46))).get("CumulativeSize");
+		return ((Number) ipfs.object.stat(Multihash.fromBase58(StringUtils.right(ipfsUrl, 46))).get("CumulativeSize")).longValue();
 	}
 
 }
