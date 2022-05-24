@@ -104,7 +104,7 @@ public class CardanoCli {
 			dummyUtxo = new TransactionInputs("1d14a530b72a46b7d747f41941e9a923c29d19298dc643d1dca059507be303ab", 0, 10_000_000, 0, "", "", "", "");
 		} else if (network.equals("mainnet")) {
 			dummyAddress = "addr1q9h7988xmmpz2y50rg2n9fw6jd5rq95t8q84k4q6ne403nxahea9slntm5n8f06nlsynyf4m6sa0qd05agra0qgk09nq96rqh9";
-			dummyUtxo = new TransactionInputs("8dcd3442673883aa3a2fff55d9b79347e27a14330ec3eb8e6a39a444a13318e1", 0, 10_000_000, 0, "", "", "", "");
+			dummyUtxo = new TransactionInputs("b13ff6b216a7dc8e41ea87035407bcadc604d72645e8b41ad40577fbfb54d51a", 0, 43784400235l, 0, "", "", "", "");
 		} else {
 			throw new RuntimeException("Network must be testnet or mainnet");
 		}
@@ -308,9 +308,7 @@ public class CardanoCli {
 		Transaction mintTransaction;
 		try {
 			mintTransaction = buildTransaction(transactionInputs, transactionOutputs, mintOrderSubmission.getMetaData(), policy, changeAddress);
-			if (!transactionInputs.contains(dummyUtxo)) {
-				signTransaction(mintTransaction, account.getAddress(), policy.getAddress());
-			}
+			signTransaction(mintTransaction, account.getAddress(), policy.getAddress());
 		} catch (MissingLovelaceException e) {
 			if (transactionInputs.contains(dummyUtxo)) {
 				mintTransaction = new Transaction();
@@ -320,7 +318,16 @@ public class CardanoCli {
 				mintTransaction.setFee(missingDifference);
 			} else {
 				transactionInputs.add(dummyUtxo);
-				mintTransaction = buildTransaction(transactionInputs, transactionOutputs, mintOrderSubmission.getMetaData(), policy, changeAddress);
+				try {
+					mintTransaction = buildTransaction(transactionInputs, transactionOutputs, mintOrderSubmission.getMetaData(), policy, changeAddress);
+					signTransaction(mintTransaction, account.getAddress(), policy.getAddress());
+				} catch (MissingLovelaceException e2) {
+					mintTransaction = new Transaction();
+					long availableFunds = calculateAvailableFunds(transactionInputs);
+					long calculatedMissing = minUtxo + pinFee - availableFunds;
+					long missingDifference = e2.getAmount() - calculatedMissing;
+					mintTransaction.setFee(missingDifference);
+				}
 			}
 		}
 
