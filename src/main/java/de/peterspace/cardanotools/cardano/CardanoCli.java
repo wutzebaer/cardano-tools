@@ -85,7 +85,7 @@ public class CardanoCli {
                 "-e", "CARDANO_NODE_SOCKET_PATH=/ipc/node.socket",
                 "-v", ipcVolumeName + ":/ipc",
                 "-v", workingDir + ":/work",
-                "inputoutput/cardano-node:1.34.1"
+                "inputoutput/cardano-node:1.35.0"
         };
         // @formatter:on
 		this.networkMagicArgs = cardanoNode.getNetworkMagicArgs();
@@ -574,11 +574,11 @@ public class CardanoCli {
 					Set<String> ipfsUrls = getIpfsUrls(metaData);
 					for (String image : ipfsUrls) {
 						if (!StringUtils.isBlank(image)) {
+							log.info("Pinning {}", image);
 							ipfsClient.pinFile(image);
 						}
 					}
 				}
-				ipfsClient.updatePins();
 			}
 
 			ProcessUtil.runCommand(cmd.toArray(new String[0]));

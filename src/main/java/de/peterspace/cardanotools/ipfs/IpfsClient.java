@@ -16,6 +16,7 @@ import io.ipfs.api.IPFS.PinType;
 import io.ipfs.multiaddr.MultiAddress;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
+import io.ipfs.cid.Cid;
 import io.ipfs.multihash.Multihash;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,11 @@ public class IpfsClient {
 		log.info("Updating pins: {} pins found", pins.size());
 	}
 
+	public boolean isPinned(String ipfsUrl) {
+		String right = StringUtils.right(ipfsUrl, 46);
+		return pins.containsKey(Multihash.fromBase58(right));
+	}
+
 	public String addFile(InputStream is) throws Exception {
 		IPFS ipfs = buildIpfsClient();
 		NamedStreamable.InputStreamWrapper data = new NamedStreamable.InputStreamWrapper(is);
@@ -61,9 +67,11 @@ public class IpfsClient {
 		ipfs.pin.rm(Multihash.fromBase58(StringUtils.right(ipfsUrl, 46)), true);
 	}
 
+	@Async
 	public void pinFile(String ipfsUrl) throws Exception {
 		IPFS ipfs = buildIpfsClient();
 		ipfs.pin.add(Multihash.fromBase58(StringUtils.right(ipfsUrl, 46)));
+		updatePins();
 	}
 
 	public long getSize(String ipfsUrl) throws IOException {
