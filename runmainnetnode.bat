@@ -1,1 +1,1 @@
-docker run --name mainnet-node --restart unless-stopped -v mainenet-data:/data -v %cd%\cardano-minter-workdir:/work -v mainnet-ipc:/ipc -e NETWORK=mainnet inputoutput/cardano-node:1.34.1
+docker run --name mainnet-node --restart unless-stopped -v mainenet-data:/data -v %cd%\cardano-minter-workdir:/work -v mainnet-ipc:/ipc -e NETWORK=mainnet inputoutput/cardano-node:1.35.0
