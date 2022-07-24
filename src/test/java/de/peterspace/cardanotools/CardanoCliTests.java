@@ -5,10 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +21,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.TransactionOutputs;
+import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.Address;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.Policy;
 import de.peterspace.cardanotools.model.TokenSubmission;
 import de.peterspace.cardanotools.model.Transaction;
+import de.peterspace.cardanotools.model.TransactionInputs;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintTransactionRepository;
 
@@ -40,6 +46,9 @@ public class CardanoCliTests {
 	@Autowired
 	MintTransactionRepository mintTransactionRepository;
 
+	@Autowired
+	CardanoDbSyncClient cardanoDbSyncClient;
+
 	@Test
 	void tipQuery() throws Exception {
 		long tip = CardanoUtil.currentSlot();
@@ -52,24 +61,10 @@ public class CardanoCliTests {
 	}
 
 	@Test
-	void getUtxoWithInvalidAccountKey() throws Exception {
-		Exception exception = assertThrows(Exception.class, () -> {
-			String key = cardanoCli.createAccount().getKey();
-			Account account = accountRepository.findById(key).get();
-			account.setAddress(new Address("c:\\", "c:\\", "c:\\", 0l, "[]"));
-			cardanoCli.getUtxo(account.getAddress());
-		});
-		String expectedMessage = "option --address: Failed reading: invalid addressUsage: cardano-cli query utxo [--shelley-mode | --byron-mode                                 [--epoch-slots NATURAL] |                                --cardano-mode [--epoch-slots NATURAL]]                               [(--address ADDRESS)]                               (--mainnet | --testnet-magic NATURAL)                               [--out-file FILE]  Get the node's current UTxO with the option of filtering by address(es)";
-		String actualMessage = exception.getMessage();
-		assertEquals(expectedMessage, actualMessage);
-	}
-
-	@Test
 	void getUtxoWithValidAccountKey() throws Exception {
 		String key = cardanoCli.createAccount().getKey();
 		Account account = accountRepository.findById(key).get();
-		JSONObject utxo = cardanoCli.getUtxo(account.getAddress());
-		long balance = cardanoCli.calculateBalance(utxo);
+		long balance = cardanoDbSyncClient.getBalance(account.getAddress().getAddress());
 		assertEquals(0, balance);
 	}
 
@@ -83,6 +78,8 @@ public class CardanoCliTests {
 				.policies(new ArrayList<>())
 				.stake(0l)
 				.lastUpdate(new Date())
+				.freePin(false)
+				.stakePositions(List.of())
 				.build();
 		accountRepository.save(account);
 		return account;
@@ -94,8 +91,7 @@ public class CardanoCliTests {
 		accountRepository.save(createAccount(key, testAddress));
 		// https://developers.cardano.org/en/testnets/cardano/tools/faucet/
 		Account account = accountRepository.findById(key).get();
-		JSONObject utxo = cardanoCli.getUtxo(account.getAddress());
-		long balance = cardanoCli.calculateBalance(utxo);
+		long balance = cardanoDbSyncClient.getBalance(account.getAddress().getAddress());
 		assertThat(balance).isGreaterThan(1_000_000);
 	}
 
@@ -166,8 +162,7 @@ public class CardanoCliTests {
 		mintOrder.setTargetAddress(account.getAddress().getAddress());
 		mintOrder.setMetaData("{\"721\":{\"" + policy.getPolicyId() + "\":{\"XXXXYYYY\":{\"haha\": \"hoho\", \"hahalist\":[\"list1\", \"list2\"]}, \"\":{\"name\":\"yay\"}}}}");
 
-		JSONObject utxo = cardanoCli.getUtxo(account.getAddress());
-		account.getAddress().setBalance(cardanoCli.calculateBalance(utxo));
+		account.getAddress().setBalance(cardanoDbSyncClient.getBalance(account.getAddress().getAddress()));
 
 		Transaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
 
@@ -204,14 +199,12 @@ public class CardanoCliTests {
 		token1.setAssetName("");
 		tokens.add(token1);
 
-
 		mintOrder.setTokens(tokens);
 		mintOrder.setTip(false);
 		mintOrder.setTargetAddress(account.getAddress().getAddress());
 		mintOrder.setMetaData("{ \"777\": { \"pct\": \"0.2\", \"addr\": \"addr1v9nevxg9wunfck0gt7hpxuy0elnqygglme3u6l3nn5q5gnq5dc9un\" } }");
 
-		JSONObject utxo = cardanoCli.getUtxo(account.getAddress());
-		account.getAddress().setBalance(cardanoCli.calculateBalance(utxo));
+		account.getAddress().setBalance(cardanoDbSyncClient.getBalance(account.getAddress().getAddress()));
 
 		Transaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
 
@@ -230,35 +223,32 @@ public class CardanoCliTests {
 		accountRepository.save(createAccount(key, testAddress));
 		Account account = accountRepository.findById(key).get();
 
-		JSONObject utxo = cardanoCli.getUtxo(account.getAddress());
-		long balance = cardanoCli.calculateBalance(utxo);
+		long balance = cardanoDbSyncClient.getBalance(account.getAddress().getAddress());
 
 		TransactionOutputs transactionOutputs = new TransactionOutputs();
 		transactionOutputs.add(account.getAddress().getAddress(), "", balance);
 
-		Iterator<String> utxoKeys = utxo.keys();
-		while (utxoKeys.hasNext()) {
-			String txid = utxoKeys.next();
-			JSONObject value = utxo.getJSONObject(txid).getJSONObject("value");
-			Iterator<String> valueKeys = value.keys();
-			while (valueKeys.hasNext()) {
-				String otherPolicyId = valueKeys.next();
-				if (!otherPolicyId.equals("lovelace")) {
-					JSONObject otherPolicy = value.getJSONObject(otherPolicyId);
-					Iterator<String> otherPolicyTokens = otherPolicy.keys();
-					while (otherPolicyTokens.hasNext()) {
-						String otherPolicyToken = otherPolicyTokens.next();
-						long amount = otherPolicy.getLong(otherPolicyToken);
-						transactionOutputs.add(account.getAddress().getAddress(), otherPolicyId + "." + otherPolicyToken, amount);
-					}
-				}
-			}
+		List<TransactionInputs> utxos = cardanoDbSyncClient.getAddressUtxos(account.getAddress().getAddress());
+
+		// return input tokens to seller
+		if (utxos.stream().filter(e -> !e.getPolicyId().isEmpty()).map(f -> f.getPolicyId()).distinct().count() > 0) {
+			utxos.stream().filter(e -> !e.getPolicyId().isEmpty()).forEach(i -> {
+				transactionOutputs.add(account.getAddress().getAddress(), formatCurrency(i.getPolicyId(), i.getAssetName()), i.getValue());
+			});
 		}
 
 		Transaction transaction = cardanoCli.buildTransaction(account.getAddress(), transactionOutputs, null);
 
 		cardanoCli.submitTransaction(transaction);
 
+	}
+
+	private String formatCurrency(String policyId, String assetName) {
+		if (StringUtils.isBlank(assetName)) {
+			return policyId;
+		} else {
+			return policyId + "." + Hex.encodeHexString(assetName.getBytes(StandardCharsets.UTF_8));
+		}
 	}
 
 }
