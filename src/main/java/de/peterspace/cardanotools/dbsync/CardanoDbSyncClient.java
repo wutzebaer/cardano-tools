@@ -348,7 +348,8 @@ public class CardanoDbSyncClient {
 			+ "from pool_hash ph\r\n"
 			+ "join epoch_stake es on es.pool_id=ph.id\r\n"
 			+ "join stake_address sa on sa.id=es.addr_id \r\n"
-			+ "left join pool_owner po on po.pool_hash_id=ph.id and po.addr_id=sa.id \r\n"
+			+ "left join pool_update pu on pu.hash_id = ph.id\r\n"
+			+ "left join pool_owner po on po.pool_update_id =pu.id and po.addr_id=sa.id\r\n"
 			+ "where \r\n"
 			+ "ph.view=?\r\n"
 			+ "and epoch_no=?";

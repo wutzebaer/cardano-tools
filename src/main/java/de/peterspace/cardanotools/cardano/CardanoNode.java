@@ -29,6 +29,9 @@ public class CardanoNode {
 	@Getter
 	private String donationAddress;
 
+	@Getter
+	private String era;
+
 	@PostConstruct
 	public void init() throws Exception {
 
@@ -50,6 +53,7 @@ public class CardanoNode {
 				double syncProgress = tip.getDouble("syncProgress");
 				log.info("Synced {}", syncProgress);
 				if (syncProgress == 100) {
+					era = tip.getString("era");
 					break;
 				}
 			} catch (Exception e) {
@@ -76,7 +80,7 @@ public class CardanoNode {
 		cmd.add("-e");
 		cmd.add("CARDANO_NODE_SOCKET_PATH=/ipc/node.socket");
 
-		cmd.add("inputoutput/cardano-node:1.35.0");
+		cmd.add("inputoutput/cardano-node:1.35.1");
 
 		cmd.add("query");
 		cmd.add("tip");
