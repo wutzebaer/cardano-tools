@@ -80,7 +80,7 @@ public class CardanoNode {
 		cmd.add("-e");
 		cmd.add("CARDANO_NODE_SOCKET_PATH=/ipc/node.socket");
 
-		cmd.add("inputoutput/cardano-node:1.35.1");
+		cmd.add("inputoutput/cardano-node:1.34.1");
 
 		cmd.add("query");
 		cmd.add("tip");

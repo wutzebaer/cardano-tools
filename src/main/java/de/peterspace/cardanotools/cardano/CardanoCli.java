@@ -85,7 +85,7 @@ public class CardanoCli {
                 "-e", "CARDANO_NODE_SOCKET_PATH=/ipc/node.socket",
                 "-v", ipcVolumeName + ":/ipc",
                 "-v", workingDir + ":/work",
-                "inputoutput/cardano-node:1.35.1"
+                "inputoutput/cardano-node:1.34.1"
         };
         // @formatter:on
 		this.networkMagicArgs = cardanoNode.getNetworkMagicArgs();
