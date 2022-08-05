@@ -28,6 +28,7 @@ import org.springframework.stereotype.Component;
 import com.zaxxer.hikari.HikariDataSource;
 
 import de.peterspace.cardanotools.TrackExecutionTime;
+import de.peterspace.cardanotools.cardano.CardanoNode;
 import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.PolicyScanner;
 import de.peterspace.cardanotools.cardano.ProjectRegistry;
@@ -42,6 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class CardanoDbSyncClient {
+
+	final private CardanoNode cardanoNode;
 
 	@Value("${pool.address}")
 	private String poolAddress;
@@ -349,6 +352,19 @@ public class CardanoDbSyncClient {
 			+ "join epoch_stake es on es.pool_id=ph.id\r\n"
 			+ "join stake_address sa on sa.id=es.addr_id \r\n"
 			+ "left join pool_owner po on po.pool_hash_id=ph.id and po.addr_id=sa.id \r\n"
+			+ "where \r\n"
+			+ "ph.view=?\r\n"
+			+ "and epoch_no=?";
+
+	private static final String epochStakeQuery_vasil = "select distinct \r\n"
+			+ "sa.\"view\" stake_address,\r\n"
+			+ "(select to2.address from tx_out to2 where to2.stake_address_id=es.addr_id limit 1),\r\n"
+			+ "es.amount\r\n"
+			+ "from pool_hash ph\r\n"
+			+ "join epoch_stake es on es.pool_id=ph.id\r\n"
+			+ "join stake_address sa on sa.id=es.addr_id \r\n"
+			+ "left join pool_update pu on pu.hash_id = ph.id\r\n"
+			+ "left join pool_owner po on po.pool_update_id =pu.id and po.addr_id=sa.id\r\n"
 			+ "where \r\n"
 			+ "ph.view=?\r\n"
 			+ "and epoch_no=?";
@@ -686,9 +702,17 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
-	public List<EpochStakePosition> epochStake(String pool, int epoch, boolean excludePledge) throws DecoderException {
+	public List<EpochStakePosition> epochStake(String pool, int epoch) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
-			PreparedStatement getTxInput = connection.prepareStatement(epochStakeQuery + (excludePledge ? " and po.id is null" : ""));
+
+			String query;
+			if ("Babbage".equals(cardanoNode.getEra())) {
+				query = epochStakeQuery_vasil;
+			} else {
+				query = epochStakeQuery;
+			}
+
+			PreparedStatement getTxInput = connection.prepareStatement(query);
 			getTxInput.setString(1, pool);
 			getTxInput.setInt(2, epoch);
 			ResultSet result = getTxInput.executeQuery();

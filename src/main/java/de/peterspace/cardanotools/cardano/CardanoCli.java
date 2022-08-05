@@ -62,6 +62,9 @@ public class CardanoCli {
 	@Value("${cardano-node.ipc-volume-name}")
 	private String ipcVolumeName;
 
+	@Value("${cardano-node.version}")
+	private String nodeVersion;
+
 	private final CardanoNode cardanoNode;
 	private final AccountRepository accountRepository;
 	private final FileUtil fileUtil;
@@ -85,7 +88,7 @@ public class CardanoCli {
                 "-e", "CARDANO_NODE_SOCKET_PATH=/ipc/node.socket",
                 "-v", ipcVolumeName + ":/ipc",
                 "-v", workingDir + ":/work",
-                "inputoutput/cardano-node:1.34.1"
+                "inputoutput/cardano-node:" + nodeVersion
         };
         // @formatter:on
 		this.networkMagicArgs = cardanoNode.getNetworkMagicArgs();

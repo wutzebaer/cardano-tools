@@ -59,8 +59,8 @@ public class StakeRewardRestInterface {
 	private final AccountRepository accountRepository;
 	private final CardanoDbSyncClient cardanoDbSyncClient;
 
-	@GetMapping("{key}/{poolHash}/{epoch}")
-	public ResponseEntity<List<EpochStakePosition>> getEpochStakes(@PathVariable("key") UUID key, @PathVariable("poolHash") String poolHash, @PathVariable int epoch, @RequestParam boolean tip, @RequestParam long minStake, @RequestParam boolean excludePledge, @RequestParam String message) throws Exception {
+	@PostMapping("{key}/{poolHash}/{epoch}")
+	public ResponseEntity<List<EpochStakePosition>> getEpochStakes(@PathVariable("key") UUID key, @PathVariable("poolHash") String poolHash, @PathVariable int epoch, @RequestBody EpochStakesRequest epochStakesRequest) throws Exception {
 
 		Optional<Account> account = accountRepository.findById(key.toString());
 		if (!account.isPresent()) {
@@ -71,11 +71,11 @@ public class StakeRewardRestInterface {
 		});
 		Long lovelace = account.get().getAddress().getBalance();
 
-		List<EpochStakePosition> epochStake = distributeFunds(tip, tokenData, lovelace, poolHash, epoch, minStake, excludePledge);
+		List<EpochStakePosition> epochStake = distributeFunds(epochStakesRequest.tip, tokenData, lovelace, poolHash, epoch, epochStakesRequest.minStake, epochStakesRequest.excludedStakers);
 
-		ResponseEntity<Transaction> transaction = buildTransaction(key, epochStake, message);
+		ResponseEntity<Transaction> transaction = buildTransaction(key, epochStake, epochStakesRequest.message);
 
-		epochStake = distributeFunds(tip, tokenData, lovelace - transaction.getBody().getFee(), poolHash, epoch, minStake, excludePledge);
+		epochStake = distributeFunds(epochStakesRequest.tip, tokenData, lovelace - transaction.getBody().getFee(), poolHash, epoch, epochStakesRequest.minStake, epochStakesRequest.excludedStakers);
 
 		return new ResponseEntity<List<EpochStakePosition>>(epochStake, HttpStatus.OK);
 	}
@@ -85,21 +85,30 @@ public class StakeRewardRestInterface {
 		return cardanoDbSyncClient.getPoolList();
 	}
 
-	private List<EpochStakePosition> distributeFunds(boolean tip, List<TokenData> tokenData, Long lovelace, String poolHash, int epoch, long minStake, boolean excludePledge) throws DecoderException {
-		List<EpochStakePosition> epochStake = cardanoDbSyncClient.epochStake(poolHash, epoch, excludePledge).stream().sorted(Comparator.comparing(EpochStakePosition::getAmount).reversed()).collect(Collectors.toList());
+	private List<EpochStakePosition> distributeFunds(boolean tip, List<TokenData> tokenData, Long lovelace, String poolHash, int epoch, long minStake, List<String> excludedStakers) throws DecoderException {
+		List<EpochStakePosition> epochStake = cardanoDbSyncClient.epochStake(poolHash, epoch).stream().sorted(Comparator.comparing(EpochStakePosition::getAmount).reversed()).collect(Collectors.toList());
 		epochStake.removeIf(es -> es.getAmount() < minStake);
 		epochStake.removeIf(es -> StringUtils.isBlank(es.getAddress()));
+
+		List<EpochStakePosition> filteredStakes = epochStake
+				.stream()
+				.filter(es -> !excludedStakers.contains(es.getStakeAddress()))
+				.collect(Collectors.toList());
 
 		if (tip) {
 			lovelace -= ONE_ADA;
 		}
 
-		long totalStake = epochStake.stream().mapToLong(es -> es.getAmount()).sum();
+		long totalStake = epochStake
+				.stream()
+				.filter(es -> !excludedStakers.contains(es.getStakeAddress()))
+				.mapToLong(es -> es.getAmount()).sum();
 
 		// distribute tokens
-		for (EpochStakePosition es : epochStake) {
+		for (EpochStakePosition es : filteredStakes) {
+
 			double share = (double) es.getAmount() / totalStake;
-			es.getOutputs().clear();
+			es.setShare(share);
 
 			for (TokenData td : tokenData) {
 				long tokenAmount = (long) (td.getQuantity() * share);
@@ -123,12 +132,12 @@ public class StakeRewardRestInterface {
 		}
 
 		// distribute remaining tokens
-		if (!epochStake.isEmpty()) {
-			EpochStakePosition epochStakePosition = epochStake.get(0);
+		if (!filteredStakes.isEmpty()) {
+			EpochStakePosition epochStakePosition = filteredStakes.get(0);
 
 			for (TokenData td : tokenData) {
 				String tokenKey = td.getPolicyId() + "." + td.getName();
-				long tokenLeft = td.getQuantity() - epochStake.stream().mapToLong(es -> es.getOutputs().getOrDefault(tokenKey, 0l)).sum();
+				long tokenLeft = td.getQuantity() - filteredStakes.stream().mapToLong(es -> es.getOutputs().getOrDefault(tokenKey, 0l)).sum();
 				if (tokenLeft > 0) {
 					epochStakePosition.getOutputs().put(tokenKey, epochStakePosition.getOutputs().getOrDefault(tokenKey, 0l) + tokenLeft);
 				}
@@ -147,7 +156,7 @@ public class StakeRewardRestInterface {
 
 		// distribute ada
 		long lovelaceDistributed = 0;
-		for (EpochStakePosition es : epochStake) {
+		for (EpochStakePosition es : filteredStakes) {
 			double share = (double) es.getAmount() / totalStake;
 			long additionalLovelaces = Math.max((long) (lovelace * share), 0);
 			es.getOutputs().put("", es.getOutputs().getOrDefault("", 0l) + additionalLovelaces);
@@ -157,7 +166,7 @@ public class StakeRewardRestInterface {
 		lovelace -= lovelaceDistributed;
 
 		if (tip) {
-			epochStake.add(new EpochStakePosition(0, "cardano-tools.io", pledgeAddress, Map.of("", ONE_ADA + Math.max(lovelace, 0l))));
+			epochStake.add(new EpochStakePosition(0, "cardano-tools.io", pledgeAddress, Map.of("", ONE_ADA + Math.max(lovelace, 0l)), 0));
 		}
 
 		return epochStake;

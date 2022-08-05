@@ -23,4 +23,6 @@ public class EpochStakePosition {
 	@Transient
 	@NotNull
 	private Map<String, Long> outputs = new HashMap<>();
+	@NotNull
+	private double share;
 }

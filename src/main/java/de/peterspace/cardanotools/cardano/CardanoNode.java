@@ -23,6 +23,9 @@ public class CardanoNode {
 	@Value("${cardano-node.ipc-volume-name}")
 	private String ipcVolumeName;
 
+	@Value("${cardano-node.version}")
+	private String nodeVersion;
+
 	@Getter
 	private String[] networkMagicArgs;
 
@@ -80,7 +83,7 @@ public class CardanoNode {
 		cmd.add("-e");
 		cmd.add("CARDANO_NODE_SOCKET_PATH=/ipc/node.socket");
 
-		cmd.add("inputoutput/cardano-node:1.34.1");
+		cmd.add("inputoutput/cardano-node:" + nodeVersion);
 
 		cmd.add("query");
 		cmd.add("tip");
