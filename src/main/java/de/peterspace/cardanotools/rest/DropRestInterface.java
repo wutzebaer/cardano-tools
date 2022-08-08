@@ -26,6 +26,7 @@ import de.peterspace.cardanotools.model.PublicDropInfo;
 import de.peterspace.cardanotools.model.Views.Transient;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.DropRepository;
+import de.peterspace.cardanotools.service.DropperService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -37,6 +38,7 @@ public class DropRestInterface {
 	private final TokenRegistry tokenRegistry;
 	private final AccountRepository accountRepository;
 	private final CardanoCli cardanoCli;
+	private final DropperService dropperService;
 
 	@PostMapping("{key}/{policyId}")
 	public ResponseEntity<Void> createDrop(@PathVariable("key") UUID key, @PathVariable("policyId") String policyId, @JsonView(Transient.class) @RequestBody Drop drop) throws Exception {
@@ -98,6 +100,12 @@ public class DropRestInterface {
 		Drop drop = dropRepository.findByPrettyUrl(prettyUrl);
 		PublicDropInfo publicDropInfo = new PublicDropInfo(drop.getName(), drop.getDropNfts().size(), drop.getDropNftsAvailableAssetNames().size(), drop.getAddress().getAddress(), drop.getMaxPerTransaction(), drop.getPrice(), drop.isRunning(), drop.getPolicy().getPolicyId());
 		return new ResponseEntity<PublicDropInfo>(publicDropInfo, HttpStatus.OK);
+	}
+
+	@GetMapping("fundedAddresses")
+	public List<String> getFundedAddresses() {
+		return dropperService.findFundedAddresses();
+
 	}
 
 	private static String encodeForUrl(String input) {

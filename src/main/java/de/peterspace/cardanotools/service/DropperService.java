@@ -60,6 +60,22 @@ public class DropperService {
 	private final Cache<Long, Boolean> temporaryBlacklist = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
 	private final Set<TransactionInputs> permanentBlacklist = new HashSet<>();
 
+	public List<String> findFundedAddresses() {
+		List<Drop> drops = dropRepository.findAll();
+		return drops
+				.stream()
+				.map(d -> d.getAddress().getAddress())
+				.filter(fundAddress -> {
+					List<TransactionInputs> offerFundings = cardanoDbSyncClient.getAddressUtxos(fundAddress);
+					Map<Long, List<TransactionInputs>> transactionInputGroups = offerFundings.stream()
+							.filter(of -> temporaryBlacklist.getIfPresent(of.getStakeAddressId()) == null)
+							.filter(of -> !permanentBlacklist.contains(of))
+							.collect(Collectors.groupingBy(of -> of.getStakeAddressId(), LinkedHashMap::new, Collectors.toList()));
+					return transactionInputGroups.size() > 0;
+				})
+				.collect(Collectors.toList());
+	}
+
 	@Scheduled(cron = "*/1 * * * * *")
 	@Transactional
 	public void dropNfts() {
