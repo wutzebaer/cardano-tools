@@ -3,8 +3,10 @@ package de.peterspace.cardanotools.cardano;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -62,11 +64,11 @@ public class CardanoCli {
 
 	private final CardanoNode cardanoNode;
 	private final AccountRepository accountRepository;
-	private final FileUtil fileUtil;
 	private final IpfsClient ipfsClient;
 	private final CardanoDbSyncClient cardanoDbSyncClient;
 	private final CardanoCliDockerBridge cardanoCliDockerBridge;
 
+	private String protocolJson;
 	private String dummyAddress;
 	private TransactionInputs dummyUtxo;
 
@@ -78,7 +80,7 @@ public class CardanoCli {
 		cmd.add("protocol-parameters");
 		cmd.add("--out-file");
 		cmd.add("protocol.json");
-		cardanoCliDockerBridge.requestCardanoCli(cmd.toArray(new String[0]));
+		protocolJson = cardanoCliDockerBridge.requestCardanoCli(null, cmd.toArray(new String[0]), "protocol.json")[1];
 
 		if (network.equals("testnet")) {
 			dummyAddress = "addr_test1qpqxjsh6jx0mumxgw5nc5jeu5xy07k35v6h2zutyka72yua578p0hapx37mcflefvvwyhwtwn4kt83nkf7wqwx9tvsdsv8p9ac";
@@ -108,7 +110,7 @@ public class CardanoCli {
 		cmd.add("--tx-out");
 		cmd.add(addressValue);
 
-		String feeString = cardanoCliDockerBridge.requestCardanoCliNomagic(cmd.toArray(new String[0]));
+		String feeString = cardanoCliDockerBridge.requestCardanoCliNomagic(Map.of("protocol.json", protocolJson), cmd.toArray(new String[0]))[0];
 		long fee = Long.valueOf(feeString.split(" ")[1]);
 
 		return fee;
@@ -141,23 +143,20 @@ public class CardanoCli {
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.add("address");
 		cmd.add("key-gen");
-		cmd.add("--verification-key-file");
-		cmd.add(vkeyFilename);
 		cmd.add("--signing-key-file");
 		cmd.add(skeyFilename);
-		cardanoCliDockerBridge.requestCardanoCliNomagic(cmd.toArray(new String[0]));
+		cmd.add("--verification-key-file");
+		cmd.add(vkeyFilename);
+		String[] keyGenResponse = cardanoCliDockerBridge.requestCardanoCliNomagic(null, cmd.toArray(new String[0]), skeyFilename, vkeyFilename);
 
 		cmd = new ArrayList<String>();
 		cmd.add("address");
 		cmd.add("build");
 		cmd.add("--payment-verification-key-file");
 		cmd.add(vkeyFilename);
-		String addressLiteral = cardanoCliDockerBridge.requestCardanoCli(cmd.toArray(new String[0]));
+		String addressLiteral = cardanoCliDockerBridge.requestCardanoCli(Map.of(vkeyFilename, keyGenResponse[2]), cmd.toArray(new String[0]))[0];
 
-		String skey = fileUtil.consumeFile(skeyFilename);
-		String vkey = fileUtil.consumeFile(vkeyFilename);
-
-		Address address = new Address(addressLiteral, skey, vkey, 0l, "[]");
+		Address address = new Address(addressLiteral, keyGenResponse[1], keyGenResponse[2], 0l, "[]");
 		return address;
 	}
 
@@ -169,7 +168,6 @@ public class CardanoCli {
 		long dueSlot = tip + secondsToLive;
 
 		String vkeyFilename = filename("vkey");
-		fileUtil.writeFile(vkeyFilename, address.getVkey());
 
 		// address hash
 		ArrayList<String> cmd1 = new ArrayList<String>();
@@ -177,7 +175,7 @@ public class CardanoCli {
 		cmd1.add("key-hash");
 		cmd1.add("--payment-verification-key-file");
 		cmd1.add(vkeyFilename);
-		String keyHash = cardanoCliDockerBridge.requestCardanoCliNomagic(cmd1.toArray(new String[0]));
+		String keyHash = cardanoCliDockerBridge.requestCardanoCliNomagic(Map.of(vkeyFilename, address.getVkey()), cmd1.toArray(new String[0]))[0];
 
 		// @formatter:off
         JSONObject script = new JSONObject()
@@ -192,18 +190,14 @@ public class CardanoCli {
                                         .put("type", "sig")));
         // @formatter:on
 
-		fileUtil.removeFile(vkeyFilename);
-
 		String policyFilename = filename("script");
 		String policyString = script.toString(3);
-		fileUtil.writeFile(policyFilename, policyString);
 		ArrayList<String> cmd2 = new ArrayList<String>();
 		cmd2.add("transaction");
 		cmd2.add("policyid");
 		cmd2.add("--script-file");
 		cmd2.add(policyFilename);
-		String policyId = cardanoCliDockerBridge.requestCardanoCliNomagic(cmd2.toArray(new String[0]));
-		fileUtil.removeFile(policyFilename);
+		String policyId = cardanoCliDockerBridge.requestCardanoCliNomagic(Map.of(policyFilename, policyString), cmd2.toArray(new String[0]))[0];
 
 		return Policy.builder()
 				.account(account)
@@ -397,7 +391,6 @@ public class CardanoCli {
 
 		String policyScriptFilename = filename("script");
 		if (mints.size() > 0) {
-			fileUtil.writeFile(policyScriptFilename, policy.getPolicy());
 			cmd.add("--mint");
 			cmd.add(StringUtils.join(mints, "+"));
 			cmd.add("--minting-script-file");
@@ -406,7 +399,6 @@ public class CardanoCli {
 
 		String metadataFilename = filename("metadata");
 		if (metaData != null) {
-			fileUtil.writeFile(metadataFilename, metaData);
 			cmd.add("--json-metadata-no-schema");
 			cmd.add("--metadata-json-file");
 			cmd.add(metadataFilename);
@@ -421,9 +413,9 @@ public class CardanoCli {
 			cmd.add("" + policy.getPolicyDueSlot());
 		}
 
-		String feeString;
+		String[] txResponse;
 		try {
-			feeString = cardanoCliDockerBridge.requestCardanoCli(cmd.toArray(new String[0]));
+			txResponse = cardanoCliDockerBridge.requestCardanoCli(Map.of(policyScriptFilename, policy.getPolicy(), metadataFilename, metaData), cmd.toArray(new String[0]), txUnsignedFilename);
 		} catch (Exception e) {
 			String message = StringUtils.trimToEmpty(e.getMessage());
 			if (message.contains("(change output)")) {
@@ -440,24 +432,17 @@ public class CardanoCli {
 			} else {
 				throw e;
 			}
-		} finally {
-			if (metaData != null) {
-				fileUtil.removeFile(metadataFilename);
-			}
-			if (mints.size() > 0) {
-				fileUtil.removeFile(policyScriptFilename);
-			}
 		}
 
 		Transaction transaction = new Transaction();
-		String[] feeStringChunks = feeString.split(" ");
+		String[] feeStringChunks = txResponse[0].split(" ");
 		transaction.setFee(Long.valueOf(feeStringChunks[feeStringChunks.length - 1]));
 		transaction.setInputs(transactionInputs.toString());
 		transaction.setOutputs(transactionOutputs.toString());
 		if (metaData != null) {
 			transaction.setMetaDataJson(metaData);
 		}
-		transaction.setRawData(fileUtil.consumeFile(txUnsignedFilename));
+		transaction.setRawData(txResponse[1]);
 
 		String txId = getTxId(transaction);
 		transaction.setTxId(txId);
@@ -475,15 +460,17 @@ public class CardanoCli {
 
 	private void signTransaction(Transaction mintTransaction, Address... addresses) throws Exception {
 
+		Map<String, String> inputFiles = new HashMap<>();
+
 		List<String> skeyFilenames = new ArrayList<String>();
 		for (Address address : addresses) {
 			String skeyFilename = filename("skey");
 			skeyFilenames.add(skeyFilename);
-			fileUtil.writeFile(skeyFilename, address.getSkey());
+			inputFiles.put(skeyFilename, address.getSkey());
 		}
 
 		String rawFilename = filename("raw");
-		fileUtil.writeFile(rawFilename, mintTransaction.getRawData());
+		inputFiles.put(rawFilename, mintTransaction.getRawData());
 
 		String signedFilename = filename("signed");
 
@@ -502,24 +489,17 @@ public class CardanoCli {
 		cmd.add("--out-file");
 		cmd.add(signedFilename);
 
-		cardanoCliDockerBridge.requestCardanoCliNomagic(cmd.toArray(new String[0]));
+		String[] output = cardanoCliDockerBridge.requestCardanoCliNomagic(inputFiles, cmd.toArray(new String[0]), signedFilename);
 
-		mintTransaction.setSignedData(fileUtil.consumeFile(signedFilename));
+		mintTransaction.setSignedData(output[1]);
 
 		String cborHex = new JSONObject(mintTransaction.getSignedData()).getString("cborHex");
 		mintTransaction.setTxSize((long) (cborHex.length() / 2));
-
-		for (String skeyFilename : skeyFilenames) {
-			fileUtil.removeFile(skeyFilename);
-		}
-		fileUtil.removeFile(rawFilename);
 	}
 
 	public void submitTransaction(Transaction mintTransaction) throws Exception {
 		String filename = filename("signed");
 		try {
-
-			fileUtil.writeFile(filename, mintTransaction.getSignedData());
 
 			ArrayList<String> cmd = new ArrayList<String>();
 			cmd.add("transaction");
@@ -542,7 +522,7 @@ public class CardanoCli {
 				}
 			}
 
-			cardanoCliDockerBridge.requestCardanoCli(cmd.toArray(new String[0]));
+			cardanoCliDockerBridge.requestCardanoCli(Map.of(filename, mintTransaction.getSignedData()), cmd.toArray(new String[0]));
 
 		} catch (Exception e) {
 			String message = StringUtils.defaultIfEmpty(e.getMessage(), "");
@@ -553,8 +533,6 @@ public class CardanoCli {
 			} else {
 				throw e;
 			}
-		} finally {
-			fileUtil.removeFile(filename);
 		}
 	}
 
@@ -580,19 +558,13 @@ public class CardanoCli {
 	}
 
 	private String getTxId(Transaction mintTransaction) throws Exception {
-
 		String filename = filename("raw");
-		fileUtil.writeFile(filename, mintTransaction.getRawData());
-
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.add("transaction");
 		cmd.add("txid");
 		cmd.add("--tx-body-file");
 		cmd.add(filename);
-		String txId = cardanoCliDockerBridge.requestCardanoCliNomagic(cmd.toArray(new String[0]));
-
-		fileUtil.removeFile(filename);
-
+		String txId = cardanoCliDockerBridge.requestCardanoCliNomagic(Map.of(filename, mintTransaction.getRawData()), cmd.toArray(new String[0]))[0];
 		return txId;
 	}
 

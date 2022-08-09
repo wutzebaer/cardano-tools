@@ -34,24 +34,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ProjectRegistry {
 
-	private final TaskExecutor taskExecutor;
-
 	@Getter
 	private Map<String, ProjectMetadata> projectRegistryMetadata;
 
-	@PostConstruct
-	public void init() throws Exception {
-		taskExecutor.execute(() -> {
-			try {
-				fetchRegistry();
-			} catch (Exception e) {
-				log.error("Init TokenRegistryMetadata", e);
-			}
-		});
-
-	}
-
-	@Scheduled(cron = "0 0 0 * * *")
 	public void updateRegistry() throws Exception {
 		fetchRegistry();
 	}
@@ -63,11 +48,9 @@ public class ProjectRegistry {
 		private List<String> policies;
 	}
 
-	/**
-	 * @return
-	 * @throws Exception
-	 */
-	private void fetchRegistry() throws Exception {
+	@Scheduled(cron = "0 0 0 * * *")
+	@Scheduled(initialDelay = 0, fixedDelay = Long.MAX_VALUE)
+	public void fetchRegistry() throws Exception {
 
 		final Map<String, ProjectMetadata> result = new HashMap<>();
 		ZipInputStream zis = new ZipInputStream(new URL("https://github.com/Cardano-NFTs/policyIDs/archive/refs/heads/main.zip").openStream());
@@ -76,7 +59,7 @@ public class ProjectRegistry {
 			if (ze.isDirectory()) {
 				continue;
 			}
-			if(!ze.getName().startsWith("policyIDs-main/projects")) {
+			if (!ze.getName().startsWith("policyIDs-main/projects")) {
 				continue;
 			}
 

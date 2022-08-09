@@ -73,12 +73,6 @@ public class TokenRegistry {
 	@Getter
 	private Map<String, TokenRegistryMetadata> tokenRegistryMetadata = new HashMap<>();
 
-	@Scheduled(cron = "0 0 0 * * *")
-	@Scheduled(initialDelay = 0, fixedDelay = Long.MAX_VALUE)
-	public void updateRegistry() throws Exception {
-		fetchRegistry();
-	}
-
 	@lombok.Value
 	public static class PullRequest {
 		String title;
@@ -98,29 +92,9 @@ public class TokenRegistry {
 		String logo;
 	}
 
-	public String createTokenRegistration(RegistrationMetadata registrationMetadata) throws Exception {
-
-		if (registrationMetadataRepository.existsByPolicyIdAndAssetName(registrationMetadata.getPolicyId(), registrationMetadata.getAssetName())) {
-			throw new Exception("Your token is already registered!");
-		}
-
-		String subject = CardanoUtil.createSubject(registrationMetadata.getPolicyId(), registrationMetadata.getAssetName());
-		addRequiredFields(subject, registrationMetadata);
-
-		try {
-			registrationMetadataRepository.save(registrationMetadata);
-		} catch (Exception e) {
-			throw new Exception("Your token is already registered!", e);
-		}
-
-		String branchname = pushToFork(registrationMetadata.getName(), subject + ".json", fileUtil.readFileBinary(subject + ".json"));
-		fileUtil.removeFile(subject + ".json");
-
-		String url = createPullRequest(branchname, registrationMetadata.getName());
-		return url;
-	}
-
-	private void fetchRegistry() throws Exception {
+	@Scheduled(cron = "0 0 0 * * *")
+	@Scheduled(initialDelay = 0, fixedDelay = Long.MAX_VALUE)
+	public void fetchRegistry() throws Exception {
 
 		final Map<String, TokenRegistryMetadata> result = new HashMap<>();
 		ZipInputStream zis = new ZipInputStream(new URL("https://github.com/cardano-foundation/cardano-token-registry/archive/refs/heads/master.zip").openStream());
@@ -157,6 +131,28 @@ public class TokenRegistry {
 		tokenRegistryMetadata = result;
 
 		log.info("Fetched {} tokens from cardano-token-registry", result.size());
+	}
+
+	public String createTokenRegistration(RegistrationMetadata registrationMetadata) throws Exception {
+
+		if (registrationMetadataRepository.existsByPolicyIdAndAssetName(registrationMetadata.getPolicyId(), registrationMetadata.getAssetName())) {
+			throw new Exception("Your token is already registered!");
+		}
+
+		String subject = CardanoUtil.createSubject(registrationMetadata.getPolicyId(), registrationMetadata.getAssetName());
+		addRequiredFields(subject, registrationMetadata);
+
+		try {
+			registrationMetadataRepository.save(registrationMetadata);
+		} catch (Exception e) {
+			throw new Exception("Your token is already registered!", e);
+		}
+
+		String branchname = pushToFork(registrationMetadata.getName(), subject + ".json", fileUtil.readFileBinary(subject + ".json"));
+		fileUtil.removeFile(subject + ".json");
+
+		String url = createPullRequest(branchname, registrationMetadata.getName());
+		return url;
 	}
 
 	private String pushToFork(String tokenname, String filename, byte[] data) throws Exception {

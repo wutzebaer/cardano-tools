@@ -1,5 +1,7 @@
 package de.peterspace.cardanotools.cardano;
 
+import java.util.Map;
+
 import javax.annotation.PostConstruct;
 
 import org.json.JSONArray;
@@ -41,6 +43,8 @@ public class CardanoCliDockerBridge {
 		String nodeVersion;
 		String[] networkMagicArgs;
 		String[] cmd;
+		String[] outputFiles;
+		Map<String, String> inputFiles;
 	}
 
 	@PostConstruct
@@ -55,28 +59,28 @@ public class CardanoCliDockerBridge {
 		}
 	}
 
-	public String requestCardanoCliNomagic(String[] cmd) throws Exception {
-		return request(cmd, new String[] {}, "cardano-cli");
+	public String[] requestCardanoCliNomagic(Map<String, String> inputFiles, String[] cmd, String... outputFiles) throws Exception {
+		return request("cardano-cli", new String[] {}, inputFiles, cmd, outputFiles);
 	}
 
-	public String requestCardanoCli(String[] cmd) throws Exception {
-		return request(cmd, networkMagicArgs, "cardano-cli");
+	public String[] requestCardanoCli(Map<String, String> inputFiles, String[] cmd, String... outputFiles) throws Exception {
+		return request("cardano-cli", networkMagicArgs, inputFiles, cmd, outputFiles);
 	}
 
-	public String requestMetadataCreator(String[] cmd) throws Exception {
-		return request(cmd, new String[] {}, "cardano-tools-token-metadata-creator");
+	public String[] requestMetadataCreator(String[] cmd) throws Exception {
+		return request("cardano-tools-token-metadata-creator", new String[0], null, cmd, null);
 	}
 
-	private String request(String[] cmd, String[] networkMagicArgs, String path) throws Exception {
+	private String[] request(String path, String[] networkMagicArgs, Map<String, String> inputFiles, String[] cmd, String[] outputFiles) throws Exception {
 		RestTemplate restTemplate = new RestTemplate();
-		CardanoCliDockerBridgeRequest cardanoCliDockerBridgeRequest = new CardanoCliDockerBridgeRequest(ipcVolumeName, workingDir, nodeVersion, networkMagicArgs, cmd);
+		CardanoCliDockerBridgeRequest cardanoCliDockerBridgeRequest = new CardanoCliDockerBridgeRequest(ipcVolumeName, workingDir, nodeVersion, networkMagicArgs, cmd, outputFiles, inputFiles);
 		log.info("Running docker " + new JSONArray(cmd).toString(3));
-		ResponseEntity<String> response = restTemplate.postForEntity(bridgeUrl + "/" + path, cardanoCliDockerBridgeRequest, String.class);
-		log.info("Result " + response.getBody());
+		ResponseEntity<String[]> response = restTemplate.postForEntity(bridgeUrl + "/" + path, cardanoCliDockerBridgeRequest, String[].class);
+		log.info("Result " + new JSONArray(response.getBody()).toString(3));
 		if (response.getStatusCodeValue() == 200) {
 			return response.getBody();
 		} else {
-			throw new Exception(response.getBody());
+			throw new Exception(response.getBody()[0]);
 		}
 	}
 

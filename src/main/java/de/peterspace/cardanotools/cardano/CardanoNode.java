@@ -44,7 +44,7 @@ public class CardanoNode {
 		ArrayList<String> cmd = new ArrayList<String>();
 		cmd.add("query");
 		cmd.add("tip");
-		String jsonString = cardanoCliDockerBridge.requestCardanoCli(cmd.toArray(new String[0]));
+		String jsonString = cardanoCliDockerBridge.requestCardanoCli(null, cmd.toArray(new String[0]))[0];
 		JSONObject jsonObject = new JSONObject(jsonString);
 		return jsonObject;
 	}
