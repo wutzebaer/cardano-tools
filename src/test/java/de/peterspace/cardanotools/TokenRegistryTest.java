@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
+import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.MintOrderSubmission;
@@ -37,12 +38,13 @@ public class TokenRegistryTest {
 
 		Account account = cardanoCli.createAccount();
 
-		account.getPolicies().add(0, cardanoCli.createPolicy(account, cardanoCli.queryTip(), 1));
+		account.getPolicies().add(0, cardanoCli.createPolicy(account, CardanoUtil.currentSlot(), 1));
 
 		MintOrderSubmission mintOrder = new MintOrderSubmission();
 		mintOrder.setTip(false);
 		mintOrder.setTargetAddress(account.getAddress().getAddress());
 		mintOrder.setPolicyId(account.getPolicies().get(0).getPolicyId());
+		mintOrder.setPin(false);
 
 		ArrayList<TokenSubmission> tokens = new ArrayList<TokenSubmission>();
 
@@ -61,7 +63,7 @@ public class TokenRegistryTest {
 
 		Transaction mintTransaction = cardanoCli.buildMintTransaction(mintOrder, account);
 		mintTransaction.setAccount(account);
-		byte[] logoData = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("43dff6dc96b32060.png"));
+		byte[] logoData = IOUtils.toByteArray(getClass().getClassLoader().getResourceAsStream("mini.png"));
 
 		Policy policy = account.getPolicy(mintTransaction.getMintOrderSubmission().getPolicyId());
 		String url = tokenRegistry.createTokenRegistration(new RegistrationMetadata(null, "AAAAA", policy.getPolicyId(), policy.getPolicy(), mintTransaction.getAccount().getAddress().getSkey(), "AAANAME", "AAADESC", "AAATICKER", null, logoData, 0));

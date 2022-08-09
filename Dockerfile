@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk11:ubuntu-jre
+FROM eclipse-temurin:11-jdk-jammy
 RUN apt-get update && apt-get install -y \
   docker.io \
   && rm -rf /var/lib/apt/lists/*

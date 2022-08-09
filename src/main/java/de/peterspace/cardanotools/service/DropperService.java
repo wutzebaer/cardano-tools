@@ -30,6 +30,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import de.peterspace.cardanotools.cardano.CardanoCli;
+import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.TransactionOutputs;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
 import de.peterspace.cardanotools.model.Address;
@@ -76,9 +77,11 @@ public class DropperService {
 				.collect(Collectors.toList());
 	}
 
-	@Scheduled(cron = "*/1 * * * * *")
+	@Scheduled(cron = "*/10 * * * * *")
 	@Transactional
 	public void dropNfts() {
+		log.info("START Dropper cycle");
+
 		List<Drop> drops = dropRepository.findAll();
 
 		for (Drop drop : drops) {
@@ -111,7 +114,7 @@ public class DropperService {
 						long price = drop.getPrice();
 						int mintsLeft = drop.getMaxPerTransaction() - wallet.map(w -> w.getTokensMinted()).orElse(0);
 
-						if (drop.getDropNftsAvailableAssetNames().size() == 0 || mintsLeft < 1) {
+						if (drop.getDropNftsAvailableAssetNames().size() == 0 || mintsLeft < 1 || drop.getPolicy().getPolicyDueSlot() < CardanoUtil.currentSlot()) {
 							refund(fundAddress, transactionInputs, lockedFunds);
 						} else if (hasEnoughFunds(price, transactionInputs, lockedFunds)) {
 							long funds = calculateAvailableFunds(transactionInputs) - lockedFunds;
@@ -144,6 +147,7 @@ public class DropperService {
 
 		}
 
+		log.info("END  Dropper cycle");
 	}
 
 	private void sell(Drop drop, List<TransactionInputs> transactionInputs, List<DropNft> tokens, long totalPrice, long lockedFunds) throws Exception {

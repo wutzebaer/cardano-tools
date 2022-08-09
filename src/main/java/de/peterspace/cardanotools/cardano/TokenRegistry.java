@@ -1,7 +1,6 @@
 package de.peterspace.cardanotools.cardano;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -13,16 +12,12 @@ import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotBlank;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.InvalidRemoteException;
-import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.internal.storage.dfs.DfsRepositoryDescription;
 import org.eclipse.jgit.internal.storage.dfs.InMemoryRepository;
 import org.eclipse.jgit.lib.CommitBuilder;
@@ -41,14 +36,12 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
 
 import de.peterspace.cardanotools.model.RegistrationMetadata;
-import de.peterspace.cardanotools.process.ProcessUtil;
 import de.peterspace.cardanotools.repository.RegistrationMetadataRepository;
 import lombok.Data;
 import lombok.Getter;
@@ -75,24 +68,13 @@ public class TokenRegistry {
 
 	private final FileUtil fileUtil;
 	private final RegistrationMetadataRepository registrationMetadataRepository;
-	private final TaskExecutor taskExecutor;
+	private final CardanoCliDockerBridge cardanoCliDockerBridge;
 
 	@Getter
 	private Map<String, TokenRegistryMetadata> tokenRegistryMetadata = new HashMap<>();
 
-	@PostConstruct
-	public void init() throws Exception {
-		taskExecutor.execute(() -> {
-			try {
-				updateRegistry();
-			} catch (Exception e) {
-				log.error("Init TokenRegistryMetadata", e);
-			}
-		});
-
-	}
-
 	@Scheduled(cron = "0 0 0 * * *")
+	@Scheduled(initialDelay = 0, fixedDelay = Long.MAX_VALUE)
 	public void updateRegistry() throws Exception {
 		fetchRegistry();
 	}
@@ -234,19 +216,6 @@ public class TokenRegistry {
 		fileUtil.writeFile(temporaryFilePrefix + ".skey", registrationMetadata.getPolicySkey());
 
 		ArrayList<String> cmd = new ArrayList<String>();
-		cmd.add("docker");
-
-		cmd.add("run");
-		cmd.add("--rm");
-
-		cmd.add("-v");
-		cmd.add(workingDir + ":/work");
-
-		cmd.add("-w");
-		cmd.add("/work");
-
-		cmd.add("wutzebaer/cardano-tools-token-metadata-creator");
-		cmd.add("token-metadata-creator");
 
 		cmd.add("entry");
 
@@ -286,7 +255,7 @@ public class TokenRegistry {
 
 		cmd.add("--finalize");
 
-		ProcessUtil.runCommand(cmd.toArray(new String[0]));
+		cardanoCliDockerBridge.requestMetadataCreator(cmd.toArray(new String[0]));
 
 		fileUtil.removeFile(temporaryFilePrefix + ".script");
 		fileUtil.removeFile(temporaryFilePrefix + ".skey");

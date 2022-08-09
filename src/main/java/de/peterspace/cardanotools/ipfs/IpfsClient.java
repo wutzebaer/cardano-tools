@@ -37,7 +37,6 @@ public class IpfsClient {
 		return ipfs;
 	}
 
-	@Async
 	@Scheduled(initialDelay = 0, fixedDelay = Long.MAX_VALUE)
 	public void updatePins() throws IOException {
 		log.info("Updating pins");
