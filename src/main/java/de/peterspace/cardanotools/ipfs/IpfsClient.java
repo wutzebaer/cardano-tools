@@ -15,10 +15,9 @@ import org.springframework.stereotype.Component;
 
 import io.ipfs.api.IPFS;
 import io.ipfs.api.IPFS.PinType;
-import io.ipfs.multiaddr.MultiAddress;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
-import io.ipfs.cid.Cid;
+import io.ipfs.multiaddr.MultiAddress;
 import io.ipfs.multihash.Multihash;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

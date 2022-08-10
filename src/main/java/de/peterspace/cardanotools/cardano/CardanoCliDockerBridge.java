@@ -1,12 +1,10 @@
 package de.peterspace.cardanotools.cardano;
 
-import java.io.Serializable;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;

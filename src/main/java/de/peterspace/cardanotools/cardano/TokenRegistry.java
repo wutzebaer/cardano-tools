@@ -67,7 +67,6 @@ public class TokenRegistry {
 	@Value("${github.registry.fork}")
 	private String githubRegistryFork;
 
-	private final FileUtil fileUtil;
 	private final RegistrationMetadataRepository registrationMetadataRepository;
 	private final CardanoCliDockerBridge cardanoCliDockerBridge;
 

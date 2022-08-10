@@ -1,6 +1,5 @@
 package de.peterspace.cardanotools.cardano;
 
-import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;

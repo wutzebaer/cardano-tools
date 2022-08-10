@@ -4,8 +4,6 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.validation.constraints.Min;
-
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
