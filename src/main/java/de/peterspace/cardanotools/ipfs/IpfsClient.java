@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -31,7 +33,8 @@ public class IpfsClient {
 
 	private Map<Multihash, Object> pins = new HashMap<>();
 
-	private IPFS buildIpfsClient() {
+	@PostConstruct
+	public IPFS buildIpfsClient() {
 		MultiAddress multiAddress = new MultiAddress(apiUrl);
 		IPFS ipfs = new IPFS(multiAddress.getHost(), multiAddress.getTCPPort(), "/api/v0/", 10_000, 60_000, multiAddress.toString().contains("/https"));
 		return ipfs;

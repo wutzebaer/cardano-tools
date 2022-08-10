@@ -1,5 +1,6 @@
 package de.peterspace.cardanotools.cardano;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -67,8 +68,8 @@ public class CardanoCliDockerBridge {
 		return request("cardano-cli", networkMagicArgs, inputFiles, cmd, outputFiles);
 	}
 
-	public String[] requestMetadataCreator(String[] cmd) throws Exception {
-		return request("cardano-tools-token-metadata-creator", new String[0], null, cmd, null);
+	public String[] requestMetadataCreator(Map<String, String> inputFiles, String[] cmd, String... outputFiles) throws Exception {
+		return request("cardano-tools-token-metadata-creator", new String[0], inputFiles, cmd, outputFiles);
 	}
 
 	private String[] request(String path, String[] networkMagicArgs, Map<String, String> inputFiles, String[] cmd, String[] outputFiles) throws Exception {

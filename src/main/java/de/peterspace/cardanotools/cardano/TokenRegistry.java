@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -140,7 +141,7 @@ public class TokenRegistry {
 		}
 
 		String subject = CardanoUtil.createSubject(registrationMetadata.getPolicyId(), registrationMetadata.getAssetName());
-		addRequiredFields(subject, registrationMetadata);
+		String regFile = addRequiredFields(subject, registrationMetadata);
 
 		try {
 			registrationMetadataRepository.save(registrationMetadata);
@@ -148,11 +149,63 @@ public class TokenRegistry {
 			throw new Exception("Your token is already registered!", e);
 		}
 
-		String branchname = pushToFork(registrationMetadata.getName(), subject + ".json", fileUtil.readFileBinary(subject + ".json"));
-		fileUtil.removeFile(subject + ".json");
+		String branchname = pushToFork(registrationMetadata.getName(), subject + ".json", regFile.getBytes());
 
 		String url = createPullRequest(branchname, registrationMetadata.getName());
 		return url;
+	}
+
+	private String addRequiredFields(String subject, RegistrationMetadata registrationMetadata) throws Exception {
+		String temporaryFilePrefix = UUID.randomUUID().toString();
+
+		ArrayList<String> cmd = new ArrayList<String>();
+
+		Map<String, String> inputFiles = new HashMap<>();
+
+		cmd.add("entry");
+
+		cmd.add("--init");
+		cmd.add(subject);
+
+		cmd.add("--name");
+		cmd.add(registrationMetadata.getName());
+
+		cmd.add("--description");
+		cmd.add(registrationMetadata.getDescription());
+
+		cmd.add("--policy");
+		cmd.add(temporaryFilePrefix + ".script");
+		inputFiles.put(temporaryFilePrefix + ".script", registrationMetadata.getPolicy());
+
+		cmd.add("--decimals");
+		cmd.add(registrationMetadata.getDecimals() + "");
+
+		if (!StringUtils.isBlank(registrationMetadata.getTicker())) {
+			cmd.add("--ticker");
+			cmd.add(registrationMetadata.getTicker());
+		}
+
+		if (!StringUtils.isBlank(registrationMetadata.getUrl())) {
+			cmd.add("--url");
+			cmd.add(registrationMetadata.getUrl());
+		}
+
+		if (registrationMetadata.getLogo() != null) {
+			cmd.add("--logo");
+			cmd.add(temporaryFilePrefix + ".png");
+			inputFiles.put(temporaryFilePrefix + ".png", "base64:" + Base64.getEncoder().encodeToString(registrationMetadata.getLogo()));
+		}
+
+		cmd.add("-a");
+		cmd.add(temporaryFilePrefix + ".skey");
+		inputFiles.put(temporaryFilePrefix + ".skey", registrationMetadata.getPolicySkey());
+
+		cmd.add("--finalize");
+
+		return cardanoCliDockerBridge.requestMetadataCreator(
+				inputFiles,
+				cmd.toArray(new String[0]),
+				subject + ".json")[1];
 	}
 
 	private String pushToFork(String tokenname, String filename, byte[] data) throws Exception {
@@ -204,60 +257,6 @@ public class TokenRegistry {
 				+ "");
 		String result = restTemplate.postForObject("https://api.github.com/repos/cardano-foundation/cardano-token-registry/pulls", pullRequest, String.class);
 		return new JSONObject(result).getString("html_url");
-	}
-
-	private void addRequiredFields(String subject, RegistrationMetadata registrationMetadata) throws Exception {
-		String temporaryFilePrefix = UUID.randomUUID().toString();
-		fileUtil.writeFile(temporaryFilePrefix + ".script", registrationMetadata.getPolicy());
-		fileUtil.writeFile(temporaryFilePrefix + ".skey", registrationMetadata.getPolicySkey());
-
-		ArrayList<String> cmd = new ArrayList<String>();
-
-		cmd.add("entry");
-
-		cmd.add("--init");
-		cmd.add(subject);
-
-		cmd.add("--name");
-		cmd.add(registrationMetadata.getName());
-
-		cmd.add("--description");
-		cmd.add(registrationMetadata.getDescription());
-
-		cmd.add("--policy");
-		cmd.add(temporaryFilePrefix + ".script");
-
-		cmd.add("--decimals");
-		cmd.add(registrationMetadata.getDecimals() + "");
-
-		if (!StringUtils.isBlank(registrationMetadata.getTicker())) {
-			cmd.add("--ticker");
-			cmd.add(registrationMetadata.getTicker());
-		}
-
-		if (!StringUtils.isBlank(registrationMetadata.getUrl())) {
-			cmd.add("--url");
-			cmd.add(registrationMetadata.getUrl());
-		}
-
-		if (registrationMetadata.getLogo() != null) {
-			fileUtil.writeFile(temporaryFilePrefix + ".png", registrationMetadata.getLogo());
-			cmd.add("--logo");
-			cmd.add(temporaryFilePrefix + ".png");
-		}
-
-		cmd.add("-a");
-		cmd.add(temporaryFilePrefix + ".skey");
-
-		cmd.add("--finalize");
-
-		cardanoCliDockerBridge.requestMetadataCreator(cmd.toArray(new String[0]));
-
-		fileUtil.removeFile(temporaryFilePrefix + ".script");
-		fileUtil.removeFile(temporaryFilePrefix + ".skey");
-		if (registrationMetadata.getLogo() != null) {
-			fileUtil.removeFile(temporaryFilePrefix + ".png");
-		}
 	}
 
 	public static void mainBAK(String[] args) throws Exception {
