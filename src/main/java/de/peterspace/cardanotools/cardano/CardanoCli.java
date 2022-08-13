@@ -56,9 +56,6 @@ public class CardanoCli {
 	@Value("${pledge-address}")
 	private String pledgeAddress;
 
-	@Value("${working.dir}")
-	private String workingDir;
-
 	@Value("${cardano-node.version}")
 	private String nodeVersion;
 

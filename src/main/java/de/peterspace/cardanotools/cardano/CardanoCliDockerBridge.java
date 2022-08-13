@@ -26,9 +26,6 @@ public class CardanoCliDockerBridge {
 	@Value("${cardano-node.version}")
 	private String nodeVersion;
 
-	@Value("${working.dir}")
-	private String workingDir;
-
 	@Value("${cardano-cli-docker-bridge.url}")
 	private String bridgeUrl;
 
@@ -38,7 +35,6 @@ public class CardanoCliDockerBridge {
 	@lombok.Value
 	public static class CardanoCliDockerBridgeRequest {
 		String ipcVolumeName;
-		String workingDir;
 		String nodeVersion;
 		String[] networkMagicArgs;
 		String[] cmd;
@@ -72,7 +68,7 @@ public class CardanoCliDockerBridge {
 
 	private String[] request(String path, String[] networkMagicArgs, Map<String, String> inputFiles, String[] cmd, String[] outputFiles) throws Exception {
 		RestTemplate restTemplate = new RestTemplate();
-		CardanoCliDockerBridgeRequest cardanoCliDockerBridgeRequest = new CardanoCliDockerBridgeRequest(ipcVolumeName, workingDir, nodeVersion, networkMagicArgs, cmd, outputFiles, inputFiles);
+		CardanoCliDockerBridgeRequest cardanoCliDockerBridgeRequest = new CardanoCliDockerBridgeRequest(ipcVolumeName, nodeVersion, networkMagicArgs, cmd, outputFiles, inputFiles);
 		log.info("Running docker " + new JSONArray(cmd).toString(3));
 		ResponseEntity<String[]> response = restTemplate.postForEntity(bridgeUrl + "/" + path, cardanoCliDockerBridgeRequest, String[].class);
 		log.info("Result " + new JSONArray(response.getBody()).toString(3));

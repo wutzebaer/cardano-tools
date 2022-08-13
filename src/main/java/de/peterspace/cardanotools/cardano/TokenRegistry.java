@@ -55,9 +55,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class TokenRegistry {
 
-	@Value("${working.dir}")
-	private String workingDir;
-
 	@Value("${github.username}")
 	private String githubUsername;
 
