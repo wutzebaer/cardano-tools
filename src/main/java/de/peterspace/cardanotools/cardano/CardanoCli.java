@@ -337,6 +337,7 @@ public class CardanoCli {
 
 	public Transaction buildTransaction(List<TransactionInputs> transactionInputs, TransactionOutputs transactionOutputs, String metaData, Policy policy, String changeAddress) throws Exception {
 
+		Map<String, String> inputFiles = new HashMap<>();
 		ArrayList<String> cmd = new ArrayList<String>();
 
 		cmd.add("transaction");
@@ -386,19 +387,21 @@ public class CardanoCli {
 			}
 		}
 
-		String policyScriptFilename = filename("script");
 		if (mints.size() > 0) {
+			String policyScriptFilename = filename("script");
 			cmd.add("--mint");
 			cmd.add(StringUtils.join(mints, "+"));
 			cmd.add("--minting-script-file");
 			cmd.add(policyScriptFilename);
+			inputFiles.put(policyScriptFilename, policy.getPolicy());
 		}
 
-		String metadataFilename = filename("metadata");
 		if (metaData != null) {
+			String metadataFilename = filename("metadata");
 			cmd.add("--json-metadata-no-schema");
 			cmd.add("--metadata-json-file");
 			cmd.add(metadataFilename);
+			inputFiles.put(metadataFilename, metaData);
 		}
 
 		String txUnsignedFilename = filename("unsigned");
@@ -412,7 +415,7 @@ public class CardanoCli {
 
 		String[] txResponse;
 		try {
-			txResponse = cardanoCliDockerBridge.requestCardanoCli(Map.of(policyScriptFilename, policy.getPolicy(), metadataFilename, metaData), cmd.toArray(new String[0]), txUnsignedFilename);
+			txResponse = cardanoCliDockerBridge.requestCardanoCli(inputFiles, cmd.toArray(new String[0]), txUnsignedFilename);
 		} catch (Exception e) {
 			String message = StringUtils.trimToEmpty(e.getMessage());
 			if (message.contains("(change output)")) {
