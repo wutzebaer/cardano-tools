@@ -69,7 +69,7 @@ public class CardanoCliDockerBridge {
 	private String[] request(String path, String[] networkMagicArgs, Map<String, String> inputFiles, String[] cmd, String[] outputFiles) throws Exception {
 		RestTemplate restTemplate = new RestTemplate();
 		CardanoCliDockerBridgeRequest cardanoCliDockerBridgeRequest = new CardanoCliDockerBridgeRequest(ipcVolumeName, nodeVersion, networkMagicArgs, cmd, outputFiles, inputFiles);
-		log.info("Running docker " + new JSONArray(cmd).toString(3));
+		log.info("Running docker " + cardanoCliDockerBridgeRequest);
 		ResponseEntity<String[]> response = restTemplate.postForEntity(bridgeUrl + "/" + path, cardanoCliDockerBridgeRequest, String[].class);
 		log.info("Result " + new JSONArray(response.getBody()).toString(3));
 		if (response.getStatusCodeValue() == 200) {

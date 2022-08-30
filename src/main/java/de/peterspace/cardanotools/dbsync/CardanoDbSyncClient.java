@@ -709,12 +709,7 @@ public class CardanoDbSyncClient {
 	public List<EpochStakePosition> epochStake(String pool, int epoch) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
 
-			String query;
-			if ("Babbage".equals(cardanoNode.getEra())) {
-				query = epochStakeQuery_vasil;
-			} else {
-				query = epochStakeQuery;
-			}
+			String query = epochStakeQuery_vasil;
 
 			PreparedStatement getTxInput = connection.prepareStatement(query);
 			getTxInput.setString(1, pool);
