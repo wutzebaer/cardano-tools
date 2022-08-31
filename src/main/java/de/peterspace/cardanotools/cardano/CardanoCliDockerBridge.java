@@ -45,12 +45,12 @@ public class CardanoCliDockerBridge {
 	@PostConstruct
 	public void init() throws Exception {
 		// determine network
-		if (network.equals("testnet")) {
-			networkMagicArgs = new String[] { "--testnet-magic", "1097911063" };
+		if (network.equals("preview")) {
+			networkMagicArgs = new String[] { "--testnet-magic", "2" };
 		} else if (network.equals("mainnet")) {
 			networkMagicArgs = new String[] { "--mainnet" };
 		} else {
-			throw new RuntimeException("Network must be testnet or mainnet");
+			throw new RuntimeException("Network must be preview or mainnet");
 		}
 	}
 

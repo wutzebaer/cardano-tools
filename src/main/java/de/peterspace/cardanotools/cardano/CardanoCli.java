@@ -46,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CardanoCli {
 
+	private static final Long oneAda = 1_000_000l;
 	private static final Pattern lovelacePattern = Pattern.compile("Lovelace (\\d+)");
 	private static final Pattern missingLovelacePattern = Pattern.compile("Lovelace \\(-(\\d+)\\)");
 	private static final Pattern ipfsPattern = Pattern.compile("Qm[1-9A-Za-z]{44}");
@@ -79,14 +80,14 @@ public class CardanoCli {
 		cmd.add("protocol.json");
 		protocolJson = cardanoCliDockerBridge.requestCardanoCli(null, cmd.toArray(new String[0]), "protocol.json")[1];
 
-		if (network.equals("testnet")) {
-			dummyAddress = "addr_test1qpqxjsh6jx0mumxgw5nc5jeu5xy07k35v6h2zutyka72yua578p0hapx37mcflefvvwyhwtwn4kt83nkf7wqwx9tvsdsv8p9ac";
-			dummyUtxo = new TransactionInputs("ece82f3f9e1af88ee07fd6be680594c1e357d8e5641afba18e0cd2fda54daedd", 0, 1000_000_000, 0, "", "", "", "");
+		if (network.equals("preview")) {
+			dummyAddress = "addr_test1qp8cprhse9pnnv7f4l3n6pj0afq2hjm6f7r2205dz0583et302yj82c5rzffkz005s28u3h6erpg7q055tt0rsd7wn5s82wyg4";
+			dummyUtxo = new TransactionInputs("ceaada570dd66d575cb813caa5146fa3c86c9aa88e4b23b7087cd44b70c65bc5", 1, 100000000000000l, 0, "", "", "", "");
 		} else if (network.equals("mainnet")) {
 			dummyAddress = "addr1q9h7988xmmpz2y50rg2n9fw6jd5rq95t8q84k4q6ne403nxahea9slntm5n8f06nlsynyf4m6sa0qd05agra0qgk09nq96rqh9";
 			dummyUtxo = new TransactionInputs("b329c5993d883b4d39a5de82762167fbc284ba999a8ebca72ee39dddaeb8b1b8", 0, 43784400235l, 0, "", "", "", "");
 		} else {
-			throw new RuntimeException("Network must be testnet or mainnet");
+			throw new RuntimeException("Network must be preview or mainnet");
 		}
 
 	}
@@ -101,11 +102,11 @@ public class CardanoCli {
 		cmd.add("protocol.json");
 
 		if ("Babbage".equals(cardanoNode.getEra())) {
-			// cmd.add("--babbage-era");
+			cmd.add("--babbage-era");
 		}
 
 		cmd.add("--tx-out");
-		cmd.add(addressValue);
+		cmd.add(addressValue + "+" + oneAda);
 
 		String feeString = cardanoCliDockerBridge.requestCardanoCliNomagic(Map.of("protocol.json", protocolJson), cmd.toArray(new String[0]))[0];
 		long fee = Long.valueOf(feeString.split(" ")[1]);
