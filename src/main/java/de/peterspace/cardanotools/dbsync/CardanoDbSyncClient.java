@@ -572,8 +572,8 @@ public class CardanoDbSyncClient {
 			} else {
 				findTokenQuery += CardanoDbSyncClient.tokenQuery;
 				findTokenQuery += "WHERE ";
-				findTokenQuery += "to_tsvector('english',json) @@ to_tsquery(?) ";
-				findTokenQuery += "and to_tsvector('english',tm.json->encode(ma.policy::bytea, 'hex')->convert_from(ma.name, 'UTF8')) @@ to_tsquery(?) ";
+				findTokenQuery += "to_tsvector('english',tm.json) @@ to_tsquery(?) ";
+				findTokenQuery += "and to_tsvector('english',tm.json->encode(ma.policy::bytea, 'hex')->encode(ma.name, 'escape')) @@ to_tsquery(?) ";
 
 				String tsquery = string.trim().replaceAll("[^A-Za-z0-9]+", " & ");
 				fillPlaceholders.put(1, tsquery);
