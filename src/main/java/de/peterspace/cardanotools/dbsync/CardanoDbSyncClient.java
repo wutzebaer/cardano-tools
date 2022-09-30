@@ -589,7 +589,8 @@ public class CardanoDbSyncClient {
 			if (fromMintid != null)
 				findTokenQuery += "and mintid > ? ";
 
-			findTokenQuery += "order by policyId, regexp_replace(encode(tokenname, 'escape'), '[0-9]+', '', 'g'), regexp_replace('0' || encode(tokenname, 'escape'), '[^0-9]+', '', 'g')::bigint ";
+			//findTokenQuery += "order by policyId, regexp_replace(encode(tokenname, 'escape'), '[0-9]+', '', 'g'), regexp_replace('0' || encode(tokenname, 'escape'), '[^0-9]+', '', 'g')::bigint ";
+			findTokenQuery += "order by mintid ";
 			findTokenQuery += "limit 100 ";
 
 			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
