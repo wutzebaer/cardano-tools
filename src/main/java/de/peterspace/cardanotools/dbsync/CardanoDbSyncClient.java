@@ -6,12 +6,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,6 +38,11 @@ import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.model.EpochStakePosition;
 import de.peterspace.cardanotools.model.StakePosition;
 import de.peterspace.cardanotools.model.TransactionInputs;
+import de.peterspace.cardanotools.rest.dto.SnapshotRequest;
+import de.peterspace.cardanotools.rest.dto.SnapshotRequest.SnapshotRequestPolicy;
+import de.peterspace.cardanotools.rest.dto.SnapshotResult;
+import de.peterspace.cardanotools.rest.dto.SnapshotResult.SnapshotResultRow;
+import de.peterspace.cardanotools.rest.dto.SnapshotResult.SnapshotResultRow.SnapshotResultToken;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,27 +73,27 @@ public class CardanoDbSyncClient {
 			+ "where to1.address = ? "
 			+ "and to2.address != ?";
 
-	private static final String getAddressFundingQuery = "select to2.address  "
-			+ "from utxo_view uv  "
+	private static final String getAddressFundingQuery = "select to2.address "
+			+ "from utxo_view uv "
 			+ "join tx t on t.id = uv.tx_id "
 			+ "join tx_in ti on ti.tx_in_id = t.id "
-			+ "join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index  "
+			+ "join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index "
 			+ "where uv.address = ? and to2.address != ?";
 
-	private static final String offerFundingQuery = "select max(address), sum(value) from  "
+	private static final String offerFundingQuery = "select max(address), sum(value) from "
 			+ "	(select max(to2.stake_address_id) stake_address_id, max(to2.address) address, max(uv.value) \"value\" "
-			+ "	from utxo_view uv  "
+			+ "	from utxo_view uv "
 			+ "	join tx_in ti on ti.tx_in_id = uv.tx_id "
-			+ "	join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index  "
+			+ "	join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index "
 			+ "	where uv.address = ? "
 			+ "	group by uv.tx_id, uv.\"index\") sub "
 			+ "group by stake_address_id";
 
-	private static final String offerTokenFundingQuery = "select max(address), max(\"policy\"), max(\"name\"), sum(quantity) from  "
+	private static final String offerTokenFundingQuery = "select max(address), max(\"policy\"), max(\"name\"), sum(quantity) from "
 			+ "	(select max(to3.stake_address_id) stake_address_id, max(to3.address) address, max(encode(mto.policy::bytea, 'hex')) \"policy\", max(encode(mto.name::bytea, 'escape')) \"name\", max(quantity) quantity "
-			+ "	from utxo_view uv  "
-			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\"  "
-			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id  "
+			+ "	from utxo_view uv "
+			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\" "
+			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id "
 			+ "	join tx_in ti on ti.tx_in_id = uv.tx_id "
 			+ "	join tx_out to3 on to3.tx_id = ti.tx_out_id and to3.\"index\" = ti.tx_out_index "
 			+ "	where uv.address = ? "
@@ -102,17 +110,17 @@ public class CardanoDbSyncClient {
 			+ "t.invalid_hereafter, "
 			+ "b.block_no, "
 			+ "b.epoch_no, "
-			+ "b.epoch_slot_no,  "
-			+ "t.id tid,  "
+			+ "b.epoch_slot_no, "
+			+ "t.id tid, "
 			+ "mtm.id mintid, "
 			+ "b.slot_no, "
 			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident = mtm.ident) total_supply, "
 			+ "ma.fingerprint, "
 			+ "jsonb_pretty(s2.json) \"policy\" "
 			+ "from ma_tx_mint mtm "
-			+ "join tx t on t.id = mtm.tx_id  "
-			+ "left join tx_metadata tm on tm.tx_id = t.id and tm.key=721  "
-			+ "join block b on b.id = t.block_id  "
+			+ "join tx t on t.id = mtm.tx_id "
+			+ "left join tx_metadata tm on tm.tx_id = t.id and tm.key=721 "
+			+ "join block b on b.id = t.block_id "
 			+ "join multi_asset ma on ma.id = mtm.ident "
 			+ "join script s2 on s2.hash=ma.\"policy\" ";
 
@@ -128,15 +136,15 @@ public class CardanoDbSyncClient {
 			+ "), "
 			+ "stake_address_id as ( "
 			+ "	select to2.stake_address_id "
-			+ "	from tx_out to2  "
-			+ "	where  "
+			+ "	from tx_out to2 "
+			+ "	where "
 			+ "	to2.address in (select address from addresses) "
 			+ "), "
 			+ "owned_tokens as ( "
 			+ "	SELECT mto.policy \"policy\", mto.name \"name\", quantity quantity, to2.id txId "
-			+ "	FROM utxo_view uv  "
-			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\"  "
-			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id  "
+			+ "	FROM utxo_view uv "
+			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\" "
+			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id "
 			+ "	where uv.stake_address_id in (select distinct stake_address_id from stake_address_id) "
 			+ ") "
 			+ "select "
@@ -149,25 +157,25 @@ public class CardanoDbSyncClient {
 			+ "max(t.invalid_hereafter) invalid_hereafter, "
 			+ "max(b.block_no) block_no, "
 			+ "max(b.epoch_no) epoch_no, "
-			+ "max(b.epoch_slot_no) epoch_slot_no,  "
-			+ "max(t.id) tid,  "
-			+ "max(mtm.id) mintid,  "
-			+ "max(b.slot_no),  "
-			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.\"policy\"=ot.\"policy\" and mtm2.\"name\"=ot.\"name\") total_supply  "
+			+ "max(b.epoch_slot_no) epoch_slot_no, "
+			+ "max(t.id) tid, "
+			+ "max(mtm.id) mintid, "
+			+ "max(b.slot_no), "
+			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.\"policy\"=ot.\"policy\" and mtm2.\"name\"=ot.\"name\") total_supply "
 			+ "from owned_tokens ot "
 			+ "join ma_tx_mint mtm on mtm.\"policy\"=ot.policy and mtm.\"name\"=ot.name "
-			+ "join tx t on t.id = mtm.tx_id  "
-			+ "left join tx_metadata tm on tm.tx_id = t.id and tm.key=721  "
+			+ "join tx t on t.id = mtm.tx_id "
+			+ "left join tx_metadata tm on tm.tx_id = t.id and tm.key=721 "
 			+ "join block b on b.id = t.block_id "
 			+ "group by ot.policy, ot.name "
 			+ "order by (select min(id) from ma_tx_mint sorter where sorter.policy = ot.policy and sorter.name = ot.name) desc";
 
-	private static final String addressTokenQuery = "with   "
+	private static final String addressTokenQuery = "with "
 			+ "owned_tokens as ( "
 			+ "	SELECT mto.ident ident, sum(quantity) quantity "
-			+ "	FROM utxo_view uv  "
-			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\"  "
-			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id  "
+			+ "	FROM utxo_view uv "
+			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\" "
+			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id "
 			+ "	where uv.address = ? "
 			+ "	group by mto.ident "
 			+ ") "
@@ -181,41 +189,41 @@ public class CardanoDbSyncClient {
 			+ "max(t.invalid_hereafter) invalid_hereafter, "
 			+ "max(b.block_no) block_no, "
 			+ "max(b.epoch_no) epoch_no, "
-			+ "max(b.epoch_slot_no) epoch_slot_no,  "
-			+ "max(t.id) tid,  "
-			+ "max(mtm.id) mintid,  "
-			+ "max(b.slot_no),  "
-			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident=ma.id) total_supply,  "
-			+ "ma.fingerprint,  "
+			+ "max(b.epoch_slot_no) epoch_slot_no, "
+			+ "max(t.id) tid, "
+			+ "max(mtm.id) mintid, "
+			+ "max(b.slot_no), "
+			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident=ma.id) total_supply, "
+			+ "ma.fingerprint, "
 			+ "max(jsonb_pretty(s2.json)) \"policy\" "
 			+ "from owned_tokens ot "
 			+ "join ma_tx_mint mtm on mtm.ident = ot.ident "
-			+ "join tx t on t.id = mtm.tx_id  "
-			+ "left join tx_metadata tm on tm.tx_id = t.id and tm.key=721  "
+			+ "join tx t on t.id = mtm.tx_id "
+			+ "left join tx_metadata tm on tm.tx_id = t.id and tm.key=721 "
 			+ "join block b on b.id = t.block_id "
 			+ "join multi_asset ma on ma.id = ot.ident "
 			+ "join script s2 on s2.hash=ma.\"policy\" "
 			+ "group by ma.id "
 			+ "order by (select min(id) from ma_tx_mint sorter where sorter.ident=ma.id) desc";
 
-	private static final String walletTokenQuery = "with   "
+	private static final String walletTokenQuery = "with "
 			+ "stake_address_id as ( "
 			+ "	select to2.stake_address_id "
-			+ "	from tx_out to2  "
-			+ "	where  "
+			+ "	from tx_out to2 "
+			+ "	where "
 			+ "	to2.address = ? "
 			+ "	union ALL "
-			+ "	select sa.id  "
-			+ "	from stake_address sa  "
-			+ "	where  "
+			+ "	select sa.id "
+			+ "	from stake_address sa "
+			+ "	where "
 			+ "	sa.\"view\" = ? "
 			+ "	limit 1 "
 			+ "), "
 			+ "owned_tokens as ( "
 			+ "	SELECT mto.ident ident, sum(quantity) quantity "
-			+ "	FROM utxo_view uv  "
-			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\"  "
-			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id  "
+			+ "	FROM utxo_view uv "
+			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\" "
+			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id "
 			+ "	where uv.stake_address_id = (select * from stake_address_id) "
 			+ "	group by mto.ident "
 			+ ") "
@@ -229,17 +237,17 @@ public class CardanoDbSyncClient {
 			+ "max(t.invalid_hereafter) invalid_hereafter, "
 			+ "max(b.block_no) block_no, "
 			+ "max(b.epoch_no) epoch_no, "
-			+ "max(b.epoch_slot_no) epoch_slot_no,  "
-			+ "max(t.id) tid,  "
-			+ "max(mtm.id) mintid,  "
-			+ "max(b.slot_no),  "
-			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident=ma.id) total_supply,  "
+			+ "max(b.epoch_slot_no) epoch_slot_no, "
+			+ "max(t.id) tid, "
+			+ "max(mtm.id) mintid, "
+			+ "max(b.slot_no), "
+			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.ident=ma.id) total_supply, "
 			+ "ma.fingerprint, "
 			+ "max(jsonb_pretty(s2.json)) \"policy\" "
 			+ "from owned_tokens ot "
 			+ "join ma_tx_mint mtm on mtm.ident = ot.ident "
-			+ "join tx t on t.id = mtm.tx_id  "
-			+ "left join tx_metadata tm on tm.tx_id = t.id and tm.key=721  "
+			+ "join tx t on t.id = mtm.tx_id "
+			+ "left join tx_metadata tm on tm.tx_id = t.id and tm.key=721 "
 			+ "join block b on b.id = t.block_id "
 			+ "join multi_asset ma on ma.id = ot.ident "
 			+ "join script s2 on s2.hash=ma.policy "
@@ -247,16 +255,16 @@ public class CardanoDbSyncClient {
 			+ "order by (select min(id) from ma_tx_mint sorter where sorter.ident=ma.id) desc";
 
 	private static final String findStakeAddressIds = "select to2.stake_address_id "
-			+ "from tx_out to2  "
-			+ "where  "
+			+ "from tx_out to2 "
+			+ "where "
 			+ "to2.address = ANY (?) "
 			+ "union "
-			+ "select sa.id  "
-			+ "from stake_address sa  "
-			+ "where  "
+			+ "select sa.id "
+			+ "from stake_address sa "
+			+ "where "
 			+ "sa.\"view\" = ANY (?)";
 
-	private static final String currentDelegateQuery = "with  "
+	private static final String currentDelegateQuery = "with "
 			+ "potential_delegates as ( "
 			+ "	select to2.stake_address_id "
 			+ "	from tx_out to1 "
@@ -269,24 +277,24 @@ public class CardanoDbSyncClient {
 			+ ",delegates as ( "
 			+ "	select stake_address_id from ( "
 			+ "		select row_number() over(PARTITION BY d.addr_id order by d.addr_id, d.id desc) row_number, ph.\"view\" pool_address, d.addr_id stake_address_id "
-			+ "		from delegation d  "
+			+ "		from delegation d "
 			+ "		join pool_hash ph on ph.id = d.pool_hash_id "
-			+ "		join stake_address sa on sa.id = d.addr_id  "
+			+ "		join stake_address sa on sa.id = d.addr_id "
 			+ "		join potential_delegates on potential_delegates.stake_address_id=d.addr_id "
 			+ "	) inner_query "
 			+ "	where row_number=1 and pool_address=? "
 			+ ") "
 			+ ",stakeamounts as ( "
-			+ "	select  "
+			+ "	select "
 			+ "	(select view from stake_address sa where sa.id=utxo.stake_address_id), "
 			+ "	sum(value) "
-			+ "	from utxo_view utxo  "
+			+ "	from utxo_view utxo "
 			+ "	join delegates d on d.stake_address_id = utxo.stake_address_id "
 			+ "	group by utxo.stake_address_id "
 			+ ") "
 			+ "select coalesce(sum(sum),0) from stakeamounts";
 
-	private static final String allDelegateQuery = "with  "
+	private static final String allDelegateQuery = "with "
 			+ "potential_delegates as ( "
 			+ "	select to2.stake_address_id "
 			+ "	from tx_out to1 "
@@ -299,23 +307,23 @@ public class CardanoDbSyncClient {
 			+ ",delegates as ( "
 			+ "	select stake_address_id, pool_id from ( "
 			+ "		select row_number() over(PARTITION BY d.addr_id order by d.addr_id, d.id desc) row_number, ph.id pool_id, d.addr_id stake_address_id "
-			+ "		from delegation d  "
+			+ "		from delegation d "
 			+ "		join pool_hash ph on ph.id = d.pool_hash_id "
-			+ "		join stake_address sa on sa.id = d.addr_id  "
+			+ "		join stake_address sa on sa.id = d.addr_id "
 			+ "		join potential_delegates on potential_delegates.stake_address_id=d.addr_id "
 			+ "	) inner_query "
-			+ "	where row_number=1  "
+			+ "	where row_number=1 "
 			+ ") "
 			+ ",stakeamounts as ( "
-			+ "	select  "
+			+ "	select "
 			+ "	(select view from stake_address sa where sa.id=utxo.stake_address_id), "
 			+ "	max(d.pool_id) pool_id, "
 			+ "	sum(value) "
-			+ "	from utxo_view utxo  "
+			+ "	from utxo_view utxo "
 			+ "	join delegates d on d.stake_address_id = utxo.stake_address_id "
 			+ "	group by utxo.stake_address_id "
 			+ ") "
-			+ "select  "
+			+ "select "
 			+ "coalesce(sum(sum),0) funds, "
 			+ "(select view from pool_hash ph where ph.id=sa.pool_id order by id desc limit 1) pool_hash, "
 			+ "(select ticker_name from pool_offline_data pod where pod.pool_id=sa.pool_id order by id desc limit 1) ticker_name, "
@@ -323,91 +331,91 @@ public class CardanoDbSyncClient {
 			+ "from stakeamounts sa "
 			+ "group by (sa.view, sa.pool_id)";
 
-	private static final String delegatorsQuery = "with  "
+	private static final String delegatorsQuery = "with "
 			+ "potential_delegates as ( "
 			+ "	select d.addr_id stake_address_id "
-			+ "	from delegation d  "
+			+ "	from delegation d "
 			+ "	join pool_hash ph on ph.id = d.pool_hash_id "
-			+ "	where  "
+			+ "	where "
 			+ "	ph.view='pool180fejev4xgwe2y53ky0pxvgxr3wcvkweu6feq5mdljfzcsmtg6u' "
 			+ ") "
 			+ ",delegates as ( "
 			+ "	select stake_address_id from ( "
 			+ "		select row_number() over(PARTITION BY d.addr_id order by d.addr_id, d.id desc) row_number, ph.\"view\" pool_address, d.addr_id stake_address_id "
-			+ "		from delegation d  "
+			+ "		from delegation d "
 			+ "		join pool_hash ph on ph.id = d.pool_hash_id "
-			+ "		join stake_address sa on sa.id = d.addr_id  "
+			+ "		join stake_address sa on sa.id = d.addr_id "
 			+ "		join potential_delegates on potential_delegates.stake_address_id=d.addr_id "
 			+ "	) inner_query "
 			+ "	where row_number=1 and pool_address='pool180fejev4xgwe2y53ky0pxvgxr3wcvkweu6feq5mdljfzcsmtg6u' "
 			+ ") "
-			+ "select  "
+			+ "select "
 			+ "(select view from stake_address sa where sa.id=utxo.stake_address_id), "
 			+ "sum(value) "
-			+ "from utxo_view utxo  "
+			+ "from utxo_view utxo "
 			+ "join delegates d on d.stake_address_id = utxo.stake_address_id "
 			+ "group by utxo.stake_address_id";
 
-	private static final String epochStakeQuery = "select distinct  "
+	private static final String epochStakeQuery = "select distinct "
 			+ "sa.\"view\" stake_address, "
 			+ "(select to2.address from tx_out to2 where to2.stake_address_id=es.addr_id limit 1), "
 			+ "es.amount "
 			+ "from pool_hash ph "
 			+ "join epoch_stake es on es.pool_id=ph.id "
-			+ "join stake_address sa on sa.id=es.addr_id  "
-			+ "left join pool_owner po on po.pool_hash_id=ph.id and po.addr_id=sa.id  "
-			+ "where  "
+			+ "join stake_address sa on sa.id=es.addr_id "
+			+ "left join pool_owner po on po.pool_hash_id=ph.id and po.addr_id=sa.id "
+			+ "where "
 			+ "ph.view=? "
 			+ "and epoch_no=?";
 
-	private static final String epochStakeQuery_vasil = "select distinct  "
+	private static final String epochStakeQuery_vasil = "select distinct "
 			+ "sa.\"view\" stake_address, "
 			+ "(select to2.address from tx_out to2 where to2.stake_address_id=es.addr_id limit 1), "
 			+ "es.amount "
 			+ "from pool_hash ph "
 			+ "join epoch_stake es on es.pool_id=ph.id "
-			+ "join stake_address sa on sa.id=es.addr_id  "
+			+ "join stake_address sa on sa.id=es.addr_id "
 			+ "left join pool_update pu on pu.hash_id = ph.id "
 			+ "left join pool_owner po on po.pool_update_id =pu.id and po.addr_id=sa.id "
-			+ "where  "
+			+ "where "
 			+ "ph.view=? "
 			+ "and epoch_no=?";
 
-	private static final String poolListQuery = "select distinct pod.ticker_name, ph.\"view\"  "
-			+ "from pool_offline_data pod  "
+	private static final String poolListQuery = "select distinct pod.ticker_name, ph.\"view\" "
+			+ "from pool_offline_data pod "
 			+ "join pool_hash ph on ph.id=pod.pool_id "
 			+ "order by pod.ticker_name";
 
 	private static final String utxoQuery = "select uv.id uvid, max(encode(t2.hash::bytea, 'hex')) txhash, max(uv.\"index\") txix, max(uv.value) \"value\", max(to2.stake_address_id) stake_address, max(to2.address) source_address, '' policyId, '' assetName, null metadata "
 			+ "from utxo_view uv "
-			+ "join tx t2 on t2.id = uv.tx_id  "
+			+ "join tx t2 on t2.id = uv.tx_id "
 			+ "join tx_in ti on ti.tx_in_id = uv.tx_id "
 			+ "join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index "
-			+ "join tx_out to3 on to3.tx_id = uv.tx_id and to3.\"index\" = uv.\"index\"  "
+			+ "join tx_out to3 on to3.tx_id = uv.tx_id and to3.\"index\" = uv.\"index\" "
 			+ "left join ma_tx_out mto on mto.tx_out_id=to3.id "
-			+ "where  "
-			+ "uv.address = ?  "
+			+ "where "
+			+ "uv.address = ? "
 			+ "group by uv.id "
 			+ "union "
-			+ "select  "
-			+ "uv.id uvid,  "
-			+ "max(encode(t2.hash::bytea, 'hex')) txhash,  "
-			+ "max(uv.\"index\") txix,  "
-			+ "max(mto.quantity) \"value\",  "
-			+ "max(to2.stake_address_id) stake_address,  "
-			+ "max(to2.address) source_address,  "
-			+ "encode(ma.\"policy\" ::bytea, 'hex') policyId,  "
+			+ "select "
+			+ "uv.id uvid, "
+			+ "max(encode(t2.hash::bytea, 'hex')) txhash, "
+			+ "max(uv.\"index\") txix, "
+			+ "max(mto.quantity) \"value\", "
+			+ "max(to2.stake_address_id) stake_address, "
+			+ "max(to2.address) source_address, "
+			+ "encode(ma.\"policy\" ::bytea, 'hex') policyId, "
 			+ "convert_from(ma.name, 'UTF8') assetName, "
 			+ "(select json->encode(ma.\"policy\" ::bytea, 'hex')->convert_from(ma.name, 'UTF8') from tx_metadata tm where tm.tx_id = (select max(tx_id) from ma_tx_mint mtm where mtm.ident=ma.id) and key=721) metadata "
 			+ "from utxo_view uv "
-			+ "join tx t2 on t2.id = uv.tx_id  "
+			+ "join tx t2 on t2.id = uv.tx_id "
 			+ "join tx_in ti on ti.tx_in_id = uv.tx_id "
 			+ "join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index "
-			+ "join tx_out to3 on to3.tx_id = uv.tx_id and to3.\"index\" = uv.\"index\"  "
+			+ "join tx_out to3 on to3.tx_id = uv.tx_id and to3.\"index\" = uv.\"index\" "
 			+ "join ma_tx_out mto on mto.tx_out_id=to3.id "
-			+ "join multi_asset ma on ma.id=mto.ident  "
-			+ "where  "
-			+ "uv.address = ?  "
+			+ "join multi_asset ma on ma.id=mto.ident "
+			+ "where "
+			+ "uv.address = ? "
 			+ "group by uv.id, ma.id "
 			+ "order by uvid, policyId, assetName";
 
@@ -589,7 +597,9 @@ public class CardanoDbSyncClient {
 			if (fromMintid != null)
 				findTokenQuery += "and mintid > ? ";
 
-			//findTokenQuery += "order by policyId, regexp_replace(encode(tokenname, 'escape'), '[0-9]+', '', 'g'), regexp_replace('0' || encode(tokenname, 'escape'), '[^0-9]+', '', 'g')::bigint ";
+			// findTokenQuery += "order by policyId, regexp_replace(encode(tokenname,
+			// 'escape'), '[0-9]+', '', 'g'), regexp_replace('0' || encode(tokenname,
+			// 'escape'), '[^0-9]+', '', 'g')::bigint ";
 			findTokenQuery += "order by mintid ";
 			findTokenQuery += "limit 100 ";
 
@@ -913,6 +923,109 @@ public class CardanoDbSyncClient {
 				tokenAmountByAddress.add(new TokenAmountByAddress(result.getString(1), result.getLong(2)));
 			}
 			return tokenAmountByAddress;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public SnapshotResult createSnapshot(SnapshotRequest snapshotRequest) {
+		String query = ""
+				+ "with "
+				+ "max_block_id as ( "
+				+ "	select max(b.id) max_block_id "
+				+ "	from block b "
+				+ "	where b.\"time\"<? "
+				+ "), "
+				+ "max_tx_id as ( "
+				+ "	select max(tx.id) max_tx_id "
+				+ "	from tx tx "
+				+ "	where tx.block_id=(select max_block_id from max_block_id) "
+				+ ") "
+				+ "select "
+				+ "\"wallet\" ";
+
+		for (SnapshotRequestPolicy snapshotRequestPolicyCurrent : snapshotRequest.getPolicies()) {
+			int i = snapshotRequest.getPolicies().indexOf(snapshotRequestPolicyCurrent);
+			query += ",string_agg(asset" + i + "_name, ',') asset" + i + "_names ";
+			query += ",sum(asset" + i + "_quantity) asset" + i + "_sum ";
+		}
+
+		query += "from (";
+
+		for (SnapshotRequestPolicy snapshotRequestPolicyCurrent : snapshotRequest.getPolicies()) {
+			int unionQueryIndex = snapshotRequest.getPolicies().indexOf(snapshotRequestPolicyCurrent);
+
+			if (unionQueryIndex > 0) {
+				query += "union all ";
+			}
+
+			query += "				select "
+					+ "				coalesce(sa.\"view\", tx_out.address) \"wallet\" ";
+			for (SnapshotRequestPolicy snapshotRequestPolicy : snapshotRequest.getPolicies()) {
+				int policyFieldsIndex = snapshotRequest.getPolicies().indexOf(snapshotRequestPolicy);
+				if (snapshotRequestPolicy == snapshotRequestPolicyCurrent) {
+					query += "				,encode(ma.name, 'escape') asset" + policyFieldsIndex + "_name "
+							+ "				,mto.quantity asset" + policyFieldsIndex + "_quantity ";
+				} else {
+					query += "				,null asset" + policyFieldsIndex + "_name "
+							+ "				,0 asset" + policyFieldsIndex + "_quantity ";
+				}
+			}
+			query += "				from multi_asset ma "
+					+ "				join ma_tx_out mto on mto.ident=ma.id "
+					+ "				join tx_out on tx_out.id=mto.tx_out_id "
+					+ "				left join stake_address sa on sa.id=tx_out.stake_address_id "
+					+ "				left join tx_in ON tx_out.tx_id=tx_in.tx_out_id AND tx_out.index::smallint=tx_in.tx_out_index::smallint  "
+					+ "				where "
+					+ "				ma.\"policy\"= decode(?, 'hex') "
+					+ "				and tx_out.tx_id<(select max_tx_id from max_tx_id) "
+					+ "				and (tx_in.tx_in_id IS null or (tx_in.tx_in_id>=(select max_tx_id from max_tx_id)))";
+
+			unionQueryIndex++;
+		}
+
+		query += ") tokens "
+				+ "group by \"wallet\" "
+				+ "order by \"wallet\"";
+
+		try (Connection connection = hds.getConnection()) {
+			connection.createStatement().execute("SET enable_seqscan = OFF; ");
+
+			PreparedStatement ps = connection.prepareStatement(query);
+			ps.setTimestamp(1, Timestamp.from(snapshotRequest.getTimestamp().toInstant()));
+
+			int parameterIndex = 2;
+			for (SnapshotRequestPolicy snapshotRequestPolicyCurrent : snapshotRequest.getPolicies()) {
+				ps.setString(parameterIndex, snapshotRequestPolicyCurrent.getPolicyId());
+				parameterIndex++;
+			}
+
+			ResultSet result = ps.executeQuery();
+
+			SnapshotResult snapshotResult = new SnapshotResult();
+			List<SnapshotResultRow> rows = new ArrayList<>();
+			while (result.next()) {
+				SnapshotResultRow snapshotResultRow = new SnapshotResultRow();
+				snapshotResultRow.setWallet(result.getString("wallet"));
+
+				List<SnapshotResultToken> snapshotResultTokens = new ArrayList<>();
+				for (SnapshotRequestPolicy snapshotRequestPolicyCurrent : snapshotRequest.getPolicies()) {
+					SnapshotResultToken snapshotResultToken = new SnapshotResultToken();
+					int i = snapshotRequest.getPolicies().indexOf(snapshotRequestPolicyCurrent);
+					List<String> assetnames = Optional
+							.ofNullable(result.getString("asset" + i + "_names"))
+							.map(s -> List.of(s.split(",")).stream().distinct().sorted().collect(Collectors.toList()))
+							.orElse(List.of());
+					snapshotResultToken.setAssetnames(assetnames);
+					snapshotResultToken.setAmount(result.getLong("asset" + i + "_sum"));
+					snapshotResultTokens.add(snapshotResultToken);
+				}
+				snapshotResultRow.setSnapshotResultTokens(snapshotResultTokens);
+				rows.add(snapshotResultRow);
+			}
+			snapshotResult.setRows(rows);
+
+			return snapshotResult;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
