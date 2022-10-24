@@ -20,6 +20,7 @@ import javax.transaction.Transactional;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
@@ -99,8 +100,10 @@ public class DropperService {
 					Set<Long> whitelist = cardanoDbSyncClient.findStakeAddressIds(drop.getWhitelist().toArray(new String[] {}));
 					long lockedFunds = calculateLockedFunds(transactionInputs);
 
-					if (!whitelist.isEmpty() && !whitelist.contains(transactionInputs.get(0).getStakeAddressId()) || !drop.isRunning()) {
-						refund(fundAddress, transactionInputs, lockedFunds);
+					if (!whitelist.isEmpty() && !whitelist.contains(transactionInputs.get(0).getStakeAddressId())) {
+						refund(fundAddress, transactionInputs, lockedFunds, "Not in whitelist");
+					} else if (!drop.isRunning()) {
+						refund(fundAddress, transactionInputs, lockedFunds, "Not running");
 					} else {
 
 						Optional<Wallet> wallet = Optional.empty();
@@ -114,8 +117,12 @@ public class DropperService {
 						long price = drop.getPrice();
 						int mintsLeft = drop.getMaxPerTransaction() - wallet.map(w -> w.getTokensMinted()).orElse(0);
 
-						if (drop.getDropNftsAvailableAssetNames().size() == 0 || mintsLeft < 1 || drop.getPolicy().getPolicyDueSlot() < CardanoUtil.currentSlot()) {
-							refund(fundAddress, transactionInputs, lockedFunds);
+						if (drop.getDropNftsAvailableAssetNames().size() == 0) {
+							refund(fundAddress, transactionInputs, lockedFunds, "No tokens left");
+						} else if (mintsLeft < 1) {
+							refund(fundAddress, transactionInputs, lockedFunds, "No tokens left for your wallet");
+						} else if (drop.getPolicy().getPolicyDueSlot() < CardanoUtil.currentSlot()) {
+							refund(fundAddress, transactionInputs, lockedFunds, "Policy has locked");
 						} else if (hasEnoughFunds(price, transactionInputs, lockedFunds)) {
 							long funds = calculateAvailableFunds(transactionInputs) - lockedFunds;
 							int amount = (int) NumberUtils.min(funds / price, mintsLeft);
@@ -214,7 +221,7 @@ public class DropperService {
 
 	}
 
-	private void refund(Address fundAddress, List<TransactionInputs> transactionInputs, long lockedFunds) throws Exception {
+	private void refund(Address fundAddress, List<TransactionInputs> transactionInputs, long lockedFunds, String reason) throws Exception {
 
 		taskExecutor.execute(() -> {
 			try {
@@ -230,12 +237,13 @@ public class DropperService {
 				}
 				transactionOutputs.add(buyerAddress, "", lockedFunds);
 
-				String txId = cardanoCli.mint(transactionInputs, transactionOutputs, null, fundAddress, null, buyerAddress);
+				JSONObject message = new JSONObject().put("674", new JSONObject().put("msg", new JSONArray().put(reason)));
+				String txId = cardanoCli.mint(transactionInputs, transactionOutputs, message, fundAddress, null, buyerAddress);
 				permanentBlacklist.addAll(transactionInputs);
-				log.info("Successfully refunded, txid: {}", txId);
+				log.info("Successfully refunded, txid: {} Reason: ", txId, reason);
 
 			} catch (Exception e) {
-				log.error("sell failed", e);
+				log.error("sell failed (Reason " + reason + ")", e);
 			}
 		});
 
