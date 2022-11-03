@@ -85,7 +85,7 @@ public class CardanoCli {
 			dummyUtxo = new TransactionInputs("ceaada570dd66d575cb813caa5146fa3c86c9aa88e4b23b7087cd44b70c65bc5", 1, 100000000000000l, 0, "", "", "", "");
 		} else if (network.equals("mainnet")) {
 			dummyAddress = "addr1q9h7988xmmpz2y50rg2n9fw6jd5rq95t8q84k4q6ne403nxahea9slntm5n8f06nlsynyf4m6sa0qd05agra0qgk09nq96rqh9";
-			dummyUtxo = new TransactionInputs("b329c5993d883b4d39a5de82762167fbc284ba999a8ebca72ee39dddaeb8b1b8", 0, 43784400235l, 0, "", "", "", "");
+			dummyUtxo = new TransactionInputs("67cbc59640ce98d1f580a211f4c205b0ac8d19c6db96f78b8904462ad588786b", 0, 43784400235l, 0, "", "", "", "");
 		} else {
 			throw new RuntimeException("Network must be preview or mainnet");
 		}

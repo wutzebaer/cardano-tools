@@ -845,7 +845,7 @@ public class CardanoDbSyncClient {
 			StakePosition stakePosition = new StakePosition();
 			stakePosition.setFunds(result.getLong(1));
 			stakePosition.setPoolHash(result.getString(2));
-			stakePosition.setTickerName(result.getString(3));
+			stakePosition.setTickerName(Optional.ofNullable(result.getString(3)).orElse("UNKNOWN"));
 			stakePosition.setTotalStake(result.getLong(4));
 			stakePositions.add(stakePosition);
 		}

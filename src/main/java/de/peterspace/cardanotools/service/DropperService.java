@@ -115,7 +115,7 @@ public class DropperService {
 						}
 
 						long price = drop.getPrice();
-						int mintsLeft = drop.getMaxPerTransaction() - wallet.map(w -> w.getTokensMinted()).orElse(0);
+						int mintsLeft = drop.getMaxPerTransaction() /*- wallet.map(w -> w.getTokensMinted()).orElse(0)*/;
 
 						if (drop.getDropNftsAvailableAssetNames().size() == 0) {
 							refund(fundAddress, transactionInputs, lockedFunds, "No tokens left");
@@ -243,7 +243,7 @@ public class DropperService {
 				log.info("Successfully refunded, txid: {} Reason: ", txId, reason);
 
 			} catch (Exception e) {
-				log.error("sell failed (Reason " + reason + ")", e);
+				log.error("Refund failed (Reason " + reason + ")", e);
 			}
 		});
 
