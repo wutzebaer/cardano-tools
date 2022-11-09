@@ -81,8 +81,8 @@ public class CardanoCli {
 		protocolJson = cardanoCliDockerBridge.requestCardanoCli(null, cmd.toArray(new String[0]), "protocol.json")[1];
 
 		if (network.equals("preview")) {
-			dummyAddress = "addr_test1qp8cprhse9pnnv7f4l3n6pj0afq2hjm6f7r2205dz0583et302yj82c5rzffkz005s28u3h6erpg7q055tt0rsd7wn5s82wyg4";
-			dummyUtxo = new TransactionInputs("ceaada570dd66d575cb813caa5146fa3c86c9aa88e4b23b7087cd44b70c65bc5", 1, 100000000000000l, 0, "", "", "", "");
+			dummyAddress = "addr_test1qp8cprhse9pnnv7f4l3n6pj0afq2hjm6f7r2205dz0583ed6zj0zugmep9lxtuxq8unn85csx9g70ugq6dklmvq6pv3qa0n8cl";
+			dummyUtxo = new TransactionInputs("e3ca57e8f323265742a8f4e79ff9af884c9ff8719bd4f7788adaea4c33ba07b6", 0, 100000000000000l, 0, "", "", "", "");
 		} else if (network.equals("mainnet")) {
 			dummyAddress = "addr1q9h7988xmmpz2y50rg2n9fw6jd5rq95t8q84k4q6ne403nxahea9slntm5n8f06nlsynyf4m6sa0qd05agra0qgk09nq96rqh9";
 			dummyUtxo = new TransactionInputs("67cbc59640ce98d1f580a211f4c205b0ac8d19c6db96f78b8904462ad588786b", 0, 43784400235l, 0, "", "", "", "");
