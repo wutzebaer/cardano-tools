@@ -38,6 +38,7 @@ import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.model.EpochStakePosition;
 import de.peterspace.cardanotools.model.StakePosition;
 import de.peterspace.cardanotools.model.TransactionInputs;
+import de.peterspace.cardanotools.rest.dto.AccountStatementRow;
 import de.peterspace.cardanotools.rest.dto.SnapshotRequest;
 import de.peterspace.cardanotools.rest.dto.SnapshotRequest.SnapshotRequestPolicy;
 import de.peterspace.cardanotools.rest.dto.SnapshotResult;
@@ -431,6 +432,86 @@ public class CardanoDbSyncClient {
 			+ "order by  sum(ma_tx_out.quantity) DESC; "
 			+ "";
 
+	private static final String accountStatementQuery = """
+				select
+					min("time") "timestamp",
+					min("epoch_no") epoch,
+					min(encode(hash, 'hex')) tx_hash,
+					sum("WITHDRAWN") withdrawn,
+					sum("REWARDS") rewards,
+					sum("OUT") "OUT",
+					sum("IN") "IN",
+					(sum("IN")-sum("OUT")-sum("WITHDRAWN")+sum("REWARDS")) "change",
+					sum(sum("IN")-sum("OUT")-sum("WITHDRAWN")+sum("REWARDS")) over (order by txId asc rows between unbounded preceding and current row),
+					string_agg(distinct "TYPE", ',') operations
+					from (
+							select
+								t2.id txId,
+								b2.time,
+								b2.epoch_no,
+								t2.hash,
+								'IN' "TYPE",
+								0 "OUT",
+								to2.value "IN",
+								0 "WITHDRAWN",
+								0 "REWARDS"
+							from tx_out to2
+							join tx t2 on t2.id=to2.tx_id
+							join block b2 on b2.id=t2.block_id
+							join stake_address sa on sa.id=to2.stake_address_id
+							where sa."view" = ?
+							union all
+							select
+								t2.id txId,
+								b2.time,
+								b2.epoch_no,
+								t2.hash,
+								'OUT' "TYPE",
+								to2.value "OUT",
+								0 "IN",
+								0 "WITHDRAWN",
+								0 "REWARDS"
+							from tx_in ti
+							join tx t2 on t2.id=ti.tx_in_id
+							join tx_out to2 on to2.tx_id=ti.tx_out_id and to2."index"=ti.tx_out_index
+							join block b2 on b2.id=t2.block_id
+							join stake_address sa on sa.id=to2.stake_address_id
+							where sa."view" = ?
+							union all
+							select
+								t2.id txId,
+								b2.time,
+								b2.epoch_no,
+								t2.hash,
+								'WITHDRAW' "TYPE",
+								0 "OUT",
+								0 "IN",
+								wi.amount "WITHDRAWN",
+								0 "REWARDS"
+							from withdrawal wi
+							join tx t2 on t2.id=wi.tx_id
+							join block b2 on b2.id=t2.block_id
+							join stake_address sa on sa.id=wi.addr_id
+							where sa."view" = ?
+							union all
+							select
+								(select min(t2.id) from block bl join tx t2 on t2.block_id=bl.id where bl.epoch_no=rw.earned_epoch) "txId",
+								(select min("time") from block bl where bl.epoch_no=rw.earned_epoch) "time",
+								rw.earned_epoch epoch_no,
+								null hash,
+								'REWARD_'||rw."type" "TYPE",
+								0 "OUT",
+								0 "IN",
+								0 "WITHDRAWN",
+								rw.amount "REWARDS"
+							from reward rw
+							join stake_address sa on sa.id=rw.addr_id
+							where sa."view" = ?
+				) movings
+				group by txId
+				order by txId desc
+			""";
+
 	@Value("${cardano-db-sync.url}")
 	String url;
 
@@ -747,6 +828,22 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
+	public List<AccountStatementRow> accountStatement(String address) throws DecoderException {
+		try (Connection connection = hds.getConnection()) {
+			PreparedStatement getTxInput = connection.prepareStatement(accountStatementQuery);
+			getTxInput.setString(1, address);
+			getTxInput.setString(2, address);
+			getTxInput.setString(3, address);
+			getTxInput.setString(4, address);
+			ResultSet result = getTxInput.executeQuery();
+			List<AccountStatementRow> tokenDatas = parseAccountStatementResultset(result);
+			return tokenDatas;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@TrackExecutionTime
 	public Set<Long> findStakeAddressIds(String[] address) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
 			PreparedStatement getTxInput = connection.prepareStatement(findStakeAddressIds);
@@ -824,6 +921,24 @@ public class CardanoDbSyncClient {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private List<AccountStatementRow> parseAccountStatementResultset(ResultSet result) throws SQLException {
+		List<AccountStatementRow> stakePositions = new ArrayList<>();
+		while (result.next()) {
+			stakePositions.add(new AccountStatementRow(result.getTimestamp("timestamp"),
+					result.getInt("epoch"),
+					result.getString("tx_hash"),
+					result.getLong("withdrawn"),
+					result.getLong("rewards"),
+					result.getLong("OUT"),
+					result.getLong("IN"),
+					result.getLong("change"),
+					result.getLong("sum"),
+					result.getString("operations").split(",")));
+		}
+
+		return stakePositions;
 	}
 
 	private List<EpochStakePosition> parseEpochStakePositionResultset(ResultSet result) throws SQLException {

@@ -110,5 +110,12 @@
 		<heap unit="entries">1000000</heap>
 		<jsr107:mbeans enable-statistics="true" />
 	</cache>
+	<cache alias="accountStatement">
+		<expiry>
+			<ttl unit="seconds">600</ttl>
+		</expiry>
+		<heap unit="entries">1000000</heap>
+		<jsr107:mbeans enable-statistics="true" />
+	</cache>
 
 </config>

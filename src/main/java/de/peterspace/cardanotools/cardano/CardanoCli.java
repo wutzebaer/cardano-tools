@@ -418,6 +418,7 @@ public class CardanoCli {
 		try {
 			txResponse = cardanoCliDockerBridge.requestCardanoCli(inputFiles, cmd.toArray(new String[0]), txUnsignedFilename);
 		} catch (Exception e) {
+			log.warn("first mint attempt failed: {}", e.getMessage());
 			String message = StringUtils.trimToEmpty(e.getMessage());
 			if (message.contains("(change output)")) {
 				Matcher matcher = lovelacePattern.matcher(e.getMessage());
