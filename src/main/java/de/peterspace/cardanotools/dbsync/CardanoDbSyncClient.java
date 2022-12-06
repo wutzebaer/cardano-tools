@@ -434,7 +434,7 @@ public class CardanoDbSyncClient {
 
 	private static final String accountStatementQuery = """
 				select
-					min("time") "timestamp",
+					"time" "timestamp",
 					min("epoch_no") epoch,
 					min(encode(hash, 'hex')) tx_hash,
 					sum("WITHDRAWN") withdrawn,
@@ -442,7 +442,7 @@ public class CardanoDbSyncClient {
 					sum("OUT") "OUT",
 					sum("IN") "IN",
 					(sum("IN")-sum("OUT")-sum("WITHDRAWN")+sum("REWARDS")) "change",
-					sum(sum("IN")-sum("OUT")-sum("WITHDRAWN")+sum("REWARDS")) over (order by txId asc rows between unbounded preceding and current row),
+					sum(sum("IN")-sum("OUT")-sum("WITHDRAWN")+sum("REWARDS")) over (order by min("time") asc, txId asc rows between unbounded preceding and current row),
 					string_agg(distinct "TYPE", ',') operations
 					from (
 							select
@@ -495,8 +495,8 @@ public class CardanoDbSyncClient {
 							where sa."view" = ?
 							union all
 							select
-								(select min(t2.id) from block bl join tx t2 on t2.block_id=bl.id where bl.epoch_no=rw.earned_epoch) "txId",
-								(select min("time") from block bl where bl.epoch_no=rw.earned_epoch) "time",
+								0 "txId",
+								TO_TIMESTAMP(rw.earned_epoch * 432000 + 1506203091),
 								rw.earned_epoch epoch_no,
 								null hash,
 								'REWARD_'||rw."type" "TYPE",
@@ -508,8 +508,8 @@ public class CardanoDbSyncClient {
 							join stake_address sa on sa.id=rw.addr_id
 							where sa."view" = ?
 				) movings
-				group by txId
-				order by txId desc
+				group by "timestamp", txId
+				order by "timestamp" desc, txId desc
 			""";
 
 	@Value("${cardano-db-sync.url}")
