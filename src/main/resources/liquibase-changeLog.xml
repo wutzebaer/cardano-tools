@@ -218,4 +218,14 @@
 		</addColumn>
 	</changeSet>
 
+	<changeSet author="wutze (generated)" id="0009">
+		<addColumn tableName="drop">
+			<column name="fee" type="int8" defaultValue="1000000">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+		<addUniqueConstraint columnNames="policy_id, asset_name, account_key, transaction_id" constraintName="UKcj0hvlhbjytxyvfx2shi2i7nm" tableName="token_offer" />
+		<dropUniqueConstraint constraintName="uk_ovg3csarwhdux4wx6xp9i3jns" tableName="policy" />
+	</changeSet>
+
 </databaseChangeLog>

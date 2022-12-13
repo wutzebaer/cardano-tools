@@ -187,7 +187,7 @@ public class DropperService {
 				transactionOutputs.add(buyerAddress, "", change);
 
 				if (true) {
-					transactionOutputs.add(pledgeAddress, "", 1_000_000);
+					transactionOutputs.add(pledgeAddress, "", drop.getFee());
 				}
 
 				// build metadata

@@ -79,5 +79,8 @@ public class Drop {
 	@NotNull
 	@NotEmpty
 	private String prettyUrl;
+	
+	@NotNull
+	private long fee = 1000000;
 
 }
