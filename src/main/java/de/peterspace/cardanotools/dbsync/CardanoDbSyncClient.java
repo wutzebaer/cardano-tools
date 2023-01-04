@@ -7,10 +7,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -23,6 +23,7 @@ import javax.annotation.PreDestroy;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.task.TaskExecutor;
@@ -36,6 +37,7 @@ import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.ProjectRegistry;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.model.EpochStakePosition;
+import de.peterspace.cardanotools.model.Price;
 import de.peterspace.cardanotools.model.StakePosition;
 import de.peterspace.cardanotools.model.TransactionInputs;
 import de.peterspace.cardanotools.rest.dto.AccountStatementRow;
@@ -44,6 +46,7 @@ import de.peterspace.cardanotools.rest.dto.SnapshotRequest.SnapshotRequestPolicy
 import de.peterspace.cardanotools.rest.dto.SnapshotResult;
 import de.peterspace.cardanotools.rest.dto.SnapshotResult.SnapshotResultRow;
 import de.peterspace.cardanotools.rest.dto.SnapshotResult.SnapshotResultRow.SnapshotResultToken;
+import de.peterspace.cardanotools.service.PriceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,6 +63,7 @@ public class CardanoDbSyncClient {
 	private final TokenRegistry tokenRegistry;
 	private final ProjectRegistry projectRegistry;
 	private final TaskExecutor taskExecutor;
+	private final PriceService priceService;
 
 	private static final String getTxInputQuery = "select distinct address from tx_out "
 			+ "inner join tx_in on tx_out.tx_id = tx_in.tx_out_id "
@@ -828,7 +832,7 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
-	public List<AccountStatementRow> accountStatement(String address) throws DecoderException {
+	public List<AccountStatementRow> accountStatement(String address, String currency) {
 		try (Connection connection = hds.getConnection()) {
 			PreparedStatement getTxInput = connection.prepareStatement(accountStatementQuery);
 			getTxInput.setString(1, address);
@@ -836,7 +840,7 @@ public class CardanoDbSyncClient {
 			getTxInput.setString(3, address);
 			getTxInput.setString(4, address);
 			ResultSet result = getTxInput.executeQuery();
-			List<AccountStatementRow> tokenDatas = parseAccountStatementResultset(result);
+			List<AccountStatementRow> tokenDatas = parseAccountStatementResultset(result, currency);
 			return tokenDatas;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -923,19 +927,39 @@ public class CardanoDbSyncClient {
 		}
 	}
 
-	private List<AccountStatementRow> parseAccountStatementResultset(ResultSet result) throws SQLException {
+	private List<AccountStatementRow> parseAccountStatementResultset(ResultSet result, String currency) throws SQLException {
 		List<AccountStatementRow> stakePositions = new ArrayList<>();
 		while (result.next()) {
-			stakePositions.add(new AccountStatementRow(result.getTimestamp("timestamp"),
+			Timestamp timestamp = result.getTimestamp("timestamp");
+			long change = result.getLong("change");
+
+			// priceService
+			Double changeInFiat = null;
+			Double rate = null;
+			LocalDate localDate = timestamp.toLocalDateTime().toLocalDate();
+			Price price = priceService.getPrices().get(localDate);
+			if (price != null) {
+				JSONObject parsedData = price.getParsedData();
+				if (parsedData.has("market_data")) {
+					rate = parsedData.getJSONObject("market_data").getJSONObject("current_price").getDouble(currency);
+					changeInFiat = change / 1000000d * rate;
+				}
+			}
+
+			AccountStatementRow row = new AccountStatementRow(timestamp,
 					result.getInt("epoch"),
 					result.getString("tx_hash"),
 					result.getLong("withdrawn"),
 					result.getLong("rewards"),
 					result.getLong("OUT"),
 					result.getLong("IN"),
-					result.getLong("change"),
+					change,
+					changeInFiat,
+					rate,
 					result.getLong("sum"),
-					result.getString("operations").split(",")));
+					result.getString("operations").split(","));
+			stakePositions.add(row);
+
 		}
 
 		return stakePositions;

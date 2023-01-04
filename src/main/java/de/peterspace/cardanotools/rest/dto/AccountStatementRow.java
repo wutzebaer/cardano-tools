@@ -14,6 +14,8 @@ public class AccountStatementRow {
 	long out;
 	long in;
 	long change;
+	Double changeInFiat;
+	Double rate;
 	long sum;
 	String[] operations;
 }
