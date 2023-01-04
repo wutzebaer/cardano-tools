@@ -115,7 +115,7 @@ public class DropperService {
 						}
 
 						long price = drop.getPrice();
-						int mintsLeft = drop.getMaxPerTransaction() /*- wallet.map(w -> w.getTokensMinted()).orElse(0)*/;
+						int mintsLeft = drop.getMaxPerTransaction() - wallet.map(w -> w.getTokensMinted()).orElse(0);
 
 						if (drop.getDropNftsAvailableAssetNames().size() == 0) {
 							refund(fundAddress, transactionInputs, lockedFunds, "No tokens left");
