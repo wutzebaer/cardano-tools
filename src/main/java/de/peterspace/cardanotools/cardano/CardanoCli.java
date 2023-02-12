@@ -1,6 +1,7 @@
 package de.peterspace.cardanotools.cardano;
 
-import java.nio.charset.StandardCharsets;
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -82,10 +83,10 @@ public class CardanoCli {
 
 		if (network.equals("preview")) {
 			dummyAddress = "addr_test1qp8cprhse9pnnv7f4l3n6pj0afq2hjm6f7r2205dz0583ed6zj0zugmep9lxtuxq8unn85csx9g70ugq6dklmvq6pv3qa0n8cl";
-			dummyUtxo = new TransactionInputs("e3ca57e8f323265742a8f4e79ff9af884c9ff8719bd4f7788adaea4c33ba07b6", 0, 100000000000000l, 0, "", "", "", "");
+			dummyUtxo = new TransactionInputs("c4b58dd8e4637098c7af36f024006abf305a9848b09332b9095aea3f411cdb74", 0, 10000000000l, 0, "", "", null, "");
 		} else if (network.equals("mainnet")) {
 			dummyAddress = "addr1q9h7988xmmpz2y50rg2n9fw6jd5rq95t8q84k4q6ne403nxahea9slntm5n8f06nlsynyf4m6sa0qd05agra0qgk09nq96rqh9";
-			dummyUtxo = new TransactionInputs("67cbc59640ce98d1f580a211f4c205b0ac8d19c6db96f78b8904462ad588786b", 0, 43784400235l, 0, "", "", "", "");
+			dummyUtxo = new TransactionInputs("67cbc59640ce98d1f580a211f4c205b0ac8d19c6db96f78b8904462ad588786b", 0, 43784400235l, 0, "", "", null, "");
 		} else {
 			throw new RuntimeException("Network must be preview or mainnet");
 		}
@@ -224,12 +225,12 @@ public class CardanoCli {
 
 		// add tokens to mint
 		for (TokenSubmission ts : mintOrderSubmission.getTokens()) {
-			transactionOutputs.add(mintOrderSubmission.getTargetAddress(), formatCurrency(policy.getPolicyId(), ts.getAssetName()), ts.getAmount());
+			transactionOutputs.add(mintOrderSubmission.getTargetAddress(), formatCurrency(policy.getPolicyId(), ts.getAssetName().getBytes()), ts.getAmount());
 		}
 		// return tokens if user sent some
 		if (transactionInputs.stream().filter(e -> !e.getPolicyId().isEmpty()).map(f -> f.getPolicyId()).distinct().count() > 0) {
 			transactionInputs.stream().filter(e -> !e.getPolicyId().isEmpty()).forEach(i -> {
-				transactionOutputs.add(mintOrderSubmission.getTargetAddress(), formatCurrency(i.getPolicyId(), i.getAssetName()), i.getValue());
+				transactionOutputs.add(mintOrderSubmission.getTargetAddress(), formatCurrency(i.getPolicyId(), i.getAssetNameBytes()), i.getValue());
 			});
 		}
 		// minutxo
@@ -374,13 +375,13 @@ public class CardanoCli {
 		Set<String> inputAssets = transactionInputs
 				.stream()
 				.filter(e -> !StringUtils.isBlank(e.getPolicyId()))
-				.map(e -> formatCurrency(e.getPolicyId(), e.getAssetName()))
+				.map(e -> formatCurrency(e.getPolicyId(), e.getAssetNameBytes()))
 				.collect(Collectors.toSet());
 		Set<String> allAssets = new HashSet<>();
 		allAssets.addAll(outputAssets);
 		allAssets.addAll(inputAssets);
 		for (String assetEntry : allAssets) {
-			long inputAmount = transactionInputs.stream().filter(i -> Objects.equals(formatCurrency(i.getPolicyId(), i.getAssetName()), assetEntry)).mapToLong(i -> i.getValue()).sum();
+			long inputAmount = transactionInputs.stream().filter(i -> Objects.equals(formatCurrency(i.getPolicyId(), i.getAssetNameBytes()), assetEntry)).mapToLong(i -> i.getValue()).sum();
 			long outputAmount = transactionOutputs.getOutputs().values().stream().flatMap(a -> a.entrySet().stream()).filter(e -> Objects.equals(e.getKey(), assetEntry)).mapToLong(e -> e.getValue()).sum();
 			long needed = outputAmount - inputAmount;
 			if (needed != 0) {
@@ -452,11 +453,11 @@ public class CardanoCli {
 		return transaction;
 	}
 
-	private String formatCurrency(String policyId, String assetName) {
-		if (StringUtils.isBlank(assetName)) {
+	private String formatCurrency(String policyId, byte[] assetNameBytes) {
+		if (isEmpty(assetNameBytes)) {
 			return policyId;
 		} else {
-			return policyId + "." + Hex.encodeHexString(assetName.getBytes(StandardCharsets.UTF_8));
+			return policyId + "." + Hex.encodeHexString(assetNameBytes);
 		}
 	}
 
@@ -586,7 +587,7 @@ public class CardanoCli {
 
 		String addressValue = g.get(0).getSourceAddress() + " " + g.stream()
 				.filter(s -> !s.getPolicyId().isBlank())
-				.map(s -> (s.getValue() + " " + formatCurrency(s.getPolicyId(), s.getAssetName())).trim())
+				.map(s -> (s.getValue() + " " + formatCurrency(s.getPolicyId(), s.getAssetNameBytes())).trim())
 				.collect(Collectors.joining("+"));
 
 		return calculateMinUtxo(addressValue);

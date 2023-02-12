@@ -10,8 +10,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.transaction.Transactional;
-
 import org.apache.commons.io.IOUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

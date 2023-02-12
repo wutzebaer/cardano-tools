@@ -1,7 +1,6 @@
 package de.peterspace.cardanotools.model;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,7 +11,6 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
-import org.hibernate.annotations.Type;
 import org.json.JSONObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

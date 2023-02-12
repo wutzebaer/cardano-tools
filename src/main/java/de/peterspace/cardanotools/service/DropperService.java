@@ -1,6 +1,7 @@
 package de.peterspace.cardanotools.service;
 
-import java.nio.charset.StandardCharsets;
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,7 +19,6 @@ import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -169,13 +169,13 @@ public class DropperService {
 
 				// send tokens
 				for (DropNft token : tokens) {
-					transactionOutputs.add(buyerAddress, formatCurrency(drop.getPolicy().getPolicyId(), token.getAssetName()), 1);
+					transactionOutputs.add(buyerAddress, formatCurrency(drop.getPolicy().getPolicyId(), token.getAssetName().getBytes()), 1);
 				}
 
 				// return input tokens to seller
 				if (transactionInputs.stream().filter(e -> !e.getPolicyId().isEmpty()).map(f -> f.getPolicyId()).distinct().count() > 0) {
 					transactionInputs.stream().filter(e -> !e.getPolicyId().isEmpty()).forEach(i -> {
-						transactionOutputs.add(buyerAddress, formatCurrency(i.getPolicyId(), i.getAssetName()), i.getValue());
+						transactionOutputs.add(buyerAddress, formatCurrency(i.getPolicyId(), i.getAssetNameBytes()), i.getValue());
 					});
 				}
 
@@ -232,7 +232,7 @@ public class DropperService {
 
 				if (transactionInputs.stream().filter(e -> !e.getPolicyId().isEmpty()).map(f -> f.getPolicyId()).distinct().count() > 0) {
 					transactionInputs.stream().filter(e -> !e.getPolicyId().isEmpty()).forEach(i -> {
-						transactionOutputs.add(buyerAddress, formatCurrency(i.getPolicyId(), i.getAssetName()), i.getValue());
+						transactionOutputs.add(buyerAddress, formatCurrency(i.getPolicyId(), i.getAssetNameBytes()), i.getValue());
 					});
 				}
 				transactionOutputs.add(buyerAddress, "", lockedFunds);
@@ -275,17 +275,17 @@ public class DropperService {
 
 		String addressValue = g.get(0).getSourceAddress() + " " + g.stream()
 				.filter(s -> !s.getPolicyId().isBlank())
-				.map(s -> (s.getValue() + " " + formatCurrency(s.getPolicyId(), s.getAssetName())).trim())
+				.map(s -> (s.getValue() + " " + formatCurrency(s.getPolicyId(), s.getAssetNameBytes())).trim())
 				.collect(Collectors.joining("+"));
 
 		return cardanoCli.calculateMinUtxo(addressValue);
 	}
 
-	private String formatCurrency(String policyId, String assetName) {
-		if (StringUtils.isBlank(assetName)) {
+	private String formatCurrency(String policyId, byte[] assetNameBytes) {
+		if (isEmpty(assetNameBytes)) {
 			return policyId;
 		} else {
-			return policyId + "." + Hex.encodeHexString(assetName.getBytes(StandardCharsets.UTF_8));
+			return policyId + "." + Hex.encodeHexString(assetNameBytes);
 		}
 	}
 

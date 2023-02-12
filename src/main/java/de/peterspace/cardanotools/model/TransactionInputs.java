@@ -10,6 +10,6 @@ public class TransactionInputs {
 	long stakeAddressId;
 	String sourceAddress;
 	String policyId;
-	String assetName;
+	byte[] assetNameBytes;
 	String metaData;
 }

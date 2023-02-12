@@ -410,8 +410,8 @@ public class CardanoDbSyncClient {
 			+ "max(to2.stake_address_id) stake_address, "
 			+ "max(to2.address) source_address, "
 			+ "encode(ma.\"policy\" ::bytea, 'hex') policyId, "
-			+ "convert_from(ma.name, 'UTF8') assetName, "
-			+ "(select json->encode(ma.\"policy\" ::bytea, 'hex')->convert_from(ma.name, 'UTF8') from tx_metadata tm where tm.tx_id = (select max(tx_id) from ma_tx_mint mtm where mtm.ident=ma.id) and key=721) metadata "
+			+ "ma.name assetNameBytes, "
+			+ "(select json->encode(ma.\"policy\" ::bytea, 'hex')->encode(ma.name, 'escape') from tx_metadata tm where tm.tx_id = (select max(tx_id) from ma_tx_mint mtm where mtm.ident=ma.id) and key=721) metadata "
 			+ "from utxo_view uv "
 			+ "join tx t2 on t2.id = uv.tx_id "
 			+ "join tx_in ti on ti.tx_in_id = uv.tx_id "
@@ -1037,7 +1037,7 @@ public class CardanoDbSyncClient {
 			ResultSet result = getTxInput.executeQuery();
 			List<TransactionInputs> offerFundings = new ArrayList<TransactionInputs>();
 			while (result.next()) {
-				offerFundings.add(new TransactionInputs(result.getString(2), result.getInt(3), result.getLong(4), result.getLong(5), result.getString(6), result.getString(7), result.getString(8), result.getString(9)));
+				offerFundings.add(new TransactionInputs(result.getString(2), result.getInt(3), result.getLong(4), result.getLong(5), result.getString(6), result.getString(7), result.getBytes(8), result.getString(9)));
 			}
 			return offerFundings;
 		} catch (Exception e) {
