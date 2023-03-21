@@ -1,5 +1,6 @@
 package de.peterspace.cardanotools;
 
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -230,7 +231,7 @@ public class CardanoCliTests {
 		// return input tokens to seller
 		if (utxos.stream().filter(e -> !e.getPolicyId().isEmpty()).map(f -> f.getPolicyId()).distinct().count() > 0) {
 			utxos.stream().filter(e -> !e.getPolicyId().isEmpty()).forEach(i -> {
-				transactionOutputs.add(account.getAddress().getAddress(), formatCurrency(i.getPolicyId(), i.getAssetName()), i.getValue());
+				transactionOutputs.add(account.getAddress().getAddress(), formatCurrency(i.getPolicyId(), i.getAssetNameBytes()), i.getValue());
 			});
 		}
 
@@ -240,11 +241,11 @@ public class CardanoCliTests {
 
 	}
 
-	private String formatCurrency(String policyId, String assetName) {
-		if (StringUtils.isBlank(assetName)) {
+	private String formatCurrency(String policyId, byte[] assetNameBytes) {
+		if (isEmpty(assetNameBytes)) {
 			return policyId;
 		} else {
-			return policyId + "." + Hex.encodeHexString(assetName.getBytes(StandardCharsets.UTF_8));
+			return policyId + "." + Hex.encodeHexString(assetNameBytes);
 		}
 	}
 

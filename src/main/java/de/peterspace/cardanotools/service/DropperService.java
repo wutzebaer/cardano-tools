@@ -141,6 +141,8 @@ public class DropperService {
 							dropRepository.save(drop);
 
 							sell(drop, transactionInputs, tokens, totalPrice, lockedFunds);
+						} else {
+							refund(fundAddress, transactionInputs, lockedFunds, "Noth enough funds");
 						}
 
 					}
@@ -240,7 +242,7 @@ public class DropperService {
 				JSONObject message = new JSONObject().put("674", new JSONObject().put("msg", new JSONArray().put(reason)));
 				String txId = cardanoCli.mint(transactionInputs, transactionOutputs, message, fundAddress, null, buyerAddress);
 				permanentBlacklist.addAll(transactionInputs);
-				log.info("Successfully refunded, txid: {} Reason: ", txId, reason);
+				log.info("Successfully refunded, txid: {} Reason: {}", txId, reason);
 
 			} catch (Exception e) {
 				log.error("Refund failed (Reason " + reason + ")", e);
