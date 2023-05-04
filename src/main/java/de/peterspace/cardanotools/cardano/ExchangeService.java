@@ -26,7 +26,7 @@ public class ExchangeService {
 	private final CardanoDbSyncClient cardanoDbSyncClient;
 	private final CardanoCli cardanoCli;
 
-	@Scheduled(cron = "*/10 * * * * *")
+	//@Scheduled(cron = "*/10 * * * * *")
 	public void processOffers() throws Exception {
 		for (TokenOffer offer : tokenOfferRepository.findByCanceledIsFalseAndTransactionNullAndErrorIsNull()) {
 
