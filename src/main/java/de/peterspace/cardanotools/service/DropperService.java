@@ -78,7 +78,7 @@ public class DropperService {
 				.collect(Collectors.toList());
 	}
 
-	@Scheduled(cron = "*/10 * * * * *")
+	@Scheduled(cron = "0 * * * * *")
 	@Transactional
 	public void dropNfts() {
 		log.info("START Dropper cycle");
