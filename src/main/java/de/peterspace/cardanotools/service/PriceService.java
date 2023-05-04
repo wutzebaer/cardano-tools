@@ -33,7 +33,7 @@ public class PriceService {
 	private final Map<LocalDate, Price> prices = new HashMap<>();
 
 	@Scheduled(initialDelay = 0, fixedDelay = Long.MAX_VALUE)
-	@Scheduled(cron = "0 0 * * * *")
+	@Scheduled(cron = "0 3 * * * *")
 	public void createSnapshot() throws MalformedURLException, IOException, InterruptedException {
 		log.info("Creating Snapshot");
 		LocalDate currentDate = priceRepository
