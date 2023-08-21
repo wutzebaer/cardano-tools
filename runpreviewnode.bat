@@ -1,1 +1,1 @@
-docker run --name preview-node --restart unless-stopped -v preview-data:/data -v %cd%\cardano-minter-workdir:/work -v preview-ipc:/ipc -e NETWORK=preview inputoutput/cardano-node:8.0.0
+docker run --name preview-node --restart unless-stopped -v preview-data:/data -v %cd%\cardano-minter-workdir:/work -v preview-ipc:/ipc -e NETWORK=preview inputoutput/cardano-node:8.1.2
