@@ -85,26 +85,6 @@ public class CardanoDbSyncClient {
 			+ "join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index "
 			+ "where uv.address = ? and to2.address != ?";
 
-	private static final String offerFundingQuery = "select max(address), sum(value) from "
-			+ "	(select max(to2.stake_address_id) stake_address_id, max(to2.address) address, max(uv.value) \"value\" "
-			+ "	from utxo_view uv "
-			+ "	join tx_in ti on ti.tx_in_id = uv.tx_id "
-			+ "	join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index "
-			+ "	where uv.address = ? "
-			+ "	group by uv.tx_id, uv.\"index\") sub "
-			+ "group by stake_address_id";
-
-	private static final String offerTokenFundingQuery = "select max(address), max(\"policy\"), max(\"name\"), sum(quantity) from "
-			+ "	(select max(to3.stake_address_id) stake_address_id, max(to3.address) address, max(encode(mto.policy::bytea, 'hex')) \"policy\", max(encode(mto.name::bytea, 'escape')) \"name\", max(quantity) quantity "
-			+ "	from utxo_view uv "
-			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\" "
-			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id "
-			+ "	join tx_in ti on ti.tx_in_id = uv.tx_id "
-			+ "	join tx_out to3 on to3.tx_id = ti.tx_out_id and to3.\"index\" = ti.tx_out_index "
-			+ "	where uv.address = ? "
-			+ "	group by uv.tx_id, uv.\"index\", \"policy\", \"name\") sub "
-			+ "group by stake_address_id, \"policy\", \"name\"";
-
 	private static final String tokenQuery = "select "
 			+ "encode(ma.policy::bytea, 'hex') policyId, "
 			+ "ma.name tokenName, "
@@ -128,52 +108,6 @@ public class CardanoDbSyncClient {
 			+ "join block b on b.id = t.block_id "
 			+ "join multi_asset ma on ma.id = mtm.ident "
 			+ "join script s2 on s2.hash=ma.\"policy\" ";
-
-	private static final String offerTokenQuery = "with "
-			+ "addresses as ( "
-			+ "	select to2.address "
-			+ "	from tx_out to1 "
-			+ "	join tx t on t.id = to1.tx_id "
-			+ "	join tx_in ti on ti.tx_in_id = t.id "
-			+ "	join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index "
-			+ "	where to1.address = ? "
-			+ "	and to2.address != ? "
-			+ "), "
-			+ "stake_address_id as ( "
-			+ "	select to2.stake_address_id "
-			+ "	from tx_out to2 "
-			+ "	where "
-			+ "	to2.address in (select address from addresses) "
-			+ "), "
-			+ "owned_tokens as ( "
-			+ "	SELECT mto.policy \"policy\", mto.name \"name\", quantity quantity, to2.id txId "
-			+ "	FROM utxo_view uv "
-			+ "	join tx_out to2 on to2.tx_id = uv.tx_id and to2.\"index\" = uv.\"index\" "
-			+ "	join ma_tx_out mto on mto.tx_out_id = to2.id "
-			+ "	where uv.stake_address_id in (select distinct stake_address_id from stake_address_id) "
-			+ ") "
-			+ "select "
-			+ "encode(ot.policy::bytea, 'hex') policyId, "
-			+ "ot.name tokenName, "
-			+ "max(ot.quantity) quantity, "
-			+ "max(encode(t.hash ::bytea, 'hex')) txId, "
-			+ "jsonb_agg(tm.json->encode(mtm.policy::bytea, 'hex')->encode(mtm.name::bytea, 'escape'))->-1 json, "
-			+ "max(t.invalid_before) invalid_before, "
-			+ "max(t.invalid_hereafter) invalid_hereafter, "
-			+ "max(b.block_no) block_no, "
-			+ "max(b.epoch_no) epoch_no, "
-			+ "max(b.epoch_slot_no) epoch_slot_no, "
-			+ "max(t.id) tid, "
-			+ "max(mtm.id) mintid, "
-			+ "max(b.slot_no), "
-			+ "(select sum(quantity) from ma_tx_mint mtm2 where mtm2.\"policy\"=ot.\"policy\" and mtm2.\"name\"=ot.\"name\") total_supply "
-			+ "from owned_tokens ot "
-			+ "join ma_tx_mint mtm on mtm.\"policy\"=ot.policy and mtm.\"name\"=ot.name "
-			+ "join tx t on t.id = mtm.tx_id "
-			+ "left join tx_metadata tm on tm.tx_id = t.id and tm.key=721 "
-			+ "join block b on b.id = t.block_id "
-			+ "group by ot.policy, ot.name "
-			+ "order by (select min(id) from ma_tx_mint sorter where sorter.policy = ot.policy and sorter.name = ot.name) desc";
 
 	private static final String addressTokenQuery = "with "
 			+ "owned_tokens as ( "
@@ -360,18 +294,6 @@ public class CardanoDbSyncClient {
 			+ "from utxo_view utxo "
 			+ "join delegates d on d.stake_address_id = utxo.stake_address_id "
 			+ "group by utxo.stake_address_id";
-
-	private static final String epochStakeQuery = "select distinct "
-			+ "sa.\"view\" stake_address, "
-			+ "(select to2.address from tx_out to2 where to2.stake_address_id=es.addr_id limit 1), "
-			+ "es.amount "
-			+ "from pool_hash ph "
-			+ "join epoch_stake es on es.pool_id=ph.id "
-			+ "join stake_address sa on sa.id=es.addr_id "
-			+ "left join pool_owner po on po.pool_hash_id=ph.id and po.addr_id=sa.id "
-			+ "where "
-			+ "ph.view=? "
-			+ "and epoch_no=?";
 
 	private static final String epochStakeQuery_vasil = "select distinct "
 			+ "sa.\"view\" stake_address, "
@@ -759,21 +681,6 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
-	public List<TokenData> getOfferableTokens(String address) throws DecoderException {
-		try (Connection connection = hds.getConnection()) {
-			String findTokenQuery = offerTokenQuery;
-			PreparedStatement getTxInput = connection.prepareStatement(findTokenQuery);
-			getTxInput.setString(1, address);
-			getTxInput.setString(2, address);
-			ResultSet result = getTxInput.executeQuery();
-			List<TokenData> tokenDatas = parseTokenResultset(result);
-			return tokenDatas;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@TrackExecutionTime
 	public long getCurrentStake(String address) throws DecoderException {
 		try (Connection connection = hds.getConnection()) {
 			PreparedStatement getTxInput = connection.prepareStatement(currentDelegateQuery);
@@ -875,38 +782,6 @@ public class CardanoDbSyncClient {
 			ResultSet result = getTxInput.executeQuery();
 			List<TokenData> tokenDatas = parseTokenResultset(result);
 			return tokenDatas;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@TrackExecutionTime
-	public List<OfferFunding> getOfferFundings(String offerAddress) {
-		try (Connection connection = hds.getConnection()) {
-			PreparedStatement getTxInput = connection.prepareStatement(offerFundingQuery);
-			getTxInput.setString(1, offerAddress);
-			ResultSet result = getTxInput.executeQuery();
-			List<OfferFunding> offerFundings = new ArrayList<OfferFunding>();
-			while (result.next()) {
-				offerFundings.add(new OfferFunding(result.getString(1), result.getLong(2)));
-			}
-			return offerFundings;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@TrackExecutionTime
-	public List<OfferTokenFunding> getOfferTokenFundings(String offerAddress) {
-		try (Connection connection = hds.getConnection()) {
-			PreparedStatement getTxInput = connection.prepareStatement(offerTokenFundingQuery);
-			getTxInput.setString(1, offerAddress);
-			ResultSet result = getTxInput.executeQuery();
-			List<OfferTokenFunding> offerFundings = new ArrayList<OfferTokenFunding>();
-			while (result.next()) {
-				offerFundings.add(new OfferTokenFunding(result.getString(1), result.getString(2), result.getString(3), result.getLong(4)));
-			}
-			return offerFundings;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
