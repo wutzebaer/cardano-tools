@@ -32,7 +32,6 @@ import org.springframework.stereotype.Component;
 import com.zaxxer.hikari.HikariDataSource;
 
 import de.peterspace.cardanotools.TrackExecutionTime;
-import de.peterspace.cardanotools.cardano.CardanoNode;
 import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.ProjectRegistry;
 import de.peterspace.cardanotools.cardano.TokenRegistry;
@@ -55,8 +54,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CardanoDbSyncClient {
 
-	final private CardanoNode cardanoNode;
-
 	@Value("${pool.address}")
 	private String poolAddress;
 
@@ -64,19 +61,6 @@ public class CardanoDbSyncClient {
 	private final ProjectRegistry projectRegistry;
 	private final TaskExecutor taskExecutor;
 	private final PriceService priceService;
-
-	private static final String getTxInputQuery = "select distinct address from tx_out "
-			+ "inner join tx_in on tx_out.tx_id = tx_in.tx_out_id "
-			+ "inner join tx on tx.id = tx_in.tx_in_id and tx_in.tx_out_index = tx_out.index "
-			+ "where tx.hash = ? ;";
-
-	private static final String getAddressFundingQueryHistory = "select to2.address "
-			+ "from tx_out to1 "
-			+ "join tx t on t.id = to1.tx_id "
-			+ "join tx_in ti on ti.tx_in_id = t.id "
-			+ "join tx_out to2 on to2.tx_id = ti.tx_out_id and to2.\"index\" = ti.tx_out_index "
-			+ "where to1.address = ? "
-			+ "and to2.address != ?";
 
 	private static final String getAddressFundingQuery = "select to2.address "
 			+ "from utxo_view uv "
@@ -270,31 +254,6 @@ public class CardanoDbSyncClient {
 			+ "from stakeamounts sa "
 			+ "group by (sa.view, sa.pool_id)";
 
-	private static final String delegatorsQuery = "with "
-			+ "potential_delegates as ( "
-			+ "	select d.addr_id stake_address_id "
-			+ "	from delegation d "
-			+ "	join pool_hash ph on ph.id = d.pool_hash_id "
-			+ "	where "
-			+ "	ph.view='pool180fejev4xgwe2y53ky0pxvgxr3wcvkweu6feq5mdljfzcsmtg6u' "
-			+ ") "
-			+ ",delegates as ( "
-			+ "	select stake_address_id from ( "
-			+ "		select row_number() over(PARTITION BY d.addr_id order by d.addr_id, d.id desc) row_number, ph.\"view\" pool_address, d.addr_id stake_address_id "
-			+ "		from delegation d "
-			+ "		join pool_hash ph on ph.id = d.pool_hash_id "
-			+ "		join stake_address sa on sa.id = d.addr_id "
-			+ "		join potential_delegates on potential_delegates.stake_address_id=d.addr_id "
-			+ "	) inner_query "
-			+ "	where row_number=1 and pool_address='pool180fejev4xgwe2y53ky0pxvgxr3wcvkweu6feq5mdljfzcsmtg6u' "
-			+ ") "
-			+ "select "
-			+ "(select view from stake_address sa where sa.id=utxo.stake_address_id), "
-			+ "sum(value) "
-			+ "from utxo_view utxo "
-			+ "join delegates d on d.stake_address_id = utxo.stake_address_id "
-			+ "group by utxo.stake_address_id";
-
 	private static final String epochStakeQuery_vasil = "select distinct "
 			+ "sa.\"view\" stake_address, "
 			+ "(select to2.address from tx_out to2 where to2.stake_address_id=es.addr_id limit 1), "
@@ -476,10 +435,6 @@ public class CardanoDbSyncClient {
 		hds.close();
 	}
 
-	public List<String> getInpuAddresses(List<String> txids) {
-		return txids.stream().flatMap(txid -> getInpuAddresses(txid).stream()).collect(Collectors.toList());
-	}
-
 	@TrackExecutionTime
 	public long getBalance(String address) {
 		try (Connection connection = hds.getConnection()) {
@@ -496,44 +451,10 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
-	public List<String> getInpuAddresses(String txid) {
-		List<String> addresses = new ArrayList<>();
-		try (Connection connection = hds.getConnection()) {
-			PreparedStatement getTxInput = connection.prepareStatement(getTxInputQuery);
-			byte[] bytes = Hex.decodeHex(txid);
-			getTxInput.setBytes(1, bytes);
-			ResultSet result = getTxInput.executeQuery();
-			while (result.next()) {
-				addresses.add(result.getString(1));
-			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-		return addresses;
-	}
-
-	@TrackExecutionTime
 	public List<String> getFundingAddresses(String address) {
 		List<String> addresses = new ArrayList<>();
 		try (Connection connection = hds.getConnection()) {
 			PreparedStatement getTxInput = connection.prepareStatement(getAddressFundingQuery);
-			getTxInput.setString(1, address);
-			getTxInput.setString(2, address);
-			ResultSet result = getTxInput.executeQuery();
-			while (result.next()) {
-				addresses.add(result.getString(1));
-			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-		return addresses;
-	}
-
-	@TrackExecutionTime
-	public List<String> getFundingAddressesHistory(String address) {
-		List<String> addresses = new ArrayList<>();
-		try (Connection connection = hds.getConnection()) {
-			PreparedStatement getTxInput = connection.prepareStatement(getAddressFundingQueryHistory);
 			getTxInput.setString(1, address);
 			getTxInput.setString(2, address);
 			ResultSet result = getTxInput.executeQuery();

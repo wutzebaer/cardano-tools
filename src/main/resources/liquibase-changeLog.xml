@@ -247,4 +247,10 @@
 		<addUniqueConstraint columnNames="date, coin" constraintName="UKh644mf2loe01igw3htlkohwm7" tableName="price" />
 	</changeSet>
 
+	<changeSet author="wutze (generated)" id="0011">
+		<dropForeignKeyConstraint baseTableName="account_funding_addresses_history" constraintName="fktq4iwr8leeim6oa9qfgj3vhsi" />
+		<dropTable tableName="account_funding_addresses_history" />
+		<dropDefaultValue columnDataType="bigint" columnName="fee" tableName="drop" />
+	</changeSet>
+
 </databaseChangeLog>

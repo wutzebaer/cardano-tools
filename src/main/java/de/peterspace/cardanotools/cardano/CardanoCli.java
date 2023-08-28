@@ -123,7 +123,6 @@ public class CardanoCli {
 				.createdAt(new Date())
 				.address(address)
 				.fundingAddresses(new ArrayList<>())
-				.fundingAddressesHistory(new ArrayList<>())
 				.policies(new ArrayList<>())
 				.stake(0l)
 				.stakePositions(List.of())

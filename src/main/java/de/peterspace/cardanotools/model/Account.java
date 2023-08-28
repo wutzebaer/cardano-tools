@@ -53,10 +53,6 @@ public class Account {
 	private List<StakePosition> stakePositions;
 
 	@NotNull
-	@ElementCollection
-	private List<String> fundingAddressesHistory;
-
-	@NotNull
 	private Long stake;
 
 	@NotNull

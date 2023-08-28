@@ -23,20 +23,6 @@ public class CardanoDbSyncTest {
 	CardanoDbSyncClient cardanoDbSyncClient;
 
 	@Test
-	void list() throws Exception {
-		List<String> inpuAddresses = cardanoDbSyncClient.getInpuAddresses(List.of("34c5cd85eef8101f6c5235e5bbebbd217d671a89c0cce588315de0e9236eca34"));
-		assertThat(inpuAddresses).hasSize(1);
-		assertEquals("addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x", inpuAddresses.get(0));
-	}
-
-	@Test
-	void single() throws Exception {
-		List<String> inpuAddresses = cardanoDbSyncClient.getInpuAddresses("34c5cd85eef8101f6c5235e5bbebbd217d671a89c0cce588315de0e9236eca34");
-		assertThat(inpuAddresses).hasSize(1);
-		assertEquals("addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x", inpuAddresses.get(0));
-	}
-
-	@Test
 	void funding() throws Exception {
 		List<String> inpuAddresses = cardanoDbSyncClient.getFundingAddresses("addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x");
 		assertThat(inpuAddresses).hasSize(4);
