@@ -3,9 +3,8 @@ package de.peterspace.cardanotools.model;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.Transient;
-import javax.validation.constraints.NotNull;
-
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

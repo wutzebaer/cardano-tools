@@ -2,11 +2,10 @@ package de.peterspace.cardanotools.cardano;
 
 import java.util.ArrayList;
 
-import javax.annotation.PostConstruct;
-
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

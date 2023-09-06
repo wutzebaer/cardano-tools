@@ -1,7 +1,6 @@
 package de.peterspace.cardanotools.dbsync;
 
-import javax.validation.constraints.NotEmpty;
-
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Value;
 
 @Value

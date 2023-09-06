@@ -16,8 +16,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import javax.transaction.Transactional;
-
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.json.JSONArray;
@@ -41,6 +39,7 @@ import de.peterspace.cardanotools.model.TransactionInputs;
 import de.peterspace.cardanotools.model.Wallet;
 import de.peterspace.cardanotools.repository.DropRepository;
 import de.peterspace.cardanotools.repository.WalletRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

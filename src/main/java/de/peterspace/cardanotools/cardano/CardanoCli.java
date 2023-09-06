@@ -15,8 +15,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
@@ -38,6 +36,7 @@ import de.peterspace.cardanotools.model.TokenSubmission;
 import de.peterspace.cardanotools.model.Transaction;
 import de.peterspace.cardanotools.model.TransactionInputs;
 import de.peterspace.cardanotools.repository.AccountRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

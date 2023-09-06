@@ -1,0 +1,320 @@
+openapi: 3.0.1
+info:
+  title: Cardano DB-Sync API
+  version: "1.0"
+servers:
+- description: Generated server url
+  url: http://localhost:8080
+paths:
+  /cardanoDbSyncApi/{address}/utxos:
+    get:
+      operationId: getUtxos
+      parameters:
+      - example: addr1qx8lsj4menq5s7w5f8jupm64n9d3aamvcppllujwse473636fhhttcg3x8kfhm6qqpvujfhgmu8jww3mfn49m3fkjssqhx0348
+        explode: false
+        in: path
+        name: address
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                items:
+                  $ref: '#/components/schemas/Utxo'
+                type: array
+          description: OK
+      summary: Find utxos of given address including multi assets
+      tags:
+      - rest-handler
+      x-accepts: '*/*'
+  /cardanoDbSyncApi/{address}/stakeInfo:
+    get:
+      operationId: getStakeInfo
+      parameters:
+      - example: addr1qx8lsj4menq5s7w5f8jupm64n9d3aamvcppllujwse473636fhhttcg3x8kfhm6qqpvujfhgmu8jww3mfn49m3fkjssqhx0348
+        explode: false
+        in: path
+        name: address
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/StakeInfo'
+          description: OK
+      summary: Get infos where address is staked to
+      tags:
+      - rest-handler
+      x-accepts: '*/*'
+  /cardanoDbSyncApi/{address}/returnAddress:
+    get:
+      operationId: getReturnAddress
+      parameters:
+      - example: stake1uywupacwlt7vdpgj26vmtpy3fx5d3tv6v4zrdppaxkmls5sak6xqg
+        explode: false
+        in: path
+        name: address
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ReturnAddress'
+          description: OK
+      summary: "Find the first known address with the same stake address, which should\
+        \ not be mangled"
+      tags:
+      - rest-handler
+      x-accepts: '*/*'
+  /cardanoDbSyncApi/token:
+    get:
+      operationId: getTokenList
+      parameters:
+      - explode: true
+        in: query
+        name: afterMintid
+        required: false
+        schema:
+          format: int64
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: beforeMintid
+        required: false
+        schema:
+          format: int64
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: filter
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                items:
+                  $ref: '#/components/schemas/TokenListItem'
+                type: array
+          description: OK
+      summary: getTokenList
+      tags:
+      - rest-handler
+      x-accepts: '*/*'
+  /cardanoDbSyncApi/token/{policyId}/{assetName}:
+    get:
+      operationId: getTokenList_1
+      parameters:
+      - example: d1edc4dfb4f5f7fb240239ad64a4730c2fd4744eda3c8a7d0fff1f92
+        explode: false
+        in: path
+        name: policyId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - example: 504f524b5958383835
+        explode: false
+        in: path
+        name: assetName
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TokenDetails'
+          description: OK
+      summary: getTokenDetails
+      tags:
+      - rest-handler
+      x-accepts: '*/*'
+  /cardanoDbSyncApi/poolList:
+    get:
+      operationId: getPoolList
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                items:
+                  $ref: '#/components/schemas/PoolInfo'
+                type: array
+          description: OK
+      summary: getPoolList
+      tags:
+      - rest-handler
+      x-accepts: '*/*'
+  /cardanoDbSyncApi/demo/test:
+    get:
+      operationId: getTest
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                type: string
+          description: OK
+      tags:
+      - demo-rest-handler
+      x-accepts: '*/*'
+  /cardanoDbSyncApi/demo/rated:
+    get:
+      operationId: getRated
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                type: string
+          description: OK
+      tags:
+      - demo-rest-handler
+      x-accepts: '*/*'
+  /cardanoDbSyncApi/demo/cached:
+    get:
+      operationId: getCached
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                type: string
+          description: OK
+      tags:
+      - demo-rest-handler
+      x-accepts: '*/*'
+components:
+  schemas:
+    Utxo:
+      example:
+        maName: maName
+        sourceAddress: sourceAddress
+        maPolicyId: maPolicyId
+        txHash: txHash
+        value: 6
+        txIndex: 0
+      properties:
+        txHash:
+          type: string
+        txIndex:
+          format: int32
+          type: integer
+        maPolicyId:
+          type: string
+        maName:
+          type: string
+        value:
+          format: int64
+          type: integer
+        sourceAddress:
+          type: string
+      type: object
+    StakeInfo:
+      example:
+        stake: 0
+        tickerName: tickerName
+        totalStake: 6
+        poolHash: poolHash
+      properties:
+        stake:
+          format: int64
+          type: integer
+        poolHash:
+          type: string
+        tickerName:
+          type: string
+        totalStake:
+          format: int64
+          type: integer
+      type: object
+    ReturnAddress:
+      example:
+        address: address
+      properties:
+        address:
+          type: string
+      type: object
+    TokenListItem:
+      example:
+        maName: maName
+        quantity: 1
+        maPolicyId: maPolicyId
+        maMintId: 0
+        slotNo: 6
+      properties:
+        maMintId:
+          format: int64
+          type: integer
+        slotNo:
+          format: int64
+          type: integer
+        maPolicyId:
+          type: string
+        maName:
+          type: string
+        quantity:
+          format: int64
+          type: integer
+      type: object
+    TokenDetails:
+      example:
+        metadata: metadata
+        maName: maName
+        totalSupply: 6
+        maPolicyId: maPolicyId
+        fingerprint: fingerprint
+        slotNo: 0
+        txHash: txHash
+        maPolicyScript: maPolicyScript
+      properties:
+        slotNo:
+          format: int64
+          type: integer
+        maPolicyId:
+          type: string
+        maName:
+          type: string
+        fingerprint:
+          type: string
+        metadata:
+          type: string
+        maPolicyScript:
+          type: string
+        txHash:
+          type: string
+        totalSupply:
+          format: int64
+          type: integer
+      type: object
+    PoolInfo:
+      example:
+        ticketName: ticketName
+        poolHash: poolHash
+      properties:
+        ticketName:
+          type: string
+        poolHash:
+          type: string
+      type: object
+

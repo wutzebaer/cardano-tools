@@ -18,9 +18,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.json.JSONObject;
@@ -31,6 +28,7 @@ import org.springframework.stereotype.Component;
 
 import com.zaxxer.hikari.HikariDataSource;
 
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
 import de.peterspace.cardanotools.TrackExecutionTime;
 import de.peterspace.cardanotools.cardano.CardanoUtil;
 import de.peterspace.cardanotools.cardano.ProjectRegistry;
@@ -46,6 +44,8 @@ import de.peterspace.cardanotools.rest.dto.SnapshotResult;
 import de.peterspace.cardanotools.rest.dto.SnapshotResult.SnapshotResultRow;
 import de.peterspace.cardanotools.rest.dto.SnapshotResult.SnapshotResultRow.SnapshotResultToken;
 import de.peterspace.cardanotools.service.PriceService;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -428,6 +428,12 @@ public class CardanoDbSyncClient {
 				log.error("Create json index", e);
 			}
 		});
+	}
+
+	private ApiClient createApiClient() {
+		ApiClient apiClient = new ApiClient();
+		apiClient.setBasePath("");
+		return apiClient;
 	}
 
 	@PreDestroy

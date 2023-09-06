@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.7.14</version>
+		<version>3.1.3</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>de.peterspace</groupId>
@@ -13,7 +15,11 @@
 	<name>cardano-minter</name>
 	<description>Webapp for minting native cardano coins</description>
 	<properties>
+		<liquibase.version>4.22.0</liquibase.version>
 		<java.version>17</java.version>
+		<springdoc.version>2.1.0</springdoc.version>
+		<bucket4j.version>0.9.1</bucket4j.version>
+		<guava.version>32.1.2-jre</guava.version>
 	</properties>
 
 	<repositories>
@@ -40,8 +46,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-ui</artifactId>
-			<version>1.6.6</version>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>${springdoc.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -74,7 +80,7 @@
 		<dependency>
 			<groupId>com.giffing.bucket4j.spring.boot.starter</groupId>
 			<artifactId>bucket4j-spring-boot-starter</artifactId>
-			<version>0.5.2</version>
+			<version>${bucket4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -83,6 +89,9 @@
 		<dependency>
 			<groupId>org.ehcache</groupId>
 			<artifactId>ehcache</artifactId>
+			<!--
+			https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide#ehcache3 -->
+			<classifier>jakarta</classifier>
 		</dependency>
 
 		<!-- test -->
@@ -98,18 +107,13 @@
 			</exclusions>
 		</dependency>
 
-		<dependency>
-			<groupId>org.bitcoinj</groupId>
-			<artifactId>bitcoinj-core</artifactId>
-			<version>0.16.1</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.alphazero</groupId>
-			<artifactId>Blake2b</artifactId>
-			<version>bbf094983c</version>
-		</dependency>
 
 		<!-- misc -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>${guava.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
@@ -144,17 +148,14 @@
 			<version>5.13.0.202109080827-r</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.jayway.jsonpath</groupId>
 			<artifactId>json-path</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.liquibase.ext</groupId>
-			<artifactId>liquibase-hibernate5</artifactId>
-			<version>4.9.1</version>
+			<artifactId>liquibase-hibernate6</artifactId>
+			<version>${liquibase.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.poi</groupId>
@@ -183,6 +184,24 @@
 				<configuration>
 					<propertyFile>liquibase-plugin.properties</propertyFile>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>add-dbsync-client-source</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>dbsync-client/generated/src/main/java</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

@@ -13,8 +13,6 @@ import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.validation.constraints.NotBlank;
-
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -44,6 +42,7 @@ import org.springframework.web.client.RestTemplate;
 
 import de.peterspace.cardanotools.model.RegistrationMetadata;
 import de.peterspace.cardanotools.repository.RegistrationMetadataRepository;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -253,4 +253,26 @@
 		<dropDefaultValue columnDataType="bigint" columnName="fee" tableName="drop" />
 	</changeSet>
 
+	<changeSet author="wutze (generated)" id="0012">
+		<createSequence incrementBy="50" sequenceName="address_seq" startValue="1" />
+		<createSequence incrementBy="50" sequenceName="drop_seq" startValue="1" />
+		<createSequence incrementBy="50" sequenceName="mint_order_submission_seq" startValue="1" />
+		<createSequence incrementBy="50" sequenceName="policy_seq" startValue="1" />
+		<createSequence incrementBy="50" sequenceName="price_seq" startValue="1" />
+		<createSequence incrementBy="50" sequenceName="registration_metadata_seq" startValue="1" />
+		<createSequence incrementBy="50" sequenceName="token_offer_seq" startValue="1" />
+		<createSequence incrementBy="50" sequenceName="token_submission_seq" startValue="1" />
+		<createSequence incrementBy="50" sequenceName="transaction_seq" startValue="1" />
+		<sql>select setval('address_seq', (select nextval('hibernate_sequence')))</sql>
+		<sql>select setval('drop_seq', (select nextval('hibernate_sequence')))</sql>
+		<sql>select setval('mint_order_submission_seq', (select nextval('hibernate_sequence')))</sql>
+		<sql>select setval('policy_seq', (select nextval('hibernate_sequence')))</sql>
+		<sql>select setval('price_seq', (select nextval('hibernate_sequence')))</sql>
+		<sql>select setval('registration_metadata_seq', (select nextval('hibernate_sequence')))</sql>
+		<sql>select setval('token_offer_seq', (select nextval('hibernate_sequence')))</sql>
+		<sql>select setval('token_submission_seq', (select nextval('hibernate_sequence')))</sql>
+		<sql>select setval('transaction_seq', (select nextval('hibernate_sequence')))</sql>
+		<addUniqueConstraint columnNames="mint_order_submission_id" constraintName="UC_TRANSACTIONMINT_ORDER_SUBMISSION_ID_COL" tableName="transaction" />
+	</changeSet>
+
 </databaseChangeLog>
