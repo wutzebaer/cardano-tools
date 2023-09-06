@@ -74,7 +74,7 @@ public class CardanoDbSyncClient {
 			+ "ma.name tokenName, "
 			+ "mtm.quantity, "
 			+ "encode(t.hash ::bytea, 'hex') txId, "
-			+ "tm.json->encode(ma.policy::bytea, 'hex')->encode(ma.name::bytea, 'escape') json, "
+			+ "coalesce(tm.json->encode(ma.policy::bytea, 'hex')->encode(ma.name::bytea, 'escape'), tm.json->encode(ma.policy::bytea, 'hex')->encode(ma.name::bytea, 'hex')) json, "
 			+ "t.invalid_before, "
 			+ "t.invalid_hereafter, "
 			+ "b.block_no, "
@@ -585,7 +585,7 @@ public class CardanoDbSyncClient {
 				findTokenQuery += "mtm.id > ? ";
 			}
 
-			findTokenQuery += "AND tm.json->encode(ma.policy::bytea, 'hex')->encode(ma.name::bytea, 'escape') IS NOT NULL ";
+			findTokenQuery += "AND coalesce(tm.json->encode(ma.policy::bytea, 'hex')->encode(ma.name::bytea, 'escape'), tm.json->encode(ma.policy::bytea, 'hex')->encode(ma.name::bytea, 'hex')) is not null ";
 
 			findTokenQuery += "order by mtm.id desc ";
 
