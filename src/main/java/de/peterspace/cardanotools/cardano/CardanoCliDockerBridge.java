@@ -71,7 +71,7 @@ public class CardanoCliDockerBridge {
 		log.info("Running docker " + cardanoCliDockerBridgeRequest);
 		ResponseEntity<String[]> response = restTemplate.postForEntity(bridgeUrl + "/" + path, cardanoCliDockerBridgeRequest, String[].class);
 		log.info("Result " + new JSONArray(response.getBody()).toString(3));
-		if (response.getStatusCodeValue() == 200) {
+		if (response.getStatusCode().is2xxSuccessful()) {
 			return response.getBody();
 		} else {
 			throw new Exception(response.getBody()[0]);

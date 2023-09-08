@@ -1,4 +1,4 @@
-package de.peterspace.cardanotools.model;
+package de.peterspace.cardanotools.rest.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
-import de.peterspace.cardanotools.model.Views.Persisted;
+import de.peterspace.cardanotools.rest.dto.Views.Persisted;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;

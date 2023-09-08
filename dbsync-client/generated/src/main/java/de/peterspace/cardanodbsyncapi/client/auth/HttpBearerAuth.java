@@ -3,7 +3,7 @@ package de.peterspace.cardanodbsyncapi.client.auth;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.MultiValueMap;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-06T19:26:55.813438100+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T11:53:23.737495700+02:00[Europe/Berlin]")
 public class HttpBearerAuth implements Authentication {
     private final String scheme;
     private String bearerToken;

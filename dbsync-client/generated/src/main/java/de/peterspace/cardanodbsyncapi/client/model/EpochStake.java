@@ -24,42 +24,72 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
- * ReturnAddress
+ * EpochStake
  */
 @JsonPropertyOrder({
-  ReturnAddress.JSON_PROPERTY_ADDRESS
+  EpochStake.JSON_PROPERTY_STAKE_ADDRESS,
+  EpochStake.JSON_PROPERTY_AMOUNT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T11:53:23.737495700+02:00[Europe/Berlin]")
-public class ReturnAddress {
-  public static final String JSON_PROPERTY_ADDRESS = "address";
-  private String address;
+public class EpochStake {
+  public static final String JSON_PROPERTY_STAKE_ADDRESS = "stakeAddress";
+  private String stakeAddress;
 
-  public ReturnAddress() {
+  public static final String JSON_PROPERTY_AMOUNT = "amount";
+  private Long amount;
+
+  public EpochStake() {
   }
 
-  public ReturnAddress address(String address) {
+  public EpochStake stakeAddress(String stakeAddress) {
     
-    this.address = address;
+    this.stakeAddress = stakeAddress;
     return this;
   }
 
    /**
-   * Get address
-   * @return address
+   * Get stakeAddress
+   * @return stakeAddress
   **/
   @jakarta.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_ADDRESS)
+  @JsonProperty(JSON_PROPERTY_STAKE_ADDRESS)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getAddress() {
-    return address;
+  public String getStakeAddress() {
+    return stakeAddress;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_ADDRESS)
+  @JsonProperty(JSON_PROPERTY_STAKE_ADDRESS)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setAddress(String address) {
-    this.address = address;
+  public void setStakeAddress(String stakeAddress) {
+    this.stakeAddress = stakeAddress;
+  }
+
+
+  public EpochStake amount(Long amount) {
+    
+    this.amount = amount;
+    return this;
+  }
+
+   /**
+   * Get amount
+   * @return amount
+  **/
+  @jakarta.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_AMOUNT)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public Long getAmount() {
+    return amount;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_AMOUNT)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setAmount(Long amount) {
+    this.amount = amount;
   }
 
   @Override
@@ -70,20 +100,22 @@ public class ReturnAddress {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ReturnAddress returnAddress = (ReturnAddress) o;
-    return Objects.equals(this.address, returnAddress.address);
+    EpochStake epochStake = (EpochStake) o;
+    return Objects.equals(this.stakeAddress, epochStake.stakeAddress) &&
+        Objects.equals(this.amount, epochStake.amount);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(address);
+    return Objects.hash(stakeAddress, amount);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ReturnAddress {\n");
-    sb.append("    address: ").append(toIndentedString(address)).append("\n");
+    sb.append("class EpochStake {\n");
+    sb.append("    stakeAddress: ").append(toIndentedString(stakeAddress)).append("\n");
+    sb.append("    amount: ").append(toIndentedString(amount)).append("\n");
     sb.append("}");
     return sb.toString();
   }

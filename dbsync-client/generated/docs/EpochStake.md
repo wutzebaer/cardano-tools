@@ -1,14 +1,14 @@
 
 
-# PoolInfo
+# EpochStake
 
 
 ## Properties
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**tickerName** | **String** |  |  [optional] |
-|**poolHash** | **String** |  |  [optional] |
+|**stakeAddress** | **String** |  |  [optional] |
+|**amount** | **Long** |  |  [optional] |
 
 
 

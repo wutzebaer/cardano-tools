@@ -6,11 +6,58 @@ servers:
 - description: Generated server url
   url: http://localhost:8080
 paths:
+  /cardanoDbSyncApi/{stakeAddress}/stakeInfo:
+    get:
+      operationId: getStakeInfo
+      parameters:
+      - example: stake1uxyt389wtpccs6t26f248d9qszgxmya2qc6a3k06jw2el9g42aktg
+        explode: false
+        in: path
+        name: stakeAddress
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/StakeInfo'
+          description: OK
+      summary: Get infos where address is staked to
+      tags:
+      - rest-handler
+      x-accepts: '*/*'
+  /cardanoDbSyncApi/{stakeAddress}/returnAddress:
+    get:
+      operationId: getReturnAddress
+      parameters:
+      - example: stake1uxyt389wtpccs6t26f248d9qszgxmya2qc6a3k06jw2el9g42aktg
+        explode: false
+        in: path
+        name: stakeAddress
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ReturnAddress'
+          description: OK
+      summary: "Find the first known address with the same stake address, which should\
+        \ not be mangled"
+      tags:
+      - rest-handler
+      x-accepts: '*/*'
   /cardanoDbSyncApi/{address}/utxos:
     get:
       operationId: getUtxos
       parameters:
-      - example: addr1qx8lsj4menq5s7w5f8jupm64n9d3aamvcppllujwse473636fhhttcg3x8kfhm6qqpvujfhgmu8jww3mfn49m3fkjssqhx0348
+      - example: stake1uxyt389wtpccs6t26f248d9qszgxmya2qc6a3k06jw2el9g42aktg
         explode: false
         in: path
         name: address
@@ -27,13 +74,13 @@ paths:
                   $ref: '#/components/schemas/Utxo'
                 type: array
           description: OK
-      summary: Find utxos of given address including multi assets
+      summary: Find utxos of given address or stakeAddress including multi assets
       tags:
       - rest-handler
       x-accepts: '*/*'
-  /cardanoDbSyncApi/{address}/stakeInfo:
+  /cardanoDbSyncApi/{address}/stakeAddress:
     get:
-      operationId: getStakeInfo
+      operationId: getStakeAddress
       parameters:
       - example: addr1qx8lsj4menq5s7w5f8jupm64n9d3aamvcppllujwse473636fhhttcg3x8kfhm6qqpvujfhgmu8jww3mfn49m3fkjssqhx0348
         explode: false
@@ -48,33 +95,9 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/StakeInfo'
+                $ref: '#/components/schemas/StakeAddress'
           description: OK
-      summary: Get infos where address is staked to
-      tags:
-      - rest-handler
-      x-accepts: '*/*'
-  /cardanoDbSyncApi/{address}/returnAddress:
-    get:
-      operationId: getReturnAddress
-      parameters:
-      - example: stake1uywupacwlt7vdpgj26vmtpy3fx5d3tv6v4zrdppaxkmls5sak6xqg
-        explode: false
-        in: path
-        name: address
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ReturnAddress'
-          description: OK
-      summary: "Find the first known address with the same stake address, which should\
-        \ not be mangled"
+      summary: Find stakeAddress of address
       tags:
       - rest-handler
       x-accepts: '*/*'
@@ -98,7 +121,8 @@ paths:
           format: int64
           type: integer
         style: form
-      - explode: true
+      - example: d1edc4dfb4f5f7fb240239ad64a4730c2fd4744eda3c8a7d0fff1f92
+        explode: true
         in: query
         name: filter
         required: false
@@ -120,7 +144,7 @@ paths:
       x-accepts: '*/*'
   /cardanoDbSyncApi/token/{policyId}/{assetName}:
     get:
-      operationId: getTokenList_1
+      operationId: getTokenDetails
       parameters:
       - example: d1edc4dfb4f5f7fb240239ad64a4730c2fd4744eda3c8a7d0fff1f92
         explode: false
@@ -165,6 +189,40 @@ paths:
       tags:
       - rest-handler
       x-accepts: '*/*'
+  /cardanoDbSyncApi/epochStake/{poolHash}/{epoch}:
+    get:
+      operationId: getEpochStake
+      parameters:
+      - example: pool180fejev4xgwe2y53ky0pxvgxr3wcvkweu6feq5mdljfzcsmtg6u
+        explode: false
+        in: path
+        name: poolHash
+        required: true
+        schema:
+          type: string
+        style: simple
+      - example: 432
+        explode: false
+        in: path
+        name: epoch
+        required: true
+        schema:
+          format: int32
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                items:
+                  $ref: '#/components/schemas/EpochStake'
+                type: array
+          description: OK
+      summary: getEpochStake
+      tags:
+      - rest-handler
+      x-accepts: '*/*'
   /cardanoDbSyncApi/demo/test:
     get:
       operationId: getTest
@@ -206,6 +264,31 @@ paths:
       x-accepts: '*/*'
 components:
   schemas:
+    StakeInfo:
+      example:
+        stake: 0
+        tickerName: tickerName
+        totalStake: 6
+        poolHash: poolHash
+      properties:
+        stake:
+          format: int64
+          type: integer
+        poolHash:
+          type: string
+        tickerName:
+          type: string
+        totalStake:
+          format: int64
+          type: integer
+      type: object
+    ReturnAddress:
+      example:
+        address: address
+      properties:
+        address:
+          type: string
+      type: object
     Utxo:
       example:
         maName: maName
@@ -230,25 +313,7 @@ components:
         sourceAddress:
           type: string
       type: object
-    StakeInfo:
-      example:
-        stake: 0
-        tickerName: tickerName
-        totalStake: 6
-        poolHash: poolHash
-      properties:
-        stake:
-          format: int64
-          type: integer
-        poolHash:
-          type: string
-        tickerName:
-          type: string
-        totalStake:
-          format: int64
-          type: integer
-      type: object
-    ReturnAddress:
+    StakeAddress:
       example:
         address: address
       properties:
@@ -309,12 +374,23 @@ components:
       type: object
     PoolInfo:
       example:
-        ticketName: ticketName
+        tickerName: tickerName
         poolHash: poolHash
       properties:
-        ticketName:
+        tickerName:
           type: string
         poolHash:
           type: string
+      type: object
+    EpochStake:
+      example:
+        amount: 0
+        stakeAddress: stakeAddress
+      properties:
+        stakeAddress:
+          type: string
+        amount:
+          format: int64
+          type: integer
       type: object
 

@@ -1,14 +1,13 @@
 
 
-# PoolInfo
+# StakeAddress
 
 
 ## Properties
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**tickerName** | **String** |  |  [optional] |
-|**poolHash** | **String** |  |  [optional] |
+|**address** | **String** |  |  [optional] |
 
 
 

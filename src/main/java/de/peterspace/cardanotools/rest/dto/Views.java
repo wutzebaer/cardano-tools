@@ -1,4 +1,4 @@
-package de.peterspace.cardanotools.model;
+package de.peterspace.cardanotools.rest.dto;
 
 public class Views {
 

@@ -37,9 +37,6 @@ public class MintOrderSubmission {
 	private String targetAddress;
 
 	@NotNull
-	private Boolean tip;
-
-	@NotNull
 	@Column(columnDefinition = "bool default true")
 	private Boolean pin;
 

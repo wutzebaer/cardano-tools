@@ -7,6 +7,10 @@ import lombok.Value;
 @EqualsAndHashCode(callSuper = false)
 public class MissingLovelaceException extends Exception {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	long amount;
 
 	public MissingLovelaceException(long amount, String message, Throwable cause) {

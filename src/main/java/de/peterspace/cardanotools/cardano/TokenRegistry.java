@@ -278,14 +278,17 @@ public class TokenRegistry {
 			treeFormatter.append("mappingsgg", FileMode.TREE, subtreeId);
 
 			ObjectId lastCommitId = repo.resolve("refs/heads/master");
-			RevWalk revWalk = new RevWalk(repo);
-			RevCommit commit = revWalk.parseCommit(lastCommitId);
-			RevTree tree = commit.getTree();
-			TreeWalk treeWalk = new TreeWalk(repo);
-			treeWalk.addTree(tree);
-			while (treeWalk.next()) {
-				log.debug(treeWalk.getNameString() + " " + treeWalk.getFileMode());
-				treeFormatter.append(treeWalk.getNameString(), treeWalk.getFileMode(), treeWalk.getObjectId(0));
+
+			try (RevWalk revWalk = new RevWalk(repo)) {
+				RevCommit commit = revWalk.parseCommit(lastCommitId);
+				RevTree tree = commit.getTree();
+				try (TreeWalk treeWalk = new TreeWalk(repo)) {
+					treeWalk.addTree(tree);
+					while (treeWalk.next()) {
+						log.debug(treeWalk.getNameString() + " " + treeWalk.getFileMode());
+						treeFormatter.append(treeWalk.getNameString(), treeWalk.getFileMode(), treeWalk.getObjectId(0));
+					}
+				}
 			}
 
 			ObjectId treeId = objectInserter.insert(treeFormatter);

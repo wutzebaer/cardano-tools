@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.DecoderException;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +26,6 @@ public class WalletStatementRestInterface {
 	private final CardanoDbSyncClient cardanoDbSyncClient;
 
 	@GetMapping("{stakeAddress}")
-	@Cacheable("accountStatement")
 	public List<AccountStatementRow> accountStatement(@PathVariable("stakeAddress") String stakeAddresses, @RequestParam String currency) throws DecoderException {
 
 		List<String> addressList = Arrays.asList(stakeAddresses.split("\\s+"));

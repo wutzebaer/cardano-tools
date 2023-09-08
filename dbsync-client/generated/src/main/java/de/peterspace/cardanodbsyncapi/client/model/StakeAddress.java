@@ -24,20 +24,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
- * ReturnAddress
+ * StakeAddress
  */
 @JsonPropertyOrder({
-  ReturnAddress.JSON_PROPERTY_ADDRESS
+  StakeAddress.JSON_PROPERTY_ADDRESS
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T11:53:23.737495700+02:00[Europe/Berlin]")
-public class ReturnAddress {
+public class StakeAddress {
   public static final String JSON_PROPERTY_ADDRESS = "address";
   private String address;
 
-  public ReturnAddress() {
+  public StakeAddress() {
   }
 
-  public ReturnAddress address(String address) {
+  public StakeAddress address(String address) {
     
     this.address = address;
     return this;
@@ -70,8 +70,8 @@ public class ReturnAddress {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ReturnAddress returnAddress = (ReturnAddress) o;
-    return Objects.equals(this.address, returnAddress.address);
+    StakeAddress stakeAddress = (StakeAddress) o;
+    return Objects.equals(this.address, stakeAddress.address);
   }
 
   @Override
@@ -82,7 +82,7 @@ public class ReturnAddress {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ReturnAddress {\n");
+    sb.append("class StakeAddress {\n");
     sb.append("    address: ").append(toIndentedString(address)).append("\n");
     sb.append("}");
     return sb.toString();

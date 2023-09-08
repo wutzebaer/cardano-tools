@@ -1,17 +1,13 @@
 package de.peterspace.cardanotools.rest;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -26,21 +22,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import de.peterspace.cardanodbsyncapi.client.model.EpochStake;
+import de.peterspace.cardanodbsyncapi.client.model.PoolInfo;
+import de.peterspace.cardanodbsyncapi.client.model.Utxo;
 import de.peterspace.cardanotools.cardano.CardanoCli;
-import de.peterspace.cardanotools.cardano.MinOutputCalculator;
 import de.peterspace.cardanotools.cardano.TransactionOutputs;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
-import de.peterspace.cardanotools.dbsync.PoolInfo;
-import de.peterspace.cardanotools.dbsync.TokenData;
 import de.peterspace.cardanotools.ipfs.IpfsClient;
 import de.peterspace.cardanotools.model.Account;
-import de.peterspace.cardanotools.model.EpochStakePosition;
 import de.peterspace.cardanotools.model.Transaction;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintTransactionRepository;
+import de.peterspace.cardanotools.rest.dto.StakeRewardPosition;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -59,122 +52,123 @@ public class StakeRewardRestInterface {
 	private final AccountRepository accountRepository;
 	private final CardanoDbSyncClient cardanoDbSyncClient;
 
-	@PostMapping("{key}/{poolHash}/{epoch}")
-	public ResponseEntity<List<EpochStakePosition>> getEpochStakes(@PathVariable("key") UUID key, @PathVariable("poolHash") String poolHash, @PathVariable int epoch, @RequestBody EpochStakesRequest epochStakesRequest) throws Exception {
-
-		Optional<Account> account = accountRepository.findById(key.toString());
-		if (!account.isPresent()) {
-			return new ResponseEntity<List<EpochStakePosition>>(HttpStatus.NOT_FOUND);
-		}
-
-		List<TokenData> tokenData = new ObjectMapper().readValue(account.get().getAddress().getTokensData(), new TypeReference<List<TokenData>>() {
-		});
-		Long lovelace = account.get().getAddress().getBalance();
-
-		List<EpochStakePosition> epochStake = distributeFunds(epochStakesRequest.tip, tokenData, lovelace, poolHash, epoch, epochStakesRequest.minStake, epochStakesRequest.excludedStakers);
-
-		ResponseEntity<Transaction> transaction = buildTransaction(key, epochStake, epochStakesRequest.message);
-
-		epochStake = distributeFunds(epochStakesRequest.tip, tokenData, lovelace - transaction.getBody().getFee(), poolHash, epoch, epochStakesRequest.minStake, epochStakesRequest.excludedStakers);
-
-		return new ResponseEntity<List<EpochStakePosition>>(epochStake, HttpStatus.OK);
-	}
-
 	@GetMapping("pools")
 	public List<PoolInfo> getPoolList() {
 		return cardanoDbSyncClient.getPoolList();
 	}
 
-	private List<EpochStakePosition> distributeFunds(boolean tip, List<TokenData> tokenData, Long lovelace, String poolHash, int epoch, long minStake, List<String> excludedStakers) throws DecoderException {
-		List<EpochStakePosition> epochStake = cardanoDbSyncClient.epochStake(poolHash, epoch).stream().sorted(Comparator.comparing(EpochStakePosition::getAmount).reversed()).collect(Collectors.toList());
-		epochStake.removeIf(es -> es.getAmount() < minStake);
-		epochStake.removeIf(es -> StringUtils.isBlank(es.getAddress()));
+	@PostMapping("{key}/{poolHash}/{epoch}")
+	public ResponseEntity<List<StakeRewardPosition>> getEpochStakes(@PathVariable("key") UUID key, @PathVariable("poolHash") String poolHash, @PathVariable int epoch, @RequestBody EpochStakesRequest epochStakesRequest) throws Exception {
 
-		List<EpochStakePosition> filteredStakes = epochStake
-				.stream()
-				.filter(es -> !excludedStakers.contains(es.getStakeAddress()))
-				.collect(Collectors.toList());
-
-		if (tip) {
-			lovelace -= ONE_ADA;
+		Optional<Account> account = accountRepository.findById(key.toString());
+		if (!account.isPresent()) {
+			return new ResponseEntity<List<StakeRewardPosition>>(HttpStatus.NOT_FOUND);
 		}
 
-		long totalStake = epochStake
+		List<Utxo> accountUtxos = cardanoDbSyncClient.getUtxos(account.get().getAddress().getAddress());
+		long lovelace = accountUtxos.stream().filter(u -> u.getMaPolicyId() == null).mapToLong(u -> u.getValue()).sum();
+		List<Utxo> tokenData = accountUtxos.stream().filter(utxo -> utxo.getMaPolicyId() != null).toList();
+
+		List<StakeRewardPosition> stakeRewardPositions = distributeFunds(epochStakesRequest.tip, tokenData, lovelace, poolHash, epoch, epochStakesRequest.minStake, epochStakesRequest.excludedStakers);
+
+		ResponseEntity<Transaction> transaction = buildTransaction(key, stakeRewardPositions, epochStakesRequest.message);
+
+		stakeRewardPositions = distributeFunds(epochStakesRequest.tip, tokenData, lovelace - transaction.getBody().getFee(), poolHash, epoch, epochStakesRequest.minStake, epochStakesRequest.excludedStakers);
+
+		return new ResponseEntity<List<StakeRewardPosition>>(stakeRewardPositions, HttpStatus.OK);
+	}
+
+	private List<StakeRewardPosition> distributeFunds(boolean tip, List<Utxo> tokenData, Long availableLovelace, String poolHash, int epoch, long minStake, List<String> excludedStakers) throws Exception {
+
+		List<EpochStake> epochStake = cardanoDbSyncClient.getEpochStake(poolHash, epoch)
 				.stream()
+				.filter(es -> es.getAmount() < minStake)
 				.filter(es -> !excludedStakers.contains(es.getStakeAddress()))
-				.mapToLong(es -> es.getAmount()).sum();
+				.sorted(Comparator.comparing(EpochStake::getAmount).reversed())
+				.toList();
+
+		if (tip) {
+			availableLovelace -= ONE_ADA;
+		}
+
+		long totalStake = epochStake.stream().mapToLong(es -> es.getAmount()).sum();
+
+		List<StakeRewardPosition> stakeRewardPositions = epochStake.stream().map(es -> {
+			StakeRewardPosition srp = new StakeRewardPosition();
+			srp.setAmount(es.getAmount());
+			srp.setStakeAddress(es.getStakeAddress());
+			return srp;
+		}).toList();
+
+		// calculate share
+		for (StakeRewardPosition srp : stakeRewardPositions) {
+			double share = (double) srp.getAmount() / totalStake;
+			srp.setShare(share);
+		}
 
 		// distribute tokens
-		for (EpochStakePosition es : filteredStakes) {
-
-			double share = (double) es.getAmount() / totalStake;
-			es.setShare(share);
-
-			for (TokenData td : tokenData) {
-				long tokenAmount = (long) (td.getQuantity() * share);
+		for (StakeRewardPosition srp : stakeRewardPositions) {
+			// add token share to output
+			for (Utxo td : tokenData) {
+				long tokenAmount = (long) (td.getValue() * srp.getShare());
 				if (tokenAmount > 0) {
-					String tokenKey = td.getPolicyId() + "." + td.getName();
-					es.getOutputs().put(tokenKey, tokenAmount);
+					String tokenKey = td.getMaPolicyId() + "." + td.getMaName();
+					srp.getOutputs().put(tokenKey, tokenAmount);
 				}
-			}
-
-			// ensure min outputs
-			Set<String> assetNames = es.getOutputs().keySet().stream().filter(k -> !StringUtils.isEmpty(k)).map(k -> k.split("\\.")[1]).collect(Collectors.toSet());
-			if (!assetNames.isEmpty()) {
-				int policies = es.getOutputs().keySet().stream().filter(k -> !StringUtils.isEmpty(k)).map(k -> k.split("\\.")[0]).collect(Collectors.toSet()).size();
-				long minOutput = MinOutputCalculator.calculate(assetNames, policies);
-				es.getOutputs().put("", minOutput);
-				lovelace -= minOutput;
-			} else {
-				es.getOutputs().put("", ONE_ADA);
-				lovelace -= ONE_ADA;
 			}
 		}
 
 		// distribute remaining tokens
-		if (!filteredStakes.isEmpty()) {
-			EpochStakePosition epochStakePosition = filteredStakes.get(0);
-
-			for (TokenData td : tokenData) {
-				String tokenKey = td.getPolicyId() + "." + td.getName();
-				long tokenLeft = td.getQuantity() - filteredStakes.stream().mapToLong(es -> es.getOutputs().getOrDefault(tokenKey, 0l)).sum();
+		if (!stakeRewardPositions.isEmpty()) {
+			StakeRewardPosition srp = stakeRewardPositions.get(0);
+			for (Utxo td : tokenData) {
+				String tokenKey = td.getMaPolicyId() + "." + td.getMaName();
+				long tokenLeft = td.getValue() - stakeRewardPositions.stream().mapToLong(es -> es.getOutputs().getOrDefault(tokenKey, 0l)).sum();
 				if (tokenLeft > 0) {
-					epochStakePosition.getOutputs().put(tokenKey, epochStakePosition.getOutputs().getOrDefault(tokenKey, 0l) + tokenLeft);
+					srp.getOutputs().put(tokenKey, srp.getOutputs().getOrDefault(tokenKey, 0l) + tokenLeft);
 				}
 			}
+		}
 
-			Set<String> assetNames = epochStakePosition.getOutputs().keySet().stream().filter(k -> !StringUtils.isEmpty(k)).map(k -> k.split("\\.")[1]).collect(Collectors.toSet());
-			if (!assetNames.isEmpty()) {
-				int policies = epochStakePosition.getOutputs().keySet().stream().filter(k -> !StringUtils.isEmpty(k)).map(k -> k.split("\\.")[0]).collect(Collectors.toSet()).size();
-				long minOutput = MinOutputCalculator.calculate(assetNames, policies);
-				Long currentOutput = epochStakePosition.getOutputs().getOrDefault("", 0l);
-				long missingOutput = Math.max(minOutput - currentOutput, 0l);
-				epochStakePosition.getOutputs().put("", currentOutput + missingOutput);
-				lovelace -= missingOutput;
+		// add minutxo to output
+		for (StakeRewardPosition srp : stakeRewardPositions) {
+			String outputsInCLiFormat = toCliFormat(srp.getOutputs());
+			if (!outputsInCLiFormat.isEmpty()) {
+				long minOutput = cardanoCli.calculateMinUtxo(outputsInCLiFormat);
+				srp.getOutputs().put("", minOutput);
+				availableLovelace -= minOutput;
 			}
 		}
 
 		// distribute ada
 		long lovelaceDistributed = 0;
-		for (EpochStakePosition es : filteredStakes) {
-			double share = (double) es.getAmount() / totalStake;
-			long additionalLovelaces = Math.max((long) (lovelace * share), 0);
-			es.getOutputs().put("", es.getOutputs().getOrDefault("", 0l) + additionalLovelaces);
+		for (StakeRewardPosition srp : stakeRewardPositions) {
+			long additionalLovelaces = Math.max((long) (availableLovelace * srp.getShare()), 0);
+			srp.getOutputs().put("", srp.getOutputs().getOrDefault("", 0l) + additionalLovelaces);
 			lovelaceDistributed += additionalLovelaces;
 		}
 
-		lovelace -= lovelaceDistributed;
+		availableLovelace -= lovelaceDistributed;
 
 		if (tip) {
-			epochStake.add(new EpochStakePosition(0, "cardano-tools.io", pledgeAddress, Map.of("", ONE_ADA + Math.max(lovelace, 0l)), 0));
+			StakeRewardPosition srp = new StakeRewardPosition();
+			srp.setAmount(0l);
+			srp.setStakeAddress("stake1uxyt389wtpccs6t26f248d9qszgxmya2qc6a3k06jw2el9g42aktg");
+			srp.setShare(0);
+			srp.setOutputs(Map.of("", ONE_ADA + Math.max(availableLovelace, 0l)));
+			stakeRewardPositions.add(srp);
 		}
 
-		return epochStake;
+		return stakeRewardPositions;
 
 	}
 
+	private String toCliFormat(Map<String, Long> outputs) {
+		return outputs.entrySet().stream().map(e -> e.getValue() + " " + e.getKey()).collect(Collectors.joining("+"));
+	}
+
 	@PostMapping("{key}/buildTransaction")
-	public ResponseEntity<Transaction> buildTransaction(@PathVariable("key") UUID key, @RequestBody List<EpochStakePosition> epochStakePositions, @RequestParam String message) throws Exception {
+	public ResponseEntity<Transaction> buildTransaction(@PathVariable("key") UUID key, @RequestBody List<StakeRewardPosition> stakeRewardPositions, @RequestParam String message) throws Exception {
 
 		Optional<Account> account = accountRepository.findById(key.toString());
 		if (!account.isPresent()) {
@@ -182,15 +176,11 @@ public class StakeRewardRestInterface {
 		}
 
 		TransactionOutputs transactionOutputs = new TransactionOutputs();
-		for (EpochStakePosition epochStakePosition : epochStakePositions) {
-			for (Entry<String, Long> currencyEntry : epochStakePosition.getOutputs().entrySet()) {
+		for (StakeRewardPosition srp : stakeRewardPositions) {
+			for (Entry<String, Long> currencyEntry : srp.getOutputs().entrySet()) {
+				String returnAddress = cardanoDbSyncClient.getReturnAddress(srp.getStakeAddress());
 				// add output
-				if (StringUtils.isEmpty(currencyEntry.getKey())) {
-					transactionOutputs.add(epochStakePosition.getAddress(), "", currencyEntry.getValue());
-				} else {
-					String[] bits = currencyEntry.getKey().split("\\.");
-					transactionOutputs.add(epochStakePosition.getAddress(), bits[0] + "." + Hex.encodeHexString(bits[1].getBytes(StandardCharsets.UTF_8)), currencyEntry.getValue());
-				}
+				transactionOutputs.add(returnAddress, currencyEntry.getKey(), currencyEntry.getValue());
 			}
 		}
 
@@ -201,7 +191,7 @@ public class StakeRewardRestInterface {
 
 		Transaction transaction = cardanoCli.buildTransaction(account.get().getAddress(), transactionOutputs, messageJson);
 
-		transaction.setMinOutput(epochStakePositions.stream().mapToLong(es -> es.getOutputs().getOrDefault("", 0l)).sum());
+		transaction.setMinOutput(stakeRewardPositions.stream().mapToLong(es -> es.getOutputs().getOrDefault("", 0l)).sum());
 
 		return new ResponseEntity<Transaction>(transaction, HttpStatus.OK);
 	}

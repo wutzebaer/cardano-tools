@@ -27,13 +27,13 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  * PoolInfo
  */
 @JsonPropertyOrder({
-  PoolInfo.JSON_PROPERTY_TICKET_NAME,
+  PoolInfo.JSON_PROPERTY_TICKER_NAME,
   PoolInfo.JSON_PROPERTY_POOL_HASH
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-06T19:26:55.813438100+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T11:53:23.737495700+02:00[Europe/Berlin]")
 public class PoolInfo {
-  public static final String JSON_PROPERTY_TICKET_NAME = "ticketName";
-  private String ticketName;
+  public static final String JSON_PROPERTY_TICKER_NAME = "tickerName";
+  private String tickerName;
 
   public static final String JSON_PROPERTY_POOL_HASH = "poolHash";
   private String poolHash;
@@ -41,29 +41,29 @@ public class PoolInfo {
   public PoolInfo() {
   }
 
-  public PoolInfo ticketName(String ticketName) {
+  public PoolInfo tickerName(String tickerName) {
     
-    this.ticketName = ticketName;
+    this.tickerName = tickerName;
     return this;
   }
 
    /**
-   * Get ticketName
-   * @return ticketName
+   * Get tickerName
+   * @return tickerName
   **/
   @jakarta.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_TICKET_NAME)
+  @JsonProperty(JSON_PROPERTY_TICKER_NAME)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getTicketName() {
-    return ticketName;
+  public String getTickerName() {
+    return tickerName;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_TICKET_NAME)
+  @JsonProperty(JSON_PROPERTY_TICKER_NAME)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setTicketName(String ticketName) {
-    this.ticketName = ticketName;
+  public void setTickerName(String tickerName) {
+    this.tickerName = tickerName;
   }
 
 
@@ -101,20 +101,20 @@ public class PoolInfo {
       return false;
     }
     PoolInfo poolInfo = (PoolInfo) o;
-    return Objects.equals(this.ticketName, poolInfo.ticketName) &&
+    return Objects.equals(this.tickerName, poolInfo.tickerName) &&
         Objects.equals(this.poolHash, poolInfo.poolHash);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(ticketName, poolHash);
+    return Objects.hash(tickerName, poolHash);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class PoolInfo {\n");
-    sb.append("    ticketName: ").append(toIndentedString(ticketName)).append("\n");
+    sb.append("    tickerName: ").append(toIndentedString(tickerName)).append("\n");
     sb.append("    poolHash: ").append(toIndentedString(poolHash)).append("\n");
     sb.append("}");
     return sb.toString();
