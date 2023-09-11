@@ -6,8 +6,10 @@ import java.util.Map;
 import de.peterspace.cardanodbsyncapi.client.model.EpochStake;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.ToString;
 
 @Data
+@ToString(callSuper = true)
 public class StakeRewardPosition extends EpochStake {
 //	@NotNull
 //	private long amount;

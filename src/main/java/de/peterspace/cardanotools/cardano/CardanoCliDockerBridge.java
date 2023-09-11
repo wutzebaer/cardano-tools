@@ -8,8 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import de.peterspace.cardanotools.TrackExecutionTime;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -32,6 +34,7 @@ public class CardanoCliDockerBridge {
 	private String[] networkMagicArgs;
 
 	@lombok.Value
+	@ToString(exclude = "inputFiles")
 	public static class CardanoCliDockerBridgeRequest {
 		String ipcVolumeName;
 		String nodeVersion;
@@ -53,14 +56,17 @@ public class CardanoCliDockerBridge {
 		}
 	}
 
+	@TrackExecutionTime
 	public String[] requestCardanoCliNomagic(Map<String, String> inputFiles, String[] cmd, String... outputFiles) throws Exception {
 		return request("cardano-cli", new String[] {}, inputFiles, cmd, outputFiles);
 	}
 
+	@TrackExecutionTime
 	public String[] requestCardanoCli(Map<String, String> inputFiles, String[] cmd, String... outputFiles) throws Exception {
 		return request("cardano-cli", networkMagicArgs, inputFiles, cmd, outputFiles);
 	}
 
+	@TrackExecutionTime
 	public String[] requestMetadataCreator(Map<String, String> inputFiles, String[] cmd, String... outputFiles) throws Exception {
 		return request("cardano-tools-token-metadata-creator", new String[0], inputFiles, cmd, outputFiles);
 	}

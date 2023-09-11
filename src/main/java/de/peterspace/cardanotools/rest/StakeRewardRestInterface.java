@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import de.peterspace.cardanodbsyncapi.client.model.EpochStake;
 import de.peterspace.cardanodbsyncapi.client.model.PoolInfo;
 import de.peterspace.cardanodbsyncapi.client.model.Utxo;
+import de.peterspace.cardanotools.TrackExecutionTime;
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.cardano.TransactionOutputs;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
@@ -57,6 +59,7 @@ public class StakeRewardRestInterface {
 		return cardanoDbSyncClient.getPoolList();
 	}
 
+	@TrackExecutionTime
 	@PostMapping("{key}/{poolHash}/{epoch}")
 	public ResponseEntity<List<StakeRewardPosition>> getEpochStakes(@PathVariable("key") UUID key, @PathVariable("poolHash") String poolHash, @PathVariable int epoch, @RequestBody EpochStakesRequest epochStakesRequest) throws Exception {
 
@@ -80,9 +83,10 @@ public class StakeRewardRestInterface {
 
 	private List<StakeRewardPosition> distributeFunds(boolean tip, List<Utxo> tokenData, Long availableLovelace, String poolHash, int epoch, long minStake, List<String> excludedStakers) throws Exception {
 
-		List<EpochStake> epochStake = cardanoDbSyncClient.getEpochStake(poolHash, epoch)
+		List<EpochStake> epochStake2 = cardanoDbSyncClient.getEpochStake(poolHash, epoch);
+		List<EpochStake> epochStake = epochStake2
 				.stream()
-				.filter(es -> es.getAmount() < minStake)
+				.filter(es -> es.getAmount() > minStake)
 				.filter(es -> !excludedStakers.contains(es.getStakeAddress()))
 				.sorted(Comparator.comparing(EpochStake::getAmount).reversed())
 				.toList();
@@ -98,7 +102,7 @@ public class StakeRewardRestInterface {
 			srp.setAmount(es.getAmount());
 			srp.setStakeAddress(es.getStakeAddress());
 			return srp;
-		}).toList();
+		}).collect(Collectors.toList());
 
 		// calculate share
 		for (StakeRewardPosition srp : stakeRewardPositions) {
@@ -132,12 +136,10 @@ public class StakeRewardRestInterface {
 
 		// add minutxo to output
 		for (StakeRewardPosition srp : stakeRewardPositions) {
-			String outputsInCLiFormat = toCliFormat(srp.getOutputs());
-			if (!outputsInCLiFormat.isEmpty()) {
-				long minOutput = cardanoCli.calculateMinUtxo(outputsInCLiFormat);
-				srp.getOutputs().put("", minOutput);
-				availableLovelace -= minOutput;
-			}
+			String outputsInCLiFormat = toCliFormat("12345", srp.getOutputs());
+			long minOutput = Math.max(cardanoCli.calculateMinUtxo(outputsInCLiFormat), ONE_ADA);
+			srp.getOutputs().put("", minOutput);
+			availableLovelace -= minOutput;
 		}
 
 		// distribute ada
@@ -163,8 +165,10 @@ public class StakeRewardRestInterface {
 
 	}
 
-	private String toCliFormat(Map<String, Long> outputs) {
-		return outputs.entrySet().stream().map(e -> e.getValue() + " " + e.getKey()).collect(Collectors.joining("+"));
+	private String toCliFormat(String address, Map<String, Long> outputs) {
+		List<String> outputBits = outputs.entrySet().stream().map(e -> e.getValue() + " " + e.getKey()).collect(Collectors.toList());
+		outputBits.add(0, address);
+		return outputBits.stream().collect(Collectors.joining("+"));
 	}
 
 	@PostMapping("{key}/buildTransaction")
@@ -176,13 +180,13 @@ public class StakeRewardRestInterface {
 		}
 
 		TransactionOutputs transactionOutputs = new TransactionOutputs();
-		for (StakeRewardPosition srp : stakeRewardPositions) {
+		stakeRewardPositions.parallelStream().forEach(srp -> {
+			String returnAddress = cardanoDbSyncClient.getReturnAddress(srp.getStakeAddress());
 			for (Entry<String, Long> currencyEntry : srp.getOutputs().entrySet()) {
-				String returnAddress = cardanoDbSyncClient.getReturnAddress(srp.getStakeAddress());
 				// add output
 				transactionOutputs.add(returnAddress, currencyEntry.getKey(), currencyEntry.getValue());
 			}
-		}
+		});
 
 		String messageJson = null;
 		if (!StringUtils.isBlank(message)) {

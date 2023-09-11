@@ -1,5 +1,6 @@
 package de.peterspace.cardanotools.rest;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -52,6 +53,17 @@ public class AccountRestInterface {
 			return new ResponseEntity<Account>(accountOptional.get(), HttpStatus.OK);
 		} else {
 			return new ResponseEntity<Account>(HttpStatus.NOT_FOUND);
+		}
+	}
+
+	@GetMapping("{key}/policies")
+	@JsonView(Private.class)
+	public ResponseEntity<List<Policy>> getPolicies(@PathVariable("key") UUID key) throws Exception {
+		Optional<Account> accountOptional = accountRepository.findById(key.toString());
+		if (accountOptional.isPresent()) {
+			return new ResponseEntity<List<Policy>>(policyRepository.findByAccount(accountOptional.get()), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<List<Policy>>(HttpStatus.NOT_FOUND);
 		}
 	}
 

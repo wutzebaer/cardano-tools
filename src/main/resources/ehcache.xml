@@ -8,4 +8,53 @@
 		<heap unit="entries">1000000</heap>
 		<jsr107:mbeans enable-statistics="true" />
 	</cache>
+	<cache alias="getUtxos">
+		<expiry>
+			<ttl unit="seconds">60</ttl>
+		</expiry>
+		<heap unit="entries">1000000</heap>
+		<jsr107:mbeans enable-statistics="true" />
+	</cache>
+	<cache alias="getReturnAddress">
+		<expiry>
+			<ttl unit="days">1</ttl>
+		</expiry>
+		<heap unit="entries">1000000</heap>
+		<jsr107:mbeans enable-statistics="true" />
+	</cache>
+	<cache alias="getPoolList">
+		<expiry>
+			<ttl unit="hours">6</ttl>
+		</expiry>
+		<heap unit="entries">1000000</heap>
+		<jsr107:mbeans enable-statistics="true" />
+	</cache>
+	<cache alias="getEpochStake">
+		<expiry>
+			<ttl unit="days">1</ttl>
+		</expiry>
+		<heap unit="entries">1000000</heap>
+		<jsr107:mbeans enable-statistics="true" />
+	</cache>
+	<cache alias="getTokenList">
+		<expiry>
+			<ttl unit="seconds">60</ttl>
+		</expiry>
+		<heap unit="entries">1000000</heap>
+		<jsr107:mbeans enable-statistics="true" />
+	</cache>
+	<cache alias="getTokenDetails">
+		<expiry>
+			<ttl unit="seconds">60</ttl>
+		</expiry>
+		<heap unit="entries">1000000</heap>
+		<jsr107:mbeans enable-statistics="true" />
+	</cache>
+	<cache alias="getStatement">
+		<expiry>
+			<ttl unit="seconds">60</ttl>
+		</expiry>
+		<heap unit="entries">1000000</heap>
+		<jsr107:mbeans enable-statistics="true" />
+	</cache>
 </config>

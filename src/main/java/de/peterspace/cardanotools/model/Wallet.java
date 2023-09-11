@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(uniqueConstraints = @UniqueConstraint(name = "wallet_drop_stake_unique", columnNames = { "drop_id", "stake_address" }))
+@Table(uniqueConstraints = @UniqueConstraint(name = "wallet_drop_stake_unique", columnNames = { "drop_id", "stakeaddress" }))
 public class Wallet {
 
 	@Id

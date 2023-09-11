@@ -275,4 +275,46 @@
 		<addUniqueConstraint columnNames="mint_order_submission_id" constraintName="UC_TRANSACTIONMINT_ORDER_SUBMISSION_ID_COL" tableName="transaction" />
 	</changeSet>
 
+	<changeSet author="wutze (generated)" id="1694436562258-3">
+		<delete tableName="wallet"></delete>
+		<dropPrimaryKey tableName="wallet" />
+		<dropColumn columnName="stake_address_id" tableName="wallet" />
+
+		<createSequence incrementBy="50" sequenceName="wallet_seq" startValue="1" />
+		<addColumn tableName="wallet">
+			<column name="drop_id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+			<column autoIncrement="true" name="id" type="bigint">
+				<constraints nullable="false" />
+			</column>
+			<column name="stake_address" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+		<addUniqueConstraint columnNames="drop_id, stake_address" constraintName="wallet_drop_stake_unique" tableName="wallet" />
+		<createIndex indexName="IX_walletPK" tableName="wallet" unique="true">
+			<column name="id" />
+		</createIndex>
+		<addForeignKeyConstraint baseColumnNames="drop_id" baseTableName="wallet" constraintName="FKe40otl0w0eprfjy5rw79d144m" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="drop" validate="true" />
+		<addPrimaryKey columnNames="id" constraintName="walletPK" tableName="wallet" />
+
+		<dropForeignKeyConstraint baseTableName="account_stake_positions" constraintName="fk393nrk2t6qhsbif4p3k0u9yhc" />
+		<dropForeignKeyConstraint baseTableName="token_offer" constraintName="fk3iowyx1gd5ja74af835s1o8xa" />
+		<dropForeignKeyConstraint baseTableName="token_offer" constraintName="fkdxjinxyagscjjavxcmay9xl03" />
+		<dropForeignKeyConstraint baseTableName="token_offer" constraintName="fkfpv96e4o1dcwi1voulp3ro8a5" />
+		<dropForeignKeyConstraint baseTableName="account_funding_addresses" constraintName="fkmxq9nf0ipme16lijyroc4re58" />
+		<dropUniqueConstraint constraintName="UKcj0hvlhbjytxyvfx2shi2i7nm" tableName="token_offer" />
+		<dropTable tableName="account_funding_addresses" />
+		<dropTable tableName="account_stake_positions" />
+		<dropTable tableName="token_offer" />
+		<dropColumn columnName="balance" tableName="address" />
+		<dropColumn columnName="last_update" tableName="account" />
+		<dropColumn columnName="stake" tableName="account" />
+		<dropColumn columnName="tip" tableName="mint_order_submission" />
+		<dropColumn columnName="tokens_data" tableName="address" />
+		<dropSequence sequenceName="token_offer_seq" />
+	</changeSet>
+
+
 </databaseChangeLog>

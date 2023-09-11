@@ -1,9 +1,11 @@
 package de.peterspace.cardanotools.dbsync;
 
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 
@@ -47,38 +49,45 @@ public class CardanoDbSyncClient {
 	}
 
 	@TrackExecutionTime
+	@Cacheable("getUtxos")
 	public List<Utxo> getUtxos(String address) {
-		return restHandlerApi.getUtxos(address);
+		return Collections.unmodifiableList(restHandlerApi.getUtxos(address));
 	}
 
 	@TrackExecutionTime
+	@Cacheable("getReturnAddress")
 	public String getReturnAddress(String address) {
 		return restHandlerApi.getReturnAddress(address).getAddress();
 	}
 
 	@TrackExecutionTime
+	@Cacheable("getPoolList")
 	public List<PoolInfo> getPoolList() {
-		return restHandlerApi.getPoolList();
+		return Collections.unmodifiableList(restHandlerApi.getPoolList());
 	}
 
 	@TrackExecutionTime
+	@Cacheable("getEpochStake")
 	public List<EpochStake> getEpochStake(String poolHash, int epoch) {
-		return restHandlerApi.getEpochStake(poolHash, epoch);
+		return Collections.unmodifiableList(restHandlerApi.getEpochStake(poolHash, epoch));
 	}
 
 	@TrackExecutionTime
+	@Cacheable("getTokenList")
 	public List<TokenListItem> getTokenList(Long afterMintid, Long beforeMintid, String filter) {
-		return restHandlerApi.getTokenList(afterMintid, beforeMintid, filter);
+		return Collections.unmodifiableList(restHandlerApi.getTokenList(afterMintid, beforeMintid, filter));
 	}
 
 	@TrackExecutionTime
+	@Cacheable("getTokenDetails")
 	public TokenDetails getTokenDetails(String policyId, String assetName) {
 		return restHandlerApi.getTokenDetails(policyId, assetName);
 	}
 
 	@TrackExecutionTime
+	@Cacheable("getStatement")
 	public List<AccountStatementRow> getStatement(String address) {
-		return restHandlerApi.getStatement(address);
+		return Collections.unmodifiableList(restHandlerApi.getStatement(address));
 	}
 
 }

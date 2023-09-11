@@ -75,12 +75,12 @@ public class DropperService {
 	@Scheduled(cron = "0 * * * * *")
 	@Transactional
 	public void dropNfts() {
-		log.info("START Dropper cycle");
 
 		List<Drop> drops = dropRepository.findAll();
 
-		for (Drop drop : drops) {
+		log.info("START Dropper cycle for {} drops", drops.size());
 
+		drops.parallelStream().forEach(drop -> {
 			Address fundAddress = drop.getAddress();
 			Map<String, List<Utxo>> transactionInputGroups = findUtxosGroupedBySourceWallet(fundAddress.getAddress());
 
@@ -144,8 +144,7 @@ public class DropperService {
 					temporaryBlacklist.put(stakeAddress, true);
 				}
 			}
-
-		}
+		});
 
 		log.info("END  Dropper cycle");
 	}

@@ -5,7 +5,9 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import de.peterspace.cardanodbsyncapi.client.model.TokenDetails;
@@ -21,13 +23,13 @@ public class TokenRestInterface {
 	private final CardanoDbSyncClient cardanoDbSyncClient;
 
 	@GetMapping
-	public ResponseEntity<List<TokenListItem>> getTokens(Long afterMintid, Long beforeMintid, String filter) throws Exception {
+	public ResponseEntity<List<TokenListItem>> getTokens(@RequestParam(required = false) Long afterMintid, @RequestParam(required = false) Long beforeMintid, @RequestParam(required = false) String filter) throws Exception {
 		List<TokenListItem> tokenList = cardanoDbSyncClient.getTokenList(afterMintid, beforeMintid, filter);
 		return new ResponseEntity<List<TokenListItem>>(tokenList, HttpStatus.OK);
 	}
 
-	@GetMapping
-	public ResponseEntity<TokenDetails> getTokenDetails(String policyId, String assetName) throws Exception {
+	@GetMapping("/{policyId}/{assetName}")
+	public ResponseEntity<TokenDetails> getTokenDetails(@PathVariable String policyId, @PathVariable String assetName) throws Exception {
 		TokenDetails tokenDetails = cardanoDbSyncClient.getTokenDetails(policyId, assetName);
 		return new ResponseEntity<TokenDetails>(tokenDetails, HttpStatus.OK);
 	}

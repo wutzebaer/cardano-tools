@@ -96,7 +96,15 @@ public class CardanoCli {
 
 	}
 
+	private HashMap<String, Long> calculateMinUtxoCache = new HashMap<>();
+
 	public long calculateMinUtxo(String addressValue) throws Exception {
+		String normalizedAddressValue = normalizeAddressValue(addressValue + "+" + oneAda);
+		Long cachedValue = calculateMinUtxoCache.get(normalizedAddressValue);
+		if (cachedValue != null) {
+			return cachedValue;
+		}
+
 		ArrayList<String> cmd = new ArrayList<String>();
 
 		cmd.add("transaction");
@@ -110,12 +118,25 @@ public class CardanoCli {
 		}
 
 		cmd.add("--tx-out");
-		cmd.add(addressValue + "+" + oneAda);
+		cmd.add(normalizedAddressValue);
 
 		String feeString = cardanoCliDockerBridge.requestCardanoCliNomagic(Map.of("protocol.json", protocolJson), cmd.toArray(new String[0]))[0];
 		long fee = Long.valueOf(feeString.split(" ")[1]);
 
+		calculateMinUtxoCache.put(normalizedAddressValue, fee);
+
 		return fee;
+	}
+
+	private String normalizeAddressValue(String addressValue) {
+		String[] bits = addressValue.split("\\+");
+		bits[0] = dummyAddress;
+		for (int i = 1; i < bits.length; i++) {
+			String[] valueBits = bits[i].split(" ");
+			valueBits[0] = "1";
+			bits[i] = StringUtils.join(valueBits, " ");
+		}
+		return StringUtils.join(bits, "+");
 	}
 
 	public Account createAccount() throws Exception {
@@ -284,7 +305,7 @@ public class CardanoCli {
 	}
 
 	public Transaction buildTransaction(Address address, TransactionOutputs transactionOutputs, String metaData) throws Exception {
-		List<Utxo> transactionInputs = cardanoDbSyncClient.getUtxos(address.getAddress());
+		List<Utxo> transactionInputs = new ArrayList<>(cardanoDbSyncClient.getUtxos(address.getAddress()));
 
 		// fake if account is not funded
 		if (transactionInputs.size() == 0) {
