@@ -5,6 +5,7 @@ README.md
 api/openapi.yaml
 build.gradle
 build.sbt
+docs/AccountStatementRow.md
 docs/DemoRestHandlerApi.md
 docs/EpochStake.md
 docs/PoolInfo.md
@@ -35,6 +36,7 @@ src/main/java/de/peterspace/cardanodbsyncapi/client/auth/ApiKeyAuth.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/auth/Authentication.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/auth/HttpBasicAuth.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/auth/HttpBearerAuth.java
+src/main/java/de/peterspace/cardanodbsyncapi/client/model/AccountStatementRow.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/model/EpochStake.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/model/PoolInfo.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/model/ReturnAddress.java

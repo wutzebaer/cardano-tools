@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   StakeInfo.JSON_PROPERTY_TICKER_NAME,
   StakeInfo.JSON_PROPERTY_TOTAL_STAKE
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T11:53:23.737495700+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T14:43:30.463313100+02:00[Europe/Berlin]")
 public class StakeInfo {
   public static final String JSON_PROPERTY_STAKE = "stake";
   private Long stake;

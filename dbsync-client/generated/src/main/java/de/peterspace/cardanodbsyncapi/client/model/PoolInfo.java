@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   PoolInfo.JSON_PROPERTY_TICKER_NAME,
   PoolInfo.JSON_PROPERTY_POOL_HASH
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T11:53:23.737495700+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T14:43:30.463313100+02:00[Europe/Berlin]")
 public class PoolInfo {
   public static final String JSON_PROPERTY_TICKER_NAME = "tickerName";
   private String tickerName;

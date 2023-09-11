@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import de.peterspace.cardanodbsyncapi.client.ApiClient;
 import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+import de.peterspace.cardanodbsyncapi.client.model.AccountStatementRow;
 import de.peterspace.cardanodbsyncapi.client.model.EpochStake;
 import de.peterspace.cardanodbsyncapi.client.model.PoolInfo;
 import de.peterspace.cardanodbsyncapi.client.model.TokenDetails;
@@ -20,7 +21,6 @@ import de.peterspace.cardanotools.cardano.TokenRegistry;
 import de.peterspace.cardanotools.service.PriceService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
@@ -74,6 +74,11 @@ public class CardanoDbSyncClient {
 	@TrackExecutionTime
 	public TokenDetails getTokenDetails(String policyId, String assetName) {
 		return restHandlerApi.getTokenDetails(policyId, assetName);
+	}
+
+	@TrackExecutionTime
+	public List<AccountStatementRow> getStatement(String address) {
+		return restHandlerApi.getStatement(address);
 	}
 
 }

@@ -78,6 +78,31 @@ paths:
       tags:
       - rest-handler
       x-accepts: '*/*'
+  /cardanoDbSyncApi/{address}/statement:
+    get:
+      operationId: getStatement
+      parameters:
+      - example: stake1uxyt389wtpccs6t26f248d9qszgxmya2qc6a3k06jw2el9g42aktg
+        explode: false
+        in: path
+        name: address
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                items:
+                  $ref: '#/components/schemas/AccountStatementRow'
+                type: array
+          description: OK
+      summary: Get all transactions for an address or stakeAddress
+      tags:
+      - rest-handler
+      x-accepts: '*/*'
   /cardanoDbSyncApi/{address}/stakeAddress:
     get:
       operationId: getStakeAddress
@@ -312,6 +337,52 @@ components:
           type: integer
         sourceAddress:
           type: string
+      type: object
+    AccountStatementRow:
+      example:
+        operations:
+        - operations
+        - operations
+        in: 5
+        change: 2
+        withdrawn: 6
+        epoch: 0
+        sum: 7
+        txHash: txHash
+        rewards: 1
+        timestamp: 2000-01-23T04:56:07.000+00:00
+        out: 5
+      properties:
+        timestamp:
+          format: date-time
+          type: string
+        epoch:
+          format: int32
+          type: integer
+        txHash:
+          type: string
+        withdrawn:
+          format: int64
+          type: integer
+        rewards:
+          format: int64
+          type: integer
+        out:
+          format: int64
+          type: integer
+        in:
+          format: int64
+          type: integer
+        change:
+          format: int64
+          type: integer
+        sum:
+          format: int64
+          type: integer
+        operations:
+          items:
+            type: string
+          type: array
       type: object
     StakeAddress:
       example:

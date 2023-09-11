@@ -2,6 +2,7 @@ package de.peterspace.cardanodbsyncapi.client;
 
 import de.peterspace.cardanodbsyncapi.client.ApiClient;
 
+import de.peterspace.cardanodbsyncapi.client.model.AccountStatementRow;
 import de.peterspace.cardanodbsyncapi.client.model.EpochStake;
 import de.peterspace.cardanodbsyncapi.client.model.PoolInfo;
 import de.peterspace.cardanodbsyncapi.client.model.ReturnAddress;
@@ -32,7 +33,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T11:53:23.737495700+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T14:43:30.463313100+02:00[Europe/Berlin]")
 public class RestHandlerApi {
     private ApiClient apiClient;
 
@@ -294,6 +295,55 @@ public class RestHandlerApi {
 
         ParameterizedTypeReference<StakeInfo> localReturnType = new ParameterizedTypeReference<StakeInfo>() {};
         return apiClient.invokeAPI("/cardanoDbSyncApi/{stakeAddress}/stakeInfo", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
+    /**
+     * Get all transactions for an address or stakeAddress
+     * 
+     * <p><b>200</b> - OK
+     * @param address  (required)
+     * @return List&lt;AccountStatementRow&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public List<AccountStatementRow> getStatement(String address) throws RestClientException {
+        return getStatementWithHttpInfo(address).getBody();
+    }
+
+    /**
+     * Get all transactions for an address or stakeAddress
+     * 
+     * <p><b>200</b> - OK
+     * @param address  (required)
+     * @return ResponseEntity&lt;List&lt;AccountStatementRow&gt;&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public ResponseEntity<List<AccountStatementRow>> getStatementWithHttpInfo(String address) throws RestClientException {
+        Object localVarPostBody = null;
+        
+        // verify the required parameter 'address' is set
+        if (address == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'address' when calling getStatement");
+        }
+        
+        // create path and map variables
+        final Map<String, Object> uriVariables = new HashMap<String, Object>();
+        uriVariables.put("address", address);
+
+        final MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders localVarHeaderParams = new HttpHeaders();
+        final MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap<String, Object>();
+
+        final String[] localVarAccepts = { 
+            "*/*"
+         };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = {  };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<List<AccountStatementRow>> localReturnType = new ParameterizedTypeReference<List<AccountStatementRow>>() {};
+        return apiClient.invokeAPI("/cardanoDbSyncApi/{address}/statement", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
     }
     /**
      * getTokenDetails

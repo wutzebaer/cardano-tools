@@ -9,6 +9,7 @@ All URIs are relative to *http://localhost:8080*
 | [**getReturnAddress**](RestHandlerApi.md#getReturnAddress) | **GET** /cardanoDbSyncApi/{stakeAddress}/returnAddress | Find the first known address with the same stake address, which should not be mangled |
 | [**getStakeAddress**](RestHandlerApi.md#getStakeAddress) | **GET** /cardanoDbSyncApi/{address}/stakeAddress | Find stakeAddress of address |
 | [**getStakeInfo**](RestHandlerApi.md#getStakeInfo) | **GET** /cardanoDbSyncApi/{stakeAddress}/stakeInfo | Get infos where address is staked to |
+| [**getStatement**](RestHandlerApi.md#getStatement) | **GET** /cardanoDbSyncApi/{address}/statement | Get all transactions for an address or stakeAddress |
 | [**getTokenDetails**](RestHandlerApi.md#getTokenDetails) | **GET** /cardanoDbSyncApi/token/{policyId}/{assetName} | getTokenDetails |
 | [**getTokenList**](RestHandlerApi.md#getTokenList) | **GET** /cardanoDbSyncApi/token | getTokenList |
 | [**getUtxos**](RestHandlerApi.md#getUtxos) | **GET** /cardanoDbSyncApi/{address}/utxos | Find utxos of given address or stakeAddress including multi assets |
@@ -316,6 +317,70 @@ public class Example {
 ### Return type
 
 [**StakeInfo**](StakeInfo.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+
+
+## getStatement
+
+> List&lt;AccountStatementRow&gt; getStatement(address)
+
+Get all transactions for an address or stakeAddress
+
+### Example
+
+```java
+// Import classes:
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
+import de.peterspace.cardanodbsyncapi.client.ApiException;
+import de.peterspace.cardanodbsyncapi.client.Configuration;
+import de.peterspace.cardanodbsyncapi.client.models.*;
+import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost:8080");
+
+        RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
+        String address = "stake1uxyt389wtpccs6t26f248d9qszgxmya2qc6a3k06jw2el9g42aktg"; // String | 
+        try {
+            List<AccountStatementRow> result = apiInstance.getStatement(address);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling RestHandlerApi#getStatement");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **address** | **String**|  | |
+
+### Return type
+
+[**List&lt;AccountStatementRow&gt;**](AccountStatementRow.md)
 
 ### Authorization
 
