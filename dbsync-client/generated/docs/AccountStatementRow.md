@@ -7,16 +7,16 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**timestamp** | **OffsetDateTime** |  |  [optional] |
-|**epoch** | **Integer** |  |  [optional] |
-|**txHash** | **String** |  |  [optional] |
-|**withdrawn** | **Long** |  |  [optional] |
-|**rewards** | **Long** |  |  [optional] |
-|**out** | **Long** |  |  [optional] |
-|**in** | **Long** |  |  [optional] |
-|**change** | **Long** |  |  [optional] |
-|**sum** | **Long** |  |  [optional] |
-|**operations** | **List&lt;String&gt;** |  |  [optional] |
+|**timestamp** | **OffsetDateTime** |  |  |
+|**epoch** | **Integer** |  |  |
+|**txHash** | **String** |  |  |
+|**withdrawn** | **Long** |  |  |
+|**rewards** | **Long** |  |  |
+|**out** | **Long** |  |  |
+|**in** | **Long** |  |  |
+|**change** | **Long** |  |  |
+|**sum** | **Long** |  |  |
+|**operations** | **List&lt;String&gt;** |  |  |
 
 
 

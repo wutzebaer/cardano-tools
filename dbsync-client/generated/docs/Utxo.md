@@ -7,12 +7,12 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**txHash** | **String** |  |  [optional] |
-|**txIndex** | **Integer** |  |  [optional] |
+|**txHash** | **String** |  |  |
+|**txIndex** | **Integer** |  |  |
 |**maPolicyId** | **String** |  |  [optional] |
 |**maName** | **String** |  |  [optional] |
-|**value** | **Long** |  |  [optional] |
-|**sourceAddress** | **String** |  |  [optional] |
+|**value** | **Long** |  |  |
+|**sourceAddress** | **String** |  |  |
 
 
 

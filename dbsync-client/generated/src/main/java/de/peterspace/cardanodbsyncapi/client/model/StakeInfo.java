@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   StakeInfo.JSON_PROPERTY_TICKER_NAME,
   StakeInfo.JSON_PROPERTY_TOTAL_STAKE
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T14:43:30.463313100+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-17T21:04:32.197294800+02:00[Europe/Berlin]")
 public class StakeInfo {
   public static final String JSON_PROPERTY_STAKE = "stake";
   private Long stake;
@@ -59,9 +59,9 @@ public class StakeInfo {
    * Get stake
    * @return stake
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_STAKE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Long getStake() {
     return stake;
@@ -69,7 +69,7 @@ public class StakeInfo {
 
 
   @JsonProperty(JSON_PROPERTY_STAKE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setStake(Long stake) {
     this.stake = stake;
   }
@@ -85,9 +85,9 @@ public class StakeInfo {
    * Get poolHash
    * @return poolHash
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_POOL_HASH)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getPoolHash() {
     return poolHash;
@@ -95,7 +95,7 @@ public class StakeInfo {
 
 
   @JsonProperty(JSON_PROPERTY_POOL_HASH)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setPoolHash(String poolHash) {
     this.poolHash = poolHash;
   }
@@ -111,9 +111,9 @@ public class StakeInfo {
    * Get tickerName
    * @return tickerName
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_TICKER_NAME)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getTickerName() {
     return tickerName;
@@ -121,7 +121,7 @@ public class StakeInfo {
 
 
   @JsonProperty(JSON_PROPERTY_TICKER_NAME)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setTickerName(String tickerName) {
     this.tickerName = tickerName;
   }
@@ -137,9 +137,9 @@ public class StakeInfo {
    * Get totalStake
    * @return totalStake
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_TOTAL_STAKE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Long getTotalStake() {
     return totalStake;
@@ -147,7 +147,7 @@ public class StakeInfo {
 
 
   @JsonProperty(JSON_PROPERTY_TOTAL_STAKE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setTotalStake(Long totalStake) {
     this.totalStake = totalStake;
   }

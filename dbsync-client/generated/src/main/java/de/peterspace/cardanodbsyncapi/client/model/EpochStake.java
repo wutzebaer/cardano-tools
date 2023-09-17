@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   EpochStake.JSON_PROPERTY_STAKE_ADDRESS,
   EpochStake.JSON_PROPERTY_AMOUNT
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T14:43:30.463313100+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-17T21:04:32.197294800+02:00[Europe/Berlin]")
 public class EpochStake {
   public static final String JSON_PROPERTY_STAKE_ADDRESS = "stakeAddress";
   private String stakeAddress;
@@ -51,9 +51,9 @@ public class EpochStake {
    * Get stakeAddress
    * @return stakeAddress
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_STAKE_ADDRESS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getStakeAddress() {
     return stakeAddress;
@@ -61,7 +61,7 @@ public class EpochStake {
 
 
   @JsonProperty(JSON_PROPERTY_STAKE_ADDRESS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setStakeAddress(String stakeAddress) {
     this.stakeAddress = stakeAddress;
   }
@@ -77,9 +77,9 @@ public class EpochStake {
    * Get amount
    * @return amount
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_AMOUNT)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Long getAmount() {
     return amount;
@@ -87,7 +87,7 @@ public class EpochStake {
 
 
   @JsonProperty(JSON_PROPERTY_AMOUNT)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setAmount(Long amount) {
     this.amount = amount;
   }

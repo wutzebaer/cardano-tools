@@ -1,4 +1,4 @@
-package de.peterspace.cardanotools.rest;
+package de.peterspace.cardanotools.rest.dto;
 
 import java.util.List;
 

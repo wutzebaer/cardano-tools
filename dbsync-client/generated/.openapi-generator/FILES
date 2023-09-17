@@ -6,7 +6,6 @@ api/openapi.yaml
 build.gradle
 build.sbt
 docs/AccountStatementRow.md
-docs/DemoRestHandlerApi.md
 docs/EpochStake.md
 docs/PoolInfo.md
 docs/RestHandlerApi.md
@@ -26,7 +25,6 @@ pom.xml
 settings.gradle
 src/main/AndroidManifest.xml
 src/main/java/de/peterspace/cardanodbsyncapi/client/ApiClient.java
-src/main/java/de/peterspace/cardanodbsyncapi/client/DemoRestHandlerApi.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/JavaTimeFormatter.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/RFC3339DateFormat.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/RestHandlerApi.java
@@ -45,3 +43,4 @@ src/main/java/de/peterspace/cardanodbsyncapi/client/model/StakeInfo.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/model/TokenDetails.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/model/TokenListItem.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/model/Utxo.java
+src/test/java/de/peterspace/cardanodbsyncapi/client/model/AccountStatementRowTest.java

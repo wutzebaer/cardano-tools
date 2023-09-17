@@ -7,8 +7,8 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**tickerName** | **String** |  |  [optional] |
-|**poolHash** | **String** |  |  [optional] |
+|**tickerName** | **String** |  |  |
+|**poolHash** | **String** |  |  |
 
 
 

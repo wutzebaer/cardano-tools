@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
@@ -15,7 +14,6 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import de.peterspace.cardanodbsyncapi.client.model.EpochStake;
-import de.peterspace.cardanodbsyncapi.client.model.PoolInfo;
 import de.peterspace.cardanodbsyncapi.client.model.Utxo;
 import de.peterspace.cardanotools.TrackExecutionTime;
 import de.peterspace.cardanotools.cardano.CardanoCli;
@@ -35,6 +32,7 @@ import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.Transaction;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintTransactionRepository;
+import de.peterspace.cardanotools.rest.dto.EpochStakesRequest;
 import de.peterspace.cardanotools.rest.dto.StakeRewardPosition;
 import lombok.RequiredArgsConstructor;
 
@@ -49,15 +47,8 @@ public class StakeRewardRestInterface {
 	private String pledgeAddress;
 
 	private final CardanoCli cardanoCli;
-	private final IpfsClient ipfsClient;
-	private final MintTransactionRepository mintTransactionRepository;
 	private final AccountRepository accountRepository;
 	private final CardanoDbSyncClient cardanoDbSyncClient;
-
-	@GetMapping("pools")
-	public List<PoolInfo> getPoolList() {
-		return cardanoDbSyncClient.getPoolList();
-	}
 
 	@TrackExecutionTime
 	@PostMapping("{key}/{poolHash}/{epoch}")

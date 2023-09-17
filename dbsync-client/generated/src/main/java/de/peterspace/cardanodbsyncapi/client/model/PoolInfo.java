@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   PoolInfo.JSON_PROPERTY_TICKER_NAME,
   PoolInfo.JSON_PROPERTY_POOL_HASH
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T14:43:30.463313100+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-17T21:04:32.197294800+02:00[Europe/Berlin]")
 public class PoolInfo {
   public static final String JSON_PROPERTY_TICKER_NAME = "tickerName";
   private String tickerName;
@@ -51,9 +51,9 @@ public class PoolInfo {
    * Get tickerName
    * @return tickerName
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_TICKER_NAME)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getTickerName() {
     return tickerName;
@@ -61,7 +61,7 @@ public class PoolInfo {
 
 
   @JsonProperty(JSON_PROPERTY_TICKER_NAME)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setTickerName(String tickerName) {
     this.tickerName = tickerName;
   }
@@ -77,9 +77,9 @@ public class PoolInfo {
    * Get poolHash
    * @return poolHash
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_POOL_HASH)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getPoolHash() {
     return poolHash;
@@ -87,7 +87,7 @@ public class PoolInfo {
 
 
   @JsonProperty(JSON_PROPERTY_POOL_HASH)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setPoolHash(String poolHash) {
     this.poolHash = poolHash;
   }

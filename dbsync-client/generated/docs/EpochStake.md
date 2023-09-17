@@ -7,8 +7,8 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**stakeAddress** | **String** |  |  [optional] |
-|**amount** | **Long** |  |  [optional] |
+|**stakeAddress** | **String** |  |  |
+|**amount** | **Long** |  |  |
 
 
 

@@ -31,9 +31,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   TokenListItem.JSON_PROPERTY_SLOT_NO,
   TokenListItem.JSON_PROPERTY_MA_POLICY_ID,
   TokenListItem.JSON_PROPERTY_MA_NAME,
-  TokenListItem.JSON_PROPERTY_QUANTITY
+  TokenListItem.JSON_PROPERTY_MA_FINGERPRINT,
+  TokenListItem.JSON_PROPERTY_QUANTITY,
+  TokenListItem.JSON_PROPERTY_NAME,
+  TokenListItem.JSON_PROPERTY_IMAGE
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T14:43:30.463313100+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-17T21:04:32.197294800+02:00[Europe/Berlin]")
 public class TokenListItem {
   public static final String JSON_PROPERTY_MA_MINT_ID = "maMintId";
   private Long maMintId;
@@ -47,8 +50,17 @@ public class TokenListItem {
   public static final String JSON_PROPERTY_MA_NAME = "maName";
   private String maName;
 
+  public static final String JSON_PROPERTY_MA_FINGERPRINT = "maFingerprint";
+  private String maFingerprint;
+
   public static final String JSON_PROPERTY_QUANTITY = "quantity";
   private Long quantity;
+
+  public static final String JSON_PROPERTY_NAME = "name";
+  private String name;
+
+  public static final String JSON_PROPERTY_IMAGE = "image";
+  private String image;
 
   public TokenListItem() {
   }
@@ -115,9 +127,9 @@ public class TokenListItem {
    * Get maPolicyId
    * @return maPolicyId
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_MA_POLICY_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getMaPolicyId() {
     return maPolicyId;
@@ -125,7 +137,7 @@ public class TokenListItem {
 
 
   @JsonProperty(JSON_PROPERTY_MA_POLICY_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setMaPolicyId(String maPolicyId) {
     this.maPolicyId = maPolicyId;
   }
@@ -141,9 +153,9 @@ public class TokenListItem {
    * Get maName
    * @return maName
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_MA_NAME)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getMaName() {
     return maName;
@@ -151,9 +163,35 @@ public class TokenListItem {
 
 
   @JsonProperty(JSON_PROPERTY_MA_NAME)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setMaName(String maName) {
     this.maName = maName;
+  }
+
+
+  public TokenListItem maFingerprint(String maFingerprint) {
+    
+    this.maFingerprint = maFingerprint;
+    return this;
+  }
+
+   /**
+   * Get maFingerprint
+   * @return maFingerprint
+  **/
+  @jakarta.annotation.Nonnull
+  @JsonProperty(JSON_PROPERTY_MA_FINGERPRINT)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+
+  public String getMaFingerprint() {
+    return maFingerprint;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_MA_FINGERPRINT)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setMaFingerprint(String maFingerprint) {
+    this.maFingerprint = maFingerprint;
   }
 
 
@@ -167,9 +205,9 @@ public class TokenListItem {
    * Get quantity
    * @return quantity
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_QUANTITY)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Long getQuantity() {
     return quantity;
@@ -177,9 +215,61 @@ public class TokenListItem {
 
 
   @JsonProperty(JSON_PROPERTY_QUANTITY)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setQuantity(Long quantity) {
     this.quantity = quantity;
+  }
+
+
+  public TokenListItem name(String name) {
+    
+    this.name = name;
+    return this;
+  }
+
+   /**
+   * Get name
+   * @return name
+  **/
+  @jakarta.annotation.Nonnull
+  @JsonProperty(JSON_PROPERTY_NAME)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+
+  public String getName() {
+    return name;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_NAME)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setName(String name) {
+    this.name = name;
+  }
+
+
+  public TokenListItem image(String image) {
+    
+    this.image = image;
+    return this;
+  }
+
+   /**
+   * Get image
+   * @return image
+  **/
+  @jakarta.annotation.Nonnull
+  @JsonProperty(JSON_PROPERTY_IMAGE)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+
+  public String getImage() {
+    return image;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_IMAGE)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setImage(String image) {
+    this.image = image;
   }
 
   @Override
@@ -195,12 +285,15 @@ public class TokenListItem {
         Objects.equals(this.slotNo, tokenListItem.slotNo) &&
         Objects.equals(this.maPolicyId, tokenListItem.maPolicyId) &&
         Objects.equals(this.maName, tokenListItem.maName) &&
-        Objects.equals(this.quantity, tokenListItem.quantity);
+        Objects.equals(this.maFingerprint, tokenListItem.maFingerprint) &&
+        Objects.equals(this.quantity, tokenListItem.quantity) &&
+        Objects.equals(this.name, tokenListItem.name) &&
+        Objects.equals(this.image, tokenListItem.image);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(maMintId, slotNo, maPolicyId, maName, quantity);
+    return Objects.hash(maMintId, slotNo, maPolicyId, maName, maFingerprint, quantity, name, image);
   }
 
   @Override
@@ -211,7 +304,10 @@ public class TokenListItem {
     sb.append("    slotNo: ").append(toIndentedString(slotNo)).append("\n");
     sb.append("    maPolicyId: ").append(toIndentedString(maPolicyId)).append("\n");
     sb.append("    maName: ").append(toIndentedString(maName)).append("\n");
+    sb.append("    maFingerprint: ").append(toIndentedString(maFingerprint)).append("\n");
     sb.append("    quantity: ").append(toIndentedString(quantity)).append("\n");
+    sb.append("    name: ").append(toIndentedString(name)).append("\n");
+    sb.append("    image: ").append(toIndentedString(image)).append("\n");
     sb.append("}");
     return sb.toString();
   }

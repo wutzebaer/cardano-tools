@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   Utxo.JSON_PROPERTY_VALUE,
   Utxo.JSON_PROPERTY_SOURCE_ADDRESS
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T14:43:30.463313100+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-17T21:04:32.197294800+02:00[Europe/Berlin]")
 public class Utxo {
   public static final String JSON_PROPERTY_TX_HASH = "txHash";
   private String txHash;
@@ -67,9 +67,9 @@ public class Utxo {
    * Get txHash
    * @return txHash
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_TX_HASH)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getTxHash() {
     return txHash;
@@ -77,7 +77,7 @@ public class Utxo {
 
 
   @JsonProperty(JSON_PROPERTY_TX_HASH)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setTxHash(String txHash) {
     this.txHash = txHash;
   }
@@ -93,9 +93,9 @@ public class Utxo {
    * Get txIndex
    * @return txIndex
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_TX_INDEX)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Integer getTxIndex() {
     return txIndex;
@@ -103,7 +103,7 @@ public class Utxo {
 
 
   @JsonProperty(JSON_PROPERTY_TX_INDEX)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setTxIndex(Integer txIndex) {
     this.txIndex = txIndex;
   }
@@ -171,9 +171,9 @@ public class Utxo {
    * Get value
    * @return value
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_VALUE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Long getValue() {
     return value;
@@ -181,7 +181,7 @@ public class Utxo {
 
 
   @JsonProperty(JSON_PROPERTY_VALUE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setValue(Long value) {
     this.value = value;
   }
@@ -197,9 +197,9 @@ public class Utxo {
    * Get sourceAddress
    * @return sourceAddress
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_SOURCE_ADDRESS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getSourceAddress() {
     return sourceAddress;
@@ -207,7 +207,7 @@ public class Utxo {
 
 
   @JsonProperty(JSON_PROPERTY_SOURCE_ADDRESS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setSourceAddress(String sourceAddress) {
     this.sourceAddress = sourceAddress;
   }

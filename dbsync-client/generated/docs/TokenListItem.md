@@ -9,9 +9,12 @@
 |------------ | ------------- | ------------- | -------------|
 |**maMintId** | **Long** |  |  [optional] |
 |**slotNo** | **Long** |  |  [optional] |
-|**maPolicyId** | **String** |  |  [optional] |
-|**maName** | **String** |  |  [optional] |
-|**quantity** | **Long** |  |  [optional] |
+|**maPolicyId** | **String** |  |  |
+|**maName** | **String** |  |  |
+|**maFingerprint** | **String** |  |  |
+|**quantity** | **Long** |  |  |
+|**name** | **String** |  |  |
+|**image** | **String** |  |  |
 
 
 

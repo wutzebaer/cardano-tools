@@ -42,7 +42,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   AccountStatementRow.JSON_PROPERTY_SUM,
   AccountStatementRow.JSON_PROPERTY_OPERATIONS
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T14:43:30.463313100+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-17T21:04:32.197294800+02:00[Europe/Berlin]")
 public class AccountStatementRow {
   public static final String JSON_PROPERTY_TIMESTAMP = "timestamp";
   private OffsetDateTime timestamp;
@@ -72,7 +72,7 @@ public class AccountStatementRow {
   private Long sum;
 
   public static final String JSON_PROPERTY_OPERATIONS = "operations";
-  private List<String> operations;
+  private List<String> operations = new ArrayList<>();
 
   public AccountStatementRow() {
   }
@@ -87,9 +87,9 @@ public class AccountStatementRow {
    * Get timestamp
    * @return timestamp
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_TIMESTAMP)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public OffsetDateTime getTimestamp() {
     return timestamp;
@@ -97,7 +97,7 @@ public class AccountStatementRow {
 
 
   @JsonProperty(JSON_PROPERTY_TIMESTAMP)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setTimestamp(OffsetDateTime timestamp) {
     this.timestamp = timestamp;
   }
@@ -113,9 +113,9 @@ public class AccountStatementRow {
    * Get epoch
    * @return epoch
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_EPOCH)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Integer getEpoch() {
     return epoch;
@@ -123,7 +123,7 @@ public class AccountStatementRow {
 
 
   @JsonProperty(JSON_PROPERTY_EPOCH)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setEpoch(Integer epoch) {
     this.epoch = epoch;
   }
@@ -139,9 +139,9 @@ public class AccountStatementRow {
    * Get txHash
    * @return txHash
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_TX_HASH)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getTxHash() {
     return txHash;
@@ -149,7 +149,7 @@ public class AccountStatementRow {
 
 
   @JsonProperty(JSON_PROPERTY_TX_HASH)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setTxHash(String txHash) {
     this.txHash = txHash;
   }
@@ -165,9 +165,9 @@ public class AccountStatementRow {
    * Get withdrawn
    * @return withdrawn
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_WITHDRAWN)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Long getWithdrawn() {
     return withdrawn;
@@ -175,7 +175,7 @@ public class AccountStatementRow {
 
 
   @JsonProperty(JSON_PROPERTY_WITHDRAWN)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setWithdrawn(Long withdrawn) {
     this.withdrawn = withdrawn;
   }
@@ -191,9 +191,9 @@ public class AccountStatementRow {
    * Get rewards
    * @return rewards
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_REWARDS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Long getRewards() {
     return rewards;
@@ -201,7 +201,7 @@ public class AccountStatementRow {
 
 
   @JsonProperty(JSON_PROPERTY_REWARDS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setRewards(Long rewards) {
     this.rewards = rewards;
   }
@@ -217,9 +217,9 @@ public class AccountStatementRow {
    * Get out
    * @return out
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_OUT)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Long getOut() {
     return out;
@@ -227,7 +227,7 @@ public class AccountStatementRow {
 
 
   @JsonProperty(JSON_PROPERTY_OUT)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setOut(Long out) {
     this.out = out;
   }
@@ -243,9 +243,9 @@ public class AccountStatementRow {
    * Get in
    * @return in
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_IN)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Long getIn() {
     return in;
@@ -253,7 +253,7 @@ public class AccountStatementRow {
 
 
   @JsonProperty(JSON_PROPERTY_IN)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setIn(Long in) {
     this.in = in;
   }
@@ -269,9 +269,9 @@ public class AccountStatementRow {
    * Get change
    * @return change
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_CHANGE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Long getChange() {
     return change;
@@ -279,7 +279,7 @@ public class AccountStatementRow {
 
 
   @JsonProperty(JSON_PROPERTY_CHANGE)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setChange(Long change) {
     this.change = change;
   }
@@ -295,9 +295,9 @@ public class AccountStatementRow {
    * Get sum
    * @return sum
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_SUM)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Long getSum() {
     return sum;
@@ -305,7 +305,7 @@ public class AccountStatementRow {
 
 
   @JsonProperty(JSON_PROPERTY_SUM)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setSum(Long sum) {
     this.sum = sum;
   }
@@ -329,9 +329,9 @@ public class AccountStatementRow {
    * Get operations
    * @return operations
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_OPERATIONS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public List<String> getOperations() {
     return operations;
@@ -339,7 +339,7 @@ public class AccountStatementRow {
 
 
   @JsonProperty(JSON_PROPERTY_OPERATIONS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setOperations(List<String> operations) {
     this.operations = operations;
   }

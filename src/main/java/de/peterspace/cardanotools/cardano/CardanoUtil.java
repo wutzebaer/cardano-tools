@@ -3,8 +3,6 @@ package de.peterspace.cardanotools.cardano;
 
 import java.util.Date;
 
-import org.apache.commons.codec.binary.Base16;
-
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -20,15 +18,7 @@ public class CardanoUtil {
 	}
 
 	public static String createSubject(String policyId, String assetName) {
-		return policyId + encodeBase16(assetName).toLowerCase();
-	}
-
-	public static void main(String[] args) {
-		System.out.println(currentSlot() + "");
-	}
-
-	private static String encodeBase16(String content) {
-		return new String(new Base16().encode(content.getBytes()));
+		return policyId + assetName;
 	}
 
 }

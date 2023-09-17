@@ -33,7 +33,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T14:43:30.463313100+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-17T21:04:32.197294800+02:00[Europe/Berlin]")
 public class RestHandlerApi {
     private ApiClient apiClient;
 
@@ -53,6 +53,55 @@ public class RestHandlerApi {
         this.apiClient = apiClient;
     }
 
+    /**
+     * getAddressTokenList
+     * 
+     * <p><b>200</b> - OK
+     * @param address  (required)
+     * @return List&lt;TokenListItem&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public List<TokenListItem> getAddressTokenList(String address) throws RestClientException {
+        return getAddressTokenListWithHttpInfo(address).getBody();
+    }
+
+    /**
+     * getAddressTokenList
+     * 
+     * <p><b>200</b> - OK
+     * @param address  (required)
+     * @return ResponseEntity&lt;List&lt;TokenListItem&gt;&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public ResponseEntity<List<TokenListItem>> getAddressTokenListWithHttpInfo(String address) throws RestClientException {
+        Object localVarPostBody = null;
+        
+        // verify the required parameter 'address' is set
+        if (address == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'address' when calling getAddressTokenList");
+        }
+        
+        // create path and map variables
+        final Map<String, Object> uriVariables = new HashMap<String, Object>();
+        uriVariables.put("address", address);
+
+        final MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders localVarHeaderParams = new HttpHeaders();
+        final MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap<String, Object>();
+
+        final String[] localVarAccepts = { 
+            "*/*"
+         };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = {  };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<List<TokenListItem>> localReturnType = new ParameterizedTypeReference<List<TokenListItem>>() {};
+        return apiClient.invokeAPI("/cardanoDbSyncApi/{address}/token", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
     /**
      * getEpochStake
      * 

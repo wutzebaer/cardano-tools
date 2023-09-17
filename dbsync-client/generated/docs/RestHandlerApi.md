@@ -4,6 +4,7 @@ All URIs are relative to *http://localhost:8080*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
+| [**getAddressTokenList**](RestHandlerApi.md#getAddressTokenList) | **GET** /cardanoDbSyncApi/{address}/token | getAddressTokenList |
 | [**getEpochStake**](RestHandlerApi.md#getEpochStake) | **GET** /cardanoDbSyncApi/epochStake/{poolHash}/{epoch} | getEpochStake |
 | [**getPoolList**](RestHandlerApi.md#getPoolList) | **GET** /cardanoDbSyncApi/poolList | getPoolList |
 | [**getReturnAddress**](RestHandlerApi.md#getReturnAddress) | **GET** /cardanoDbSyncApi/{stakeAddress}/returnAddress | Find the first known address with the same stake address, which should not be mangled |
@@ -14,6 +15,70 @@ All URIs are relative to *http://localhost:8080*
 | [**getTokenList**](RestHandlerApi.md#getTokenList) | **GET** /cardanoDbSyncApi/token | getTokenList |
 | [**getUtxos**](RestHandlerApi.md#getUtxos) | **GET** /cardanoDbSyncApi/{address}/utxos | Find utxos of given address or stakeAddress including multi assets |
 
+
+
+## getAddressTokenList
+
+> List&lt;TokenListItem&gt; getAddressTokenList(address)
+
+getAddressTokenList
+
+### Example
+
+```java
+// Import classes:
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
+import de.peterspace.cardanodbsyncapi.client.ApiException;
+import de.peterspace.cardanodbsyncapi.client.Configuration;
+import de.peterspace.cardanodbsyncapi.client.models.*;
+import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost:8080");
+
+        RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
+        String address = "stake1u8wmu7jc0e4a6fn5haflczfjy6aagwhsxh6w5p7hsyt8jeshhy0rn"; // String | 
+        try {
+            List<TokenListItem> result = apiInstance.getAddressTokenList(address);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling RestHandlerApi#getAddressTokenList");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **address** | **String**|  | |
+
+### Return type
+
+[**List&lt;TokenListItem&gt;**](TokenListItem.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 
 ## getEpochStake
@@ -164,7 +229,7 @@ public class Example {
         defaultClient.setBasePath("http://localhost:8080");
 
         RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
-        String stakeAddress = "stake1uxyt389wtpccs6t26f248d9qszgxmya2qc6a3k06jw2el9g42aktg"; // String | 
+        String stakeAddress = "stake1u8wmu7jc0e4a6fn5haflczfjy6aagwhsxh6w5p7hsyt8jeshhy0rn"; // String | 
         try {
             ReturnAddress result = apiInstance.getReturnAddress(stakeAddress);
             System.out.println(result);
@@ -292,7 +357,7 @@ public class Example {
         defaultClient.setBasePath("http://localhost:8080");
 
         RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
-        String stakeAddress = "stake1uxyt389wtpccs6t26f248d9qszgxmya2qc6a3k06jw2el9g42aktg"; // String | 
+        String stakeAddress = "stake1u8wmu7jc0e4a6fn5haflczfjy6aagwhsxh6w5p7hsyt8jeshhy0rn"; // String | 
         try {
             StakeInfo result = apiInstance.getStakeInfo(stakeAddress);
             System.out.println(result);
@@ -356,7 +421,7 @@ public class Example {
         defaultClient.setBasePath("http://localhost:8080");
 
         RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
-        String address = "stake1uxyt389wtpccs6t26f248d9qszgxmya2qc6a3k06jw2el9g42aktg"; // String | 
+        String address = "stake1u8wmu7jc0e4a6fn5haflczfjy6aagwhsxh6w5p7hsyt8jeshhy0rn"; // String | 
         try {
             List<AccountStatementRow> result = apiInstance.getStatement(address);
             System.out.println(result);
@@ -554,7 +619,7 @@ public class Example {
         defaultClient.setBasePath("http://localhost:8080");
 
         RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
-        String address = "stake1uxyt389wtpccs6t26f248d9qszgxmya2qc6a3k06jw2el9g42aktg"; // String | 
+        String address = "stake1u8wmu7jc0e4a6fn5haflczfjy6aagwhsxh6w5p7hsyt8jeshhy0rn"; // String | 
         try {
             List<Utxo> result = apiInstance.getUtxos(address);
             System.out.println(result);

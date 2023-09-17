@@ -7,14 +7,14 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**slotNo** | **Long** |  |  [optional] |
-|**maPolicyId** | **String** |  |  [optional] |
-|**maName** | **String** |  |  [optional] |
-|**fingerprint** | **String** |  |  [optional] |
+|**slotNo** | **Long** |  |  |
+|**maPolicyId** | **String** |  |  |
+|**maName** | **String** |  |  |
+|**fingerprint** | **String** |  |  |
 |**metadata** | **String** |  |  [optional] |
-|**maPolicyScript** | **String** |  |  [optional] |
-|**txHash** | **String** |  |  [optional] |
-|**totalSupply** | **Long** |  |  [optional] |
+|**maPolicyScript** | **String** |  |  |
+|**txHash** | **String** |  |  |
+|**totalSupply** | **Long** |  |  |
 
 
 

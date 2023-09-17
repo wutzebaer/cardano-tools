@@ -36,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   TokenDetails.JSON_PROPERTY_TX_HASH,
   TokenDetails.JSON_PROPERTY_TOTAL_SUPPLY
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-11T14:43:30.463313100+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-17T21:04:32.197294800+02:00[Europe/Berlin]")
 public class TokenDetails {
   public static final String JSON_PROPERTY_SLOT_NO = "slotNo";
   private Long slotNo;
@@ -75,9 +75,9 @@ public class TokenDetails {
    * Get slotNo
    * @return slotNo
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_SLOT_NO)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Long getSlotNo() {
     return slotNo;
@@ -85,7 +85,7 @@ public class TokenDetails {
 
 
   @JsonProperty(JSON_PROPERTY_SLOT_NO)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setSlotNo(Long slotNo) {
     this.slotNo = slotNo;
   }
@@ -101,9 +101,9 @@ public class TokenDetails {
    * Get maPolicyId
    * @return maPolicyId
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_MA_POLICY_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getMaPolicyId() {
     return maPolicyId;
@@ -111,7 +111,7 @@ public class TokenDetails {
 
 
   @JsonProperty(JSON_PROPERTY_MA_POLICY_ID)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setMaPolicyId(String maPolicyId) {
     this.maPolicyId = maPolicyId;
   }
@@ -127,9 +127,9 @@ public class TokenDetails {
    * Get maName
    * @return maName
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_MA_NAME)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getMaName() {
     return maName;
@@ -137,7 +137,7 @@ public class TokenDetails {
 
 
   @JsonProperty(JSON_PROPERTY_MA_NAME)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setMaName(String maName) {
     this.maName = maName;
   }
@@ -153,9 +153,9 @@ public class TokenDetails {
    * Get fingerprint
    * @return fingerprint
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_FINGERPRINT)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getFingerprint() {
     return fingerprint;
@@ -163,7 +163,7 @@ public class TokenDetails {
 
 
   @JsonProperty(JSON_PROPERTY_FINGERPRINT)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setFingerprint(String fingerprint) {
     this.fingerprint = fingerprint;
   }
@@ -205,9 +205,9 @@ public class TokenDetails {
    * Get maPolicyScript
    * @return maPolicyScript
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_MA_POLICY_SCRIPT)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getMaPolicyScript() {
     return maPolicyScript;
@@ -215,7 +215,7 @@ public class TokenDetails {
 
 
   @JsonProperty(JSON_PROPERTY_MA_POLICY_SCRIPT)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setMaPolicyScript(String maPolicyScript) {
     this.maPolicyScript = maPolicyScript;
   }
@@ -231,9 +231,9 @@ public class TokenDetails {
    * Get txHash
    * @return txHash
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_TX_HASH)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public String getTxHash() {
     return txHash;
@@ -241,7 +241,7 @@ public class TokenDetails {
 
 
   @JsonProperty(JSON_PROPERTY_TX_HASH)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setTxHash(String txHash) {
     this.txHash = txHash;
   }
@@ -257,9 +257,9 @@ public class TokenDetails {
    * Get totalSupply
    * @return totalSupply
   **/
-  @jakarta.annotation.Nullable
+  @jakarta.annotation.Nonnull
   @JsonProperty(JSON_PROPERTY_TOTAL_SUPPLY)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
   public Long getTotalSupply() {
     return totalSupply;
@@ -267,7 +267,7 @@ public class TokenDetails {
 
 
   @JsonProperty(JSON_PROPERTY_TOTAL_SUPPLY)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setTotalSupply(Long totalSupply) {
     this.totalSupply = totalSupply;
   }

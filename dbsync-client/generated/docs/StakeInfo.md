@@ -7,10 +7,10 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**stake** | **Long** |  |  [optional] |
-|**poolHash** | **String** |  |  [optional] |
-|**tickerName** | **String** |  |  [optional] |
-|**totalStake** | **Long** |  |  [optional] |
+|**stake** | **Long** |  |  |
+|**poolHash** | **String** |  |  |
+|**tickerName** | **String** |  |  |
+|**totalStake** | **Long** |  |  |
 
 
 
