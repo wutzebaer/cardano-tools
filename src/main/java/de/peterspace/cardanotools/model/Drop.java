@@ -3,22 +3,21 @@ package de.peterspace.cardanotools.model;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.ManyToOne;
-import javax.persistence.OrderColumn;
-import javax.persistence.Table;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonView;
 
-import de.peterspace.cardanotools.model.Views.Persisted;
+import de.peterspace.cardanotools.rest.dto.Views.Persisted;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Entity
@@ -79,7 +78,7 @@ public class Drop {
 	@NotNull
 	@NotEmpty
 	private String prettyUrl;
-	
+
 	@NotNull
 	@JsonView(Persisted.class)
 	private long fee = 1000000;

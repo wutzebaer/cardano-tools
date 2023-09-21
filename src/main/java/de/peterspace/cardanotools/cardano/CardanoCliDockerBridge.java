@@ -2,15 +2,16 @@ package de.peterspace.cardanotools.cardano;
 
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-
 import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import de.peterspace.cardanotools.TrackExecutionTime;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -33,6 +34,7 @@ public class CardanoCliDockerBridge {
 	private String[] networkMagicArgs;
 
 	@lombok.Value
+	@ToString(exclude = "inputFiles")
 	public static class CardanoCliDockerBridgeRequest {
 		String ipcVolumeName;
 		String nodeVersion;
@@ -54,14 +56,17 @@ public class CardanoCliDockerBridge {
 		}
 	}
 
+	@TrackExecutionTime
 	public String[] requestCardanoCliNomagic(Map<String, String> inputFiles, String[] cmd, String... outputFiles) throws Exception {
 		return request("cardano-cli", new String[] {}, inputFiles, cmd, outputFiles);
 	}
 
+	@TrackExecutionTime
 	public String[] requestCardanoCli(Map<String, String> inputFiles, String[] cmd, String... outputFiles) throws Exception {
 		return request("cardano-cli", networkMagicArgs, inputFiles, cmd, outputFiles);
 	}
 
+	@TrackExecutionTime
 	public String[] requestMetadataCreator(Map<String, String> inputFiles, String[] cmd, String... outputFiles) throws Exception {
 		return request("cardano-tools-token-metadata-creator", new String[0], inputFiles, cmd, outputFiles);
 	}
@@ -72,7 +77,7 @@ public class CardanoCliDockerBridge {
 		log.info("Running docker " + cardanoCliDockerBridgeRequest);
 		ResponseEntity<String[]> response = restTemplate.postForEntity(bridgeUrl + "/" + path, cardanoCliDockerBridgeRequest, String[].class);
 		log.info("Result " + new JSONArray(response.getBody()).toString(3));
-		if (response.getStatusCodeValue() == 200) {
+		if (response.getStatusCode().is2xxSuccessful()) {
 			return response.getBody();
 		} else {
 			throw new Exception(response.getBody()[0]);

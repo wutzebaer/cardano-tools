@@ -23,6 +23,12 @@ public class CardanoDbSyncTest {
 	CardanoDbSyncClient cardanoDbSyncClient;
 
 	@Test
+	void getBalance2() throws Exception {
+		long balance = cardanoDbSyncClient.getBalance2("addr1qx6pnsm9n3lrvtwx24kq7a0mfwq2txum2tvtaevnpkn4mpyghzw2ukr33p5k45j42w62pqysdkf65p34mrvl4yu4n72s7yfgkq");
+		assertThat(balance).isEqualTo(52214010213L);
+	}
+
+	@Test
 	void funding() throws Exception {
 		List<String> inpuAddresses = cardanoDbSyncClient.getFundingAddresses("addr_test1vpxfv548dwfl5qlq4gd8qhzcv68e33phv72yxgmqqtf9t7g9p0j6x");
 		assertThat(inpuAddresses).hasSize(4);

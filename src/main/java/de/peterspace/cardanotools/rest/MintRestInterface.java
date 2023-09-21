@@ -1,6 +1,7 @@
 package de.peterspace.cardanotools.rest;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import de.peterspace.cardanodbsyncapi.client.model.Utxo;
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
 import de.peterspace.cardanotools.ipfs.IpfsClient;
@@ -25,6 +27,7 @@ import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.Transaction;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintTransactionRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -45,14 +48,19 @@ public class MintRestInterface {
 	}
 
 	@PostMapping("buildMintTransaction/{key}")
-	public ResponseEntity<Transaction> buildMintTransaction(@PathVariable("key") UUID key, @RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
+	public ResponseEntity<Transaction> buildMintTransaction(@PathVariable("key") UUID key, @Valid @RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
 
 		Optional<Account> account = accountRepository.findById(key.toString());
 		if (!account.isPresent()) {
 			return new ResponseEntity<Transaction>(HttpStatus.NOT_FOUND);
 		}
 
-		if (account.get().getAddress().getBalance() > 0 && !StringUtils.isBlank(mintOrderSubmission.getTargetAddress()) && !account.get().getFundingAddresses().contains(mintOrderSubmission.getTargetAddress())) {
+		List<Utxo> accountUtxos = cardanoDbSyncClient.getUtxos(account.get().getAddress().getAddress());
+		List<String> sourceAddresses = accountUtxos.stream().map(u -> u.getSourceAddress()).toList();
+
+		if (!accountUtxos.isEmpty()
+				&& !StringUtils.isBlank(mintOrderSubmission.getTargetAddress())
+				&& !sourceAddresses.contains(mintOrderSubmission.getTargetAddress())) {
 			throw new Exception("Invalid target address.");
 		}
 

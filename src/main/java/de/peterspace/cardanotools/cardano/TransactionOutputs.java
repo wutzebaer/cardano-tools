@@ -6,14 +6,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Synchronized;
 
 @Data
-@Slf4j
 public class TransactionOutputs {
 
 	private Map<String, Map<String, Long>> outputs = new HashMap<>();
 
+	@Synchronized
 	public void add(String address, String currency, long amount) {
 		Map<String, Long> addressMap = outputs.computeIfAbsent(address, k -> new HashMap<>());
 		Long currentAmount = addressMap.computeIfAbsent(currency, k -> 0l);

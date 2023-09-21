@@ -1,16 +1,13 @@
 package de.peterspace.cardanotools.model;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 
-import de.peterspace.cardanotools.model.Views.Private;
+import de.peterspace.cardanotools.rest.dto.Views.Private;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -24,8 +21,6 @@ public class Address {
 		this.address = address;
 		this.skey = skey;
 		this.vkey = vkey;
-		this.balance = balance;
-		this.tokensData = tokensData;
 	}
 
 	@Id
@@ -43,12 +38,5 @@ public class Address {
 	@NotBlank
 	@JsonView(Private.class)
 	private String vkey;
-
-	@NotNull
-	private Long balance;
-
-	@NotBlank
-	@Column(columnDefinition = "TEXT")
-	String tokensData;
 
 }

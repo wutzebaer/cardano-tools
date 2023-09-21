@@ -24,7 +24,6 @@ import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.Policy;
 import de.peterspace.cardanotools.model.TokenSubmission;
 import de.peterspace.cardanotools.model.Transaction;
-import de.peterspace.cardanotools.model.TransactionInputs;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintTransactionRepository;
 

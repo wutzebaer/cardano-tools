@@ -1,17 +1,16 @@
 package de.peterspace.cardanotools.model;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
-
 import org.hibernate.validator.constraints.URL;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -54,7 +53,7 @@ public class RegistrationMetadata {
 	// kleiner als 64kb und png
 	@Size(max = 52428800)
 	@JsonIgnore
-	//@Column(columnDefinition = "VARBINARY(52428800)")
+	// @Column(columnDefinition = "VARBINARY(52428800)")
 	byte[] logo;
 
 	int decimals;
