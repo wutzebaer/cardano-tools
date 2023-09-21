@@ -1,4 +1,4 @@
-package de.peterspace.cardanotools;
+package de.peterspace.cardanotools.config;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

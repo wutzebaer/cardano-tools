@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import de.peterspace.cardanotools.TrackExecutionTime;
+import de.peterspace.cardanotools.config.TrackExecutionTime;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.ToString;

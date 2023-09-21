@@ -1,4 +1,4 @@
-package de.peterspace.cardanotools;
+package de.peterspace.cardanotools.config;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnExpression("${aspect.enabled:true}")
 public class ExecutionTimeAdvice {
 
-	@Around("@annotation(de.peterspace.cardanotools.TrackExecutionTime)")
+	@Around("@annotation(de.peterspace.cardanotools.config.TrackExecutionTime)")
 	public Object executionTime(ProceedingJoinPoint point) throws Throwable {
 		long startTime = System.currentTimeMillis();
 		Object object = point.proceed();
