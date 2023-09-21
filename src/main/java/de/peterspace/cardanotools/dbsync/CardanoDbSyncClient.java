@@ -38,8 +38,12 @@ public class CardanoDbSyncClient {
 		return Collections.unmodifiableList(restHandlerApi.getUtxos(address));
 	}
 
-	public String getReturnAddress(String address) {
-		return restHandlerApi.getReturnAddress(address).getAddress();
+	public String getReturnAddress(String stakeAddress) {
+		return restHandlerApi.getReturnAddress(stakeAddress).getAddress();
+	}
+
+	public String getStakeAddress(String address) {
+		return restHandlerApi.getStakeAddress(address).getAddress();
 	}
 
 	public List<EpochStake> getEpochStake(String poolHash, int epoch) {

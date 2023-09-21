@@ -32,7 +32,6 @@ public class MintOrderSubmission {
 	@OneToMany(cascade = CascadeType.ALL)
 	private List<TokenSubmission> tokens;
 
-	@NotBlank
 	@Column(nullable = false)
 	private String targetAddress;
 

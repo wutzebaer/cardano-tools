@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -227,9 +228,9 @@ public class CardanoCli {
 	}
 
 	public Transaction buildMintTransaction(MintOrderSubmission mintOrderSubmission, Account account) throws Exception {
-		List<Utxo> transactionInputs = cardanoDbSyncClient.getUtxos(account.getAddress().getAddress());
+		List<Utxo> transactionInputs = new ArrayList<>(cardanoDbSyncClient.getUtxos(account.getAddress().getAddress()));
 		Policy policy = policyRepository.getByAccountAndPolicyId(account, mintOrderSubmission.getPolicyId());
-		String returnAddress = cardanoDbSyncClient.getReturnAddress(mintOrderSubmission.getTargetAddress());
+		String returnAddress = cardanoDbSyncClient.getReturnAddress(Optional.ofNullable(mintOrderSubmission.getTargetAddress()).orElse(dummyAddress));
 
 		// fake if account is not funded
 		if (transactionInputs.size() == 0) {

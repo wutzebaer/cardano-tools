@@ -27,6 +27,7 @@ import de.peterspace.cardanotools.model.MintOrderSubmission;
 import de.peterspace.cardanotools.model.Transaction;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.MintTransactionRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -47,7 +48,7 @@ public class MintRestInterface {
 	}
 
 	@PostMapping("buildMintTransaction/{key}")
-	public ResponseEntity<Transaction> buildMintTransaction(@PathVariable("key") UUID key, @RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
+	public ResponseEntity<Transaction> buildMintTransaction(@PathVariable("key") UUID key, @Valid @RequestBody MintOrderSubmission mintOrderSubmission) throws Exception {
 
 		Optional<Account> account = accountRepository.findById(key.toString());
 		if (!account.isPresent()) {
