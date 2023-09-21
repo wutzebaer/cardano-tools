@@ -11,5 +11,6 @@ import de.peterspace.cardanotools.model.Policy;
 @Repository
 public interface PolicyRepository extends JpaRepository<Policy, Long> {
 	Policy getByAccountAndPolicyId(Account account, String policyId);
+
 	List<Policy> findByAccount(Account account);
 }

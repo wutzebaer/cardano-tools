@@ -78,7 +78,7 @@ public class Drop {
 	@NotNull
 	@NotEmpty
 	private String prettyUrl;
-	
+
 	@NotNull
 	@JsonView(Persisted.class)
 	private long fee = 1000000;

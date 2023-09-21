@@ -53,7 +53,7 @@ public class RegistrationMetadata {
 	// kleiner als 64kb und png
 	@Size(max = 52428800)
 	@JsonIgnore
-	//@Column(columnDefinition = "VARBINARY(52428800)")
+	// @Column(columnDefinition = "VARBINARY(52428800)")
 	byte[] logo;
 
 	int decimals;
