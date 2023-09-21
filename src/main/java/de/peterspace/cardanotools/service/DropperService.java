@@ -88,7 +88,7 @@ public class DropperService {
 				String stakeAddress = utxos.get(0).getSourceAddress();
 				try {
 
-					Set<String> whitelist = drop.getWhitelist();
+					List<String> whitelist = drop.getWhitelist();
 					long lockedFunds = calculateLockedFunds(utxos);
 
 					if (!whitelist.isEmpty() && !whitelist.contains(stakeAddress)) {

@@ -60,7 +60,7 @@ public class Drop {
 
 	@NotNull
 	@ElementCollection
-	private Set<String> whitelist;
+	private List<String> whitelist;
 
 	@NotNull
 	@ElementCollection
@@ -69,11 +69,11 @@ public class Drop {
 
 	@NotNull
 	@ElementCollection(fetch = FetchType.EAGER)
-	private Set<String> dropNftsSoldAssetNames;
+	private List<String> dropNftsSoldAssetNames;
 
 	@NotNull
 	@ElementCollection(fetch = FetchType.EAGER)
-	private Set<String> dropNftsAvailableAssetNames;
+	private List<String> dropNftsAvailableAssetNames;
 
 	@NotNull
 	@NotEmpty

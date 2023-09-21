@@ -51,7 +51,7 @@ public class DropRestInterface {
 
 		drop.setPolicy(policy);
 		drop.setAddress(cardanoCli.createAddress());
-		drop.setDropNftsAvailableAssetNames(drop.getDropNfts().stream().map(n -> n.getAssetName()).collect(Collectors.toSet()));
+		drop.setDropNftsAvailableAssetNames(drop.getDropNfts().stream().map(n -> n.getAssetName()).toList());
 		drop.setPrettyUrl(encodeForUrl(drop.getName()) + "-" + drop.getId());
 		drop = dropRepository.save(drop);
 		drop.setPrettyUrl(encodeForUrl(drop.getName()) + "-" + drop.getId());
@@ -78,7 +78,7 @@ public class DropRestInterface {
 		persistentDrop.setWhitelist(drop.getWhitelist());
 		persistentDrop.setDropNfts(drop.getDropNfts());
 		persistentDrop.setPrettyUrl(drop.getPrettyUrl());
-		persistentDrop.setDropNftsAvailableAssetNames(drop.getDropNfts().stream().map(n -> n.getAssetName()).collect(Collectors.toSet()));
+		persistentDrop.setDropNftsAvailableAssetNames(drop.getDropNfts().stream().map(n -> n.getAssetName()).toList());
 		persistentDrop.getDropNftsAvailableAssetNames().removeAll(persistentDrop.getDropNftsSoldAssetNames());
 
 		dropRepository.save(persistentDrop);
