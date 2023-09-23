@@ -14,10 +14,14 @@
 package de.peterspace.cardanodbsyncapi.client.model;
 
 import java.util.Objects;
-
+import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
  * PoolInfo
@@ -26,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
   PoolInfo.JSON_PROPERTY_TICKER_NAME,
   PoolInfo.JSON_PROPERTY_POOL_HASH
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-17T21:04:32.197294800+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-23T22:00:56.355312+02:00[Europe/Berlin]")
 public class PoolInfo {
   public static final String JSON_PROPERTY_TICKER_NAME = "tickerName";
   private String tickerName;

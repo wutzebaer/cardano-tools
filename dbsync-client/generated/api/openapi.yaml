@@ -3,8 +3,8 @@ info:
   title: Cardano DB-Sync API
   version: "1.0"
 servers:
-- description: Generated server url
-  url: http://localhost:8080
+- description: Default Server URL
+  url: http://localhost:8080/
 paths:
   /cardanoDbSyncApi/{stakeAddress}/stakeInfo:
     get:
@@ -21,14 +21,14 @@ paths:
       responses:
         "200":
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: '#/components/schemas/StakeInfo'
           description: OK
       summary: Get infos where address is staked to
       tags:
       - rest-handler
-      x-accepts: '*/*'
+      x-accepts: application/json
   /cardanoDbSyncApi/{stakeAddress}/returnAddress:
     get:
       operationId: getReturnAddress
@@ -44,7 +44,7 @@ paths:
       responses:
         "200":
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: '#/components/schemas/ReturnAddress'
           description: OK
@@ -52,7 +52,7 @@ paths:
         \ not be mangled"
       tags:
       - rest-handler
-      x-accepts: '*/*'
+      x-accepts: application/json
   /cardanoDbSyncApi/{address}/utxos:
     get:
       operationId: getUtxos
@@ -68,7 +68,7 @@ paths:
       responses:
         "200":
           content:
-            '*/*':
+            application/json:
               schema:
                 items:
                   $ref: '#/components/schemas/Utxo'
@@ -77,7 +77,7 @@ paths:
       summary: Find utxos of given address or stakeAddress including multi assets
       tags:
       - rest-handler
-      x-accepts: '*/*'
+      x-accepts: application/json
   /cardanoDbSyncApi/{address}/token:
     get:
       operationId: getAddressTokenList
@@ -93,7 +93,7 @@ paths:
       responses:
         "200":
           content:
-            '*/*':
+            application/json:
               schema:
                 items:
                   $ref: '#/components/schemas/TokenListItem'
@@ -102,7 +102,7 @@ paths:
       summary: getAddressTokenList
       tags:
       - rest-handler
-      x-accepts: '*/*'
+      x-accepts: application/json
   /cardanoDbSyncApi/{address}/statement:
     get:
       operationId: getStatement
@@ -118,7 +118,7 @@ paths:
       responses:
         "200":
           content:
-            '*/*':
+            application/json:
               schema:
                 items:
                   $ref: '#/components/schemas/AccountStatementRow'
@@ -127,7 +127,7 @@ paths:
       summary: Get all transactions for an address or stakeAddress
       tags:
       - rest-handler
-      x-accepts: '*/*'
+      x-accepts: application/json
   /cardanoDbSyncApi/{address}/stakeAddress:
     get:
       operationId: getStakeAddress
@@ -143,14 +143,14 @@ paths:
       responses:
         "200":
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: '#/components/schemas/StakeAddress'
           description: OK
       summary: Find stakeAddress of address
       tags:
       - rest-handler
-      x-accepts: '*/*'
+      x-accepts: application/json
   /cardanoDbSyncApi/token:
     get:
       operationId: getTokenList
@@ -182,7 +182,7 @@ paths:
       responses:
         "200":
           content:
-            '*/*':
+            application/json:
               schema:
                 items:
                   $ref: '#/components/schemas/TokenListItem'
@@ -191,7 +191,7 @@ paths:
       summary: getTokenList
       tags:
       - rest-handler
-      x-accepts: '*/*'
+      x-accepts: application/json
   /cardanoDbSyncApi/token/{policyId}/{assetName}:
     get:
       operationId: getTokenDetails
@@ -215,21 +215,21 @@ paths:
       responses:
         "200":
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: '#/components/schemas/TokenDetails'
           description: OK
       summary: getTokenDetails
       tags:
       - rest-handler
-      x-accepts: '*/*'
+      x-accepts: application/json
   /cardanoDbSyncApi/poolList:
     get:
       operationId: getPoolList
       responses:
         "200":
           content:
-            '*/*':
+            application/json:
               schema:
                 items:
                   $ref: '#/components/schemas/PoolInfo'
@@ -238,7 +238,7 @@ paths:
       summary: getPoolList
       tags:
       - rest-handler
-      x-accepts: '*/*'
+      x-accepts: application/json
   /cardanoDbSyncApi/epochStake/{poolHash}/{epoch}:
     get:
       operationId: getEpochStake
@@ -263,7 +263,7 @@ paths:
       responses:
         "200":
           content:
-            '*/*':
+            application/json:
               schema:
                 items:
                   $ref: '#/components/schemas/EpochStake'
@@ -272,7 +272,7 @@ paths:
       summary: getEpochStake
       tags:
       - rest-handler
-      x-accepts: '*/*'
+      x-accepts: application/json
 components:
   schemas:
     StakeInfo:
