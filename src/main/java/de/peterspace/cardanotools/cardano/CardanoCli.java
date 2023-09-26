@@ -114,10 +114,6 @@ public class CardanoCli {
 		cmd.add("--protocol-params-file");
 		cmd.add("protocol.json");
 
-		if ("Babbage".equals(cardanoNode.getEra())) {
-			cmd.add("--babbage-era");
-		}
-
 		cmd.add("--tx-out");
 		cmd.add(normalizedAddressValue);
 
@@ -134,7 +130,7 @@ public class CardanoCli {
 		bits[0] = dummyAddress;
 		for (int i = 1; i < bits.length; i++) {
 			String[] valueBits = bits[i].split(" ");
-			valueBits[0] = "1";
+			valueBits[0] = "1000000";
 			bits[i] = StringUtils.join(valueBits, " ");
 		}
 		return StringUtils.join(bits, "+");
@@ -174,7 +170,7 @@ public class CardanoCli {
 		cmd.add(vkeyFilename);
 		String addressLiteral = cardanoCliDockerBridge.requestCardanoCli(Map.of(vkeyFilename, keyGenResponse[2]), cmd.toArray(new String[0]))[0];
 
-		Address address = new Address(addressLiteral, keyGenResponse[1], keyGenResponse[2], 0l, "[]");
+		Address address = new Address(addressLiteral, keyGenResponse[1], keyGenResponse[2]);
 		return address;
 	}
 

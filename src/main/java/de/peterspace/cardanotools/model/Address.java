@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Address {
 
-	public Address(String address, String skey, String vkey, Long balance, String tokensData) {
+	public Address(String address, String skey, String vkey) {
 		super();
 		this.address = address;
 		this.skey = skey;

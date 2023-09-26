@@ -89,7 +89,7 @@ public class AccountRestInterface {
 			} else {
 				policy = new Policy();
 				policy.setAccount(account);
-				policy.setAddress(new Address("???", policyConfig.getSkey(), "???", 0l, "[]"));
+				policy.setAddress(new Address("???", policyConfig.getSkey(), "???"));
 				policy.setName(policyConfig.getName());
 				policy.setPolicy(policyConfig.getPolicy());
 				policy.setPolicyId(policyConfig.getPolicyId());
