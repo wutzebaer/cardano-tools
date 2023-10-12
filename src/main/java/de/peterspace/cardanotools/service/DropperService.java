@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import de.peterspace.cardano.javalib.CardanoUtils;
 import de.peterspace.cardanodbsyncapi.client.model.Utxo;
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.cardano.CardanoUtil;
@@ -85,7 +86,7 @@ public class DropperService {
 			Map<String, List<Utxo>> transactionInputGroups = findUtxosGroupedBySourceWallet(fundAddress.getAddress());
 
 			for (List<Utxo> utxos : transactionInputGroups.values()) {
-				String stakeAddress = utxos.get(0).getSourceAddress();
+				String stakeAddress = CardanoUtils.extractStakePart(utxos.get(0).getSourceAddress());
 				try {
 
 					List<String> whitelist = drop.getWhitelist();
@@ -152,9 +153,9 @@ public class DropperService {
 	private Map<String, List<Utxo>> findUtxosGroupedBySourceWallet(String address) {
 		List<Utxo> offerFundings = cardanoDbSyncClient.getUtxos(address);
 		Map<String, List<Utxo>> transactionInputGroups = offerFundings.stream()
-				.filter(of -> temporaryBlacklist.getIfPresent(of.getSourceAddress()) == null)
+				.filter(of -> temporaryBlacklist.getIfPresent(CardanoUtils.extractStakePart(of.getSourceAddress())) == null)
 				.filter(of -> !permanentBlacklist.contains(of))
-				.collect(Collectors.groupingBy(of -> of.getSourceAddress(), LinkedHashMap::new, Collectors.toList()));
+				.collect(Collectors.groupingBy(of -> CardanoUtils.extractStakePart(of.getSourceAddress()), LinkedHashMap::new, Collectors.toList()));
 		return transactionInputGroups;
 	}
 
@@ -220,23 +221,23 @@ public class DropperService {
 
 	}
 
-	private void refund(Address fundAddress, List<Utxo> Utxo, long lockedFunds, String reason) throws Exception {
+	private void refund(Address fundAddress, List<Utxo> utxos, long lockedFunds, String reason) throws Exception {
 
 		taskExecutor.execute(() -> {
 			try {
 				// determine amount of tokens
-				String buyerAddress = Utxo.get(0).getSourceAddress();
+				String buyerAddress = cardanoDbSyncClient.getReturnAddress(utxos.get(0).getSourceAddress());
 
 				TransactionOutputs transactionOutputs = new TransactionOutputs();
 
-				Utxo.stream().filter(e -> e.getMaPolicyId() != null).forEach(i -> {
+				utxos.stream().filter(e -> e.getMaPolicyId() != null).forEach(i -> {
 					transactionOutputs.add(buyerAddress, formatCurrency(i.getMaPolicyId(), i.getMaName()), i.getValue());
 				});
 				transactionOutputs.add(buyerAddress, "", lockedFunds);
 
 				JSONObject message = new JSONObject().put("674", new JSONObject().put("msg", new JSONArray().put(reason)));
-				String txId = cardanoCli.mint(Utxo, transactionOutputs, message, fundAddress, null, buyerAddress);
-				permanentBlacklist.addAll(Utxo);
+				String txId = cardanoCli.mint(utxos, transactionOutputs, message, fundAddress, null, buyerAddress);
+				permanentBlacklist.addAll(utxos);
 				log.info("Successfully refunded, txid: {} Reason: {}", txId, reason);
 
 			} catch (Exception e) {
