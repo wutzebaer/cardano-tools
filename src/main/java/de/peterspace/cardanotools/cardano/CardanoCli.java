@@ -130,7 +130,7 @@ public class CardanoCli {
 		bits[0] = dummyAddress;
 		for (int i = 1; i < bits.length; i++) {
 			String[] valueBits = bits[i].split(" ");
-			valueBits[0] = "1000000";
+			valueBits[0] = "10000000000";
 			bits[i] = StringUtils.join(valueBits, " ");
 		}
 		return StringUtils.join(bits, "+");
