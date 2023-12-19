@@ -430,6 +430,9 @@ public class CardanoCli {
 				Matcher matcher = lovelacePattern.matcher(e.getMessage());
 				matcher.find();
 				Long missingFunds = Long.valueOf(matcher.group(1));
+				if (transactionOutputs.getOutputs().isEmpty()) {
+					throw new Exception("Cannot return " + ((double) missingFunds / oneAda) + " ₳");
+				}
 				transactionOutputs.add(transactionOutputs.getOutputs().keySet().iterator().next(), "", missingFunds);
 				return buildTransaction(transactionInputs, transactionOutputs, metaData, policy, changeAddress);
 			} else if (message.contains("The net balance of the transaction is negative")) {
