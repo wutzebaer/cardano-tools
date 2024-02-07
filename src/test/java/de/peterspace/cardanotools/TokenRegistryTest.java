@@ -41,7 +41,7 @@ public class TokenRegistryTest {
 		account.getPolicies().add(0, cardanoCli.createPolicy(account, CardanoUtil.currentSlot(), 1));
 
 		MintOrderSubmission mintOrder = new MintOrderSubmission();
-		mintOrder.setTip(false);
+		mintOrder.setPin(false);
 		mintOrder.setTargetAddress(account.getAddress().getAddress());
 		mintOrder.setPolicyId(account.getPolicies().get(0).getPolicyId());
 		mintOrder.setPin(false);
