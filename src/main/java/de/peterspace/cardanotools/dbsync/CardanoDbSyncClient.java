@@ -54,4 +54,12 @@ public class CardanoDbSyncClient {
 		return Collections.unmodifiableList(restHandlerApi.getStatement(address));
 	}
 
+	public long getTip() {
+		return restHandlerApi.getTip();
+	}
+
+	public boolean isTransactionConfirmed(String txId) {
+		return restHandlerApi.isTransactionConfirmed(txId);
+	}
+
 }

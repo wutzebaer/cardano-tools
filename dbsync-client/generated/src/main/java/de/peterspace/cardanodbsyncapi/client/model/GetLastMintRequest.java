@@ -20,28 +20,31 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
- * EpochStake
+ * GetLastMintRequest
  */
 @JsonPropertyOrder({
-  EpochStake.JSON_PROPERTY_STAKE_ADDRESS,
-  EpochStake.JSON_PROPERTY_AMOUNT
+  GetLastMintRequest.JSON_PROPERTY_STAKE_ADDRESS,
+  GetLastMintRequest.JSON_PROPERTY_POLICY_IDS
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2024-03-04T20:45:00.021345200+01:00[Europe/Berlin]")
-public class EpochStake {
+public class GetLastMintRequest {
   public static final String JSON_PROPERTY_STAKE_ADDRESS = "stakeAddress";
   private String stakeAddress;
 
-  public static final String JSON_PROPERTY_AMOUNT = "amount";
-  private Long amount;
+  public static final String JSON_PROPERTY_POLICY_IDS = "policyIds";
+  private List<String> policyIds;
 
-  public EpochStake() {
+  public GetLastMintRequest() {
   }
 
-  public EpochStake stakeAddress(String stakeAddress) {
+  public GetLastMintRequest stakeAddress(String stakeAddress) {
     
     this.stakeAddress = stakeAddress;
     return this;
@@ -51,9 +54,9 @@ public class EpochStake {
    * Get stakeAddress
    * @return stakeAddress
   **/
-  @jakarta.annotation.Nonnull
+  @jakarta.annotation.Nullable
   @JsonProperty(JSON_PROPERTY_STAKE_ADDRESS)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
   public String getStakeAddress() {
     return stakeAddress;
@@ -61,35 +64,43 @@ public class EpochStake {
 
 
   @JsonProperty(JSON_PROPERTY_STAKE_ADDRESS)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
   public void setStakeAddress(String stakeAddress) {
     this.stakeAddress = stakeAddress;
   }
 
 
-  public EpochStake amount(Long amount) {
+  public GetLastMintRequest policyIds(List<String> policyIds) {
     
-    this.amount = amount;
+    this.policyIds = policyIds;
+    return this;
+  }
+
+  public GetLastMintRequest addPolicyIdsItem(String policyIdsItem) {
+    if (this.policyIds == null) {
+      this.policyIds = new ArrayList<>();
+    }
+    this.policyIds.add(policyIdsItem);
     return this;
   }
 
    /**
-   * Get amount
-   * @return amount
+   * Get policyIds
+   * @return policyIds
   **/
-  @jakarta.annotation.Nonnull
-  @JsonProperty(JSON_PROPERTY_AMOUNT)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_POLICY_IDS)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public Long getAmount() {
-    return amount;
+  public List<String> getPolicyIds() {
+    return policyIds;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_AMOUNT)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAmount(Long amount) {
-    this.amount = amount;
+  @JsonProperty(JSON_PROPERTY_POLICY_IDS)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setPolicyIds(List<String> policyIds) {
+    this.policyIds = policyIds;
   }
 
   @Override
@@ -100,22 +111,22 @@ public class EpochStake {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    EpochStake epochStake = (EpochStake) o;
-    return Objects.equals(this.stakeAddress, epochStake.stakeAddress) &&
-        Objects.equals(this.amount, epochStake.amount);
+    GetLastMintRequest getLastMintRequest = (GetLastMintRequest) o;
+    return Objects.equals(this.stakeAddress, getLastMintRequest.stakeAddress) &&
+        Objects.equals(this.policyIds, getLastMintRequest.policyIds);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(stakeAddress, amount);
+    return Objects.hash(stakeAddress, policyIds);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class EpochStake {\n");
+    sb.append("class GetLastMintRequest {\n");
     sb.append("    stakeAddress: ").append(toIndentedString(stakeAddress)).append("\n");
-    sb.append("    amount: ").append(toIndentedString(amount)).append("\n");
+    sb.append("    policyIds: ").append(toIndentedString(policyIds)).append("\n");
     sb.append("}");
     return sb.toString();
   }

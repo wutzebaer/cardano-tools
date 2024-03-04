@@ -20,76 +20,77 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import de.peterspace.cardanodbsyncapi.client.model.Utxo;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
- * PoolInfo
+ * LiquidityPool
  */
 @JsonPropertyOrder({
-  PoolInfo.JSON_PROPERTY_TICKER_NAME,
-  PoolInfo.JSON_PROPERTY_POOL_HASH
+  LiquidityPool.JSON_PROPERTY_ASSET_A,
+  LiquidityPool.JSON_PROPERTY_ASSET_B
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2024-03-04T20:45:00.021345200+01:00[Europe/Berlin]")
-public class PoolInfo {
-  public static final String JSON_PROPERTY_TICKER_NAME = "tickerName";
-  private String tickerName;
+public class LiquidityPool {
+  public static final String JSON_PROPERTY_ASSET_A = "assetA";
+  private Utxo assetA;
 
-  public static final String JSON_PROPERTY_POOL_HASH = "poolHash";
-  private String poolHash;
+  public static final String JSON_PROPERTY_ASSET_B = "assetB";
+  private Utxo assetB;
 
-  public PoolInfo() {
+  public LiquidityPool() {
   }
 
-  public PoolInfo tickerName(String tickerName) {
+  public LiquidityPool assetA(Utxo assetA) {
     
-    this.tickerName = tickerName;
+    this.assetA = assetA;
     return this;
   }
 
    /**
-   * Get tickerName
-   * @return tickerName
+   * Get assetA
+   * @return assetA
   **/
-  @jakarta.annotation.Nonnull
-  @JsonProperty(JSON_PROPERTY_TICKER_NAME)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_ASSET_A)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getTickerName() {
-    return tickerName;
+  public Utxo getAssetA() {
+    return assetA;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_TICKER_NAME)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setTickerName(String tickerName) {
-    this.tickerName = tickerName;
+  @JsonProperty(JSON_PROPERTY_ASSET_A)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setAssetA(Utxo assetA) {
+    this.assetA = assetA;
   }
 
 
-  public PoolInfo poolHash(String poolHash) {
+  public LiquidityPool assetB(Utxo assetB) {
     
-    this.poolHash = poolHash;
+    this.assetB = assetB;
     return this;
   }
 
    /**
-   * Get poolHash
-   * @return poolHash
+   * Get assetB
+   * @return assetB
   **/
-  @jakarta.annotation.Nonnull
-  @JsonProperty(JSON_PROPERTY_POOL_HASH)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_ASSET_B)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getPoolHash() {
-    return poolHash;
+  public Utxo getAssetB() {
+    return assetB;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_POOL_HASH)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setPoolHash(String poolHash) {
-    this.poolHash = poolHash;
+  @JsonProperty(JSON_PROPERTY_ASSET_B)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setAssetB(Utxo assetB) {
+    this.assetB = assetB;
   }
 
   @Override
@@ -100,22 +101,22 @@ public class PoolInfo {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    PoolInfo poolInfo = (PoolInfo) o;
-    return Objects.equals(this.tickerName, poolInfo.tickerName) &&
-        Objects.equals(this.poolHash, poolInfo.poolHash);
+    LiquidityPool liquidityPool = (LiquidityPool) o;
+    return Objects.equals(this.assetA, liquidityPool.assetA) &&
+        Objects.equals(this.assetB, liquidityPool.assetB);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(tickerName, poolHash);
+    return Objects.hash(assetA, assetB);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class PoolInfo {\n");
-    sb.append("    tickerName: ").append(toIndentedString(tickerName)).append("\n");
-    sb.append("    poolHash: ").append(toIndentedString(poolHash)).append("\n");
+    sb.append("class LiquidityPool {\n");
+    sb.append("    assetA: ").append(toIndentedString(assetA)).append("\n");
+    sb.append("    assetB: ").append(toIndentedString(assetB)).append("\n");
     sb.append("}");
     return sb.toString();
   }

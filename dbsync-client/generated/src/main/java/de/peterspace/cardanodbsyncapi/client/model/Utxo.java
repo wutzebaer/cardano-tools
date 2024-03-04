@@ -32,9 +32,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   Utxo.JSON_PROPERTY_MA_POLICY_ID,
   Utxo.JSON_PROPERTY_MA_NAME,
   Utxo.JSON_PROPERTY_VALUE,
+  Utxo.JSON_PROPERTY_OWNING_ADDRESS,
   Utxo.JSON_PROPERTY_SOURCE_ADDRESS
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-23T22:00:56.355312+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2024-03-04T20:45:00.021345200+01:00[Europe/Berlin]")
 public class Utxo {
   public static final String JSON_PROPERTY_TX_HASH = "txHash";
   private String txHash;
@@ -50,6 +51,9 @@ public class Utxo {
 
   public static final String JSON_PROPERTY_VALUE = "value";
   private Long value;
+
+  public static final String JSON_PROPERTY_OWNING_ADDRESS = "owningAddress";
+  private String owningAddress;
 
   public static final String JSON_PROPERTY_SOURCE_ADDRESS = "sourceAddress";
   private String sourceAddress;
@@ -187,6 +191,32 @@ public class Utxo {
   }
 
 
+  public Utxo owningAddress(String owningAddress) {
+    
+    this.owningAddress = owningAddress;
+    return this;
+  }
+
+   /**
+   * Get owningAddress
+   * @return owningAddress
+  **/
+  @jakarta.annotation.Nonnull
+  @JsonProperty(JSON_PROPERTY_OWNING_ADDRESS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+
+  public String getOwningAddress() {
+    return owningAddress;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_OWNING_ADDRESS)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setOwningAddress(String owningAddress) {
+    this.owningAddress = owningAddress;
+  }
+
+
   public Utxo sourceAddress(String sourceAddress) {
     
     this.sourceAddress = sourceAddress;
@@ -226,12 +256,13 @@ public class Utxo {
         Objects.equals(this.maPolicyId, utxo.maPolicyId) &&
         Objects.equals(this.maName, utxo.maName) &&
         Objects.equals(this.value, utxo.value) &&
+        Objects.equals(this.owningAddress, utxo.owningAddress) &&
         Objects.equals(this.sourceAddress, utxo.sourceAddress);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(txHash, txIndex, maPolicyId, maName, value, sourceAddress);
+    return Objects.hash(txHash, txIndex, maPolicyId, maName, value, owningAddress, sourceAddress);
   }
 
   @Override
@@ -243,6 +274,7 @@ public class Utxo {
     sb.append("    maPolicyId: ").append(toIndentedString(maPolicyId)).append("\n");
     sb.append("    maName: ").append(toIndentedString(maName)).append("\n");
     sb.append("    value: ").append(toIndentedString(value)).append("\n");
+    sb.append("    owningAddress: ").append(toIndentedString(owningAddress)).append("\n");
     sb.append("    sourceAddress: ").append(toIndentedString(sourceAddress)).append("\n");
     sb.append("}");
     return sb.toString();

@@ -20,9 +20,11 @@ import com.fasterxml.jackson.annotation.JsonView;
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.model.Account;
 import de.peterspace.cardanotools.model.Drop;
+import de.peterspace.cardanotools.model.MintingStatus;
 import de.peterspace.cardanotools.model.Policy;
 import de.peterspace.cardanotools.repository.AccountRepository;
 import de.peterspace.cardanotools.repository.DropRepository;
+import de.peterspace.cardanotools.repository.MintingStatusRepository;
 import de.peterspace.cardanotools.repository.PolicyRepository;
 import de.peterspace.cardanotools.rest.dto.PublicDropInfo;
 import de.peterspace.cardanotools.rest.dto.Views.Transient;
@@ -39,6 +41,7 @@ public class DropRestInterface {
 	private final CardanoCli cardanoCli;
 	private final DropperService dropperService;
 	private final PolicyRepository policyRepository;
+	private final MintingStatusRepository mintingStatusRepository;
 
 	@PostMapping("{key}/{policyId}")
 	public ResponseEntity<Void> createDrop(@PathVariable("key") UUID key, @PathVariable("policyId") String policyId, @JsonView(Transient.class) @RequestBody Drop drop) throws Exception {
@@ -86,7 +89,7 @@ public class DropRestInterface {
 	}
 
 	@GetMapping("{key}/{policyId}")
-	public ResponseEntity<List<Drop>> getDrops(@PathVariable("key") UUID key, @PathVariable("policyId") String policyId) throws Exception {
+	public ResponseEntity<List<Drop>> getDrops(@PathVariable UUID key, @PathVariable String policyId) throws Exception {
 		Optional<Account> account = accountRepository.findById(key.toString());
 		if (!account.isPresent()) {
 			return new ResponseEntity<List<Drop>>(HttpStatus.NOT_FOUND);
@@ -97,10 +100,20 @@ public class DropRestInterface {
 	}
 
 	@GetMapping("{prettyUrl}")
-	public ResponseEntity<PublicDropInfo> getDrop(@PathVariable("prettyUrl") String prettyUrl) throws Exception {
+	public ResponseEntity<PublicDropInfo> getDrop(@PathVariable String prettyUrl) throws Exception {
 		Drop drop = dropRepository.findByPrettyUrl(prettyUrl);
 		PublicDropInfo publicDropInfo = new PublicDropInfo(drop.getName(), drop.getDropNfts().size(), drop.getDropNftsAvailableAssetNames().size(), drop.getAddress().getAddress(), drop.getMaxPerTransaction(), drop.getPrice(), drop.isRunning(), drop.getPolicy().getPolicyId());
 		return new ResponseEntity<PublicDropInfo>(publicDropInfo, HttpStatus.OK);
+	}
+
+	@PostMapping("status")
+	public void initMintingStatus(@RequestBody MintingStatus mintingStatus) throws Exception {
+		mintingStatusRepository.save(mintingStatus);
+	}
+
+	@GetMapping("status/{stakeAddressHash}")
+	public MintingStatus getMintingStatus(@PathVariable String paymentTxId) throws Exception {
+		return mintingStatusRepository.findByPaymentTxId(paymentTxId);
 	}
 
 	@GetMapping("fundedAddresses")

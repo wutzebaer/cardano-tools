@@ -4,6 +4,9 @@ import de.peterspace.cardanodbsyncapi.client.ApiClient;
 
 import de.peterspace.cardanodbsyncapi.client.model.AccountStatementRow;
 import de.peterspace.cardanodbsyncapi.client.model.EpochStake;
+import de.peterspace.cardanodbsyncapi.client.model.GetLastMintRequest;
+import de.peterspace.cardanodbsyncapi.client.model.LiquidityPool;
+import de.peterspace.cardanodbsyncapi.client.model.OwnerInfo;
 import de.peterspace.cardanodbsyncapi.client.model.PoolInfo;
 import de.peterspace.cardanodbsyncapi.client.model.ReturnAddress;
 import de.peterspace.cardanodbsyncapi.client.model.StakeAddress;
@@ -33,7 +36,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2023-09-23T22:00:56.355312+02:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2024-03-04T20:45:00.021345200+01:00[Europe/Berlin]")
 public class RestHandlerApi {
     private ApiClient apiClient;
 
@@ -53,6 +56,55 @@ public class RestHandlerApi {
         this.apiClient = apiClient;
     }
 
+    /**
+     * Get address for handle
+     * 
+     * <p><b>200</b> - OK
+     * @param handle  (required)
+     * @return StakeAddress
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public StakeAddress getAddressByHandle(String handle) throws RestClientException {
+        return getAddressByHandleWithHttpInfo(handle).getBody();
+    }
+
+    /**
+     * Get address for handle
+     * 
+     * <p><b>200</b> - OK
+     * @param handle  (required)
+     * @return ResponseEntity&lt;StakeAddress&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public ResponseEntity<StakeAddress> getAddressByHandleWithHttpInfo(String handle) throws RestClientException {
+        Object localVarPostBody = null;
+        
+        // verify the required parameter 'handle' is set
+        if (handle == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'handle' when calling getAddressByHandle");
+        }
+        
+        // create path and map variables
+        final Map<String, Object> uriVariables = new HashMap<String, Object>();
+        uriVariables.put("handle", handle);
+
+        final MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders localVarHeaderParams = new HttpHeaders();
+        final MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap<String, Object>();
+
+        final String[] localVarAccepts = { 
+            "application/json"
+         };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = {  };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<StakeAddress> localReturnType = new ParameterizedTypeReference<StakeAddress>() {};
+        return apiClient.invokeAPI("/cardanoDbSyncApi/handles/{handle}", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
     /**
      * getAddressTokenList
      * 
@@ -158,6 +210,209 @@ public class RestHandlerApi {
 
         ParameterizedTypeReference<List<EpochStake>> localReturnType = new ParameterizedTypeReference<List<EpochStake>>() {};
         return apiClient.invokeAPI("/cardanoDbSyncApi/epochStake/{poolHash}/{epoch}", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
+    /**
+     * Get all handles from a stakeAddress
+     * 
+     * <p><b>200</b> - OK
+     * @param stakeAddress  (required)
+     * @return List&lt;StakeAddress&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public List<StakeAddress> getHandles(String stakeAddress) throws RestClientException {
+        return getHandlesWithHttpInfo(stakeAddress).getBody();
+    }
+
+    /**
+     * Get all handles from a stakeAddress
+     * 
+     * <p><b>200</b> - OK
+     * @param stakeAddress  (required)
+     * @return ResponseEntity&lt;List&lt;StakeAddress&gt;&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public ResponseEntity<List<StakeAddress>> getHandlesWithHttpInfo(String stakeAddress) throws RestClientException {
+        Object localVarPostBody = null;
+        
+        // verify the required parameter 'stakeAddress' is set
+        if (stakeAddress == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'stakeAddress' when calling getHandles");
+        }
+        
+        // create path and map variables
+        final Map<String, Object> uriVariables = new HashMap<String, Object>();
+        uriVariables.put("stakeAddress", stakeAddress);
+
+        final MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders localVarHeaderParams = new HttpHeaders();
+        final MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap<String, Object>();
+
+        final String[] localVarAccepts = { 
+            "application/json"
+         };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = {  };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<List<StakeAddress>> localReturnType = new ParameterizedTypeReference<List<StakeAddress>>() {};
+        return apiClient.invokeAPI("/cardanoDbSyncApi/{stakeAddress}/handles", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
+    /**
+     * Get last minted tokens for stakeAddress and policy ids
+     * 
+     * <p><b>200</b> - OK
+     * @param getLastMintRequest  (required)
+     * @return List&lt;TokenDetails&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public List<TokenDetails> getLastMint(GetLastMintRequest getLastMintRequest) throws RestClientException {
+        return getLastMintWithHttpInfo(getLastMintRequest).getBody();
+    }
+
+    /**
+     * Get last minted tokens for stakeAddress and policy ids
+     * 
+     * <p><b>200</b> - OK
+     * @param getLastMintRequest  (required)
+     * @return ResponseEntity&lt;List&lt;TokenDetails&gt;&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public ResponseEntity<List<TokenDetails>> getLastMintWithHttpInfo(GetLastMintRequest getLastMintRequest) throws RestClientException {
+        Object localVarPostBody = getLastMintRequest;
+        
+        // verify the required parameter 'getLastMintRequest' is set
+        if (getLastMintRequest == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'getLastMintRequest' when calling getLastMint");
+        }
+        
+
+        final MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders localVarHeaderParams = new HttpHeaders();
+        final MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap<String, Object>();
+
+        final String[] localVarAccepts = { 
+            "application/json"
+         };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = { 
+            "application/json"
+         };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<List<TokenDetails>> localReturnType = new ParameterizedTypeReference<List<TokenDetails>>() {};
+        return apiClient.invokeAPI("/cardanoDbSyncApi/lastMint", HttpMethod.POST, Collections.<String, Object>emptyMap(), localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
+    /**
+     * Get minswap pools for token
+     * 
+     * <p><b>200</b> - OK
+     * @param policyId  (required)
+     * @param assetName  (required)
+     * @return List&lt;LiquidityPool&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public List<LiquidityPool> getMinswapPools(String policyId, String assetName) throws RestClientException {
+        return getMinswapPoolsWithHttpInfo(policyId, assetName).getBody();
+    }
+
+    /**
+     * Get minswap pools for token
+     * 
+     * <p><b>200</b> - OK
+     * @param policyId  (required)
+     * @param assetName  (required)
+     * @return ResponseEntity&lt;List&lt;LiquidityPool&gt;&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public ResponseEntity<List<LiquidityPool>> getMinswapPoolsWithHttpInfo(String policyId, String assetName) throws RestClientException {
+        Object localVarPostBody = null;
+        
+        // verify the required parameter 'policyId' is set
+        if (policyId == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'policyId' when calling getMinswapPools");
+        }
+        
+        // verify the required parameter 'assetName' is set
+        if (assetName == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'assetName' when calling getMinswapPools");
+        }
+        
+        // create path and map variables
+        final Map<String, Object> uriVariables = new HashMap<String, Object>();
+        uriVariables.put("policyId", policyId);
+        uriVariables.put("assetName", assetName);
+
+        final MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders localVarHeaderParams = new HttpHeaders();
+        final MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap<String, Object>();
+
+        final String[] localVarAccepts = { 
+            "application/json"
+         };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = {  };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<List<LiquidityPool>> localReturnType = new ParameterizedTypeReference<List<LiquidityPool>>() {};
+        return apiClient.invokeAPI("/cardanoDbSyncApi/minswap/{policyId}/{assetName}", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
+    /**
+     * Get all token owners of a policyId, values get updated twice a day
+     * 
+     * <p><b>200</b> - OK
+     * @param policyId  (required)
+     * @return List&lt;OwnerInfo&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public List<OwnerInfo> getOwners(String policyId) throws RestClientException {
+        return getOwnersWithHttpInfo(policyId).getBody();
+    }
+
+    /**
+     * Get all token owners of a policyId, values get updated twice a day
+     * 
+     * <p><b>200</b> - OK
+     * @param policyId  (required)
+     * @return ResponseEntity&lt;List&lt;OwnerInfo&gt;&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public ResponseEntity<List<OwnerInfo>> getOwnersWithHttpInfo(String policyId) throws RestClientException {
+        Object localVarPostBody = null;
+        
+        // verify the required parameter 'policyId' is set
+        if (policyId == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'policyId' when calling getOwners");
+        }
+        
+        // create path and map variables
+        final Map<String, Object> uriVariables = new HashMap<String, Object>();
+        uriVariables.put("policyId", policyId);
+
+        final MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders localVarHeaderParams = new HttpHeaders();
+        final MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap<String, Object>();
+
+        final String[] localVarAccepts = { 
+            "application/json"
+         };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = {  };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<List<OwnerInfo>> localReturnType = new ParameterizedTypeReference<List<OwnerInfo>>() {};
+        return apiClient.invokeAPI("/cardanoDbSyncApi/policy/{policyId}/owners", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
     }
     /**
      * getPoolList
@@ -297,6 +552,104 @@ public class RestHandlerApi {
         return apiClient.invokeAPI("/cardanoDbSyncApi/{address}/stakeAddress", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
     }
     /**
+     * Find stakeAddress by stakeAddressHash
+     * 
+     * <p><b>200</b> - OK
+     * @param stakeAddressHash  (required)
+     * @return StakeAddress
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public StakeAddress getStakeAddressByHash(String stakeAddressHash) throws RestClientException {
+        return getStakeAddressByHashWithHttpInfo(stakeAddressHash).getBody();
+    }
+
+    /**
+     * Find stakeAddress by stakeAddressHash
+     * 
+     * <p><b>200</b> - OK
+     * @param stakeAddressHash  (required)
+     * @return ResponseEntity&lt;StakeAddress&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public ResponseEntity<StakeAddress> getStakeAddressByHashWithHttpInfo(String stakeAddressHash) throws RestClientException {
+        Object localVarPostBody = null;
+        
+        // verify the required parameter 'stakeAddressHash' is set
+        if (stakeAddressHash == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'stakeAddressHash' when calling getStakeAddressByHash");
+        }
+        
+        // create path and map variables
+        final Map<String, Object> uriVariables = new HashMap<String, Object>();
+        uriVariables.put("stakeAddressHash", stakeAddressHash);
+
+        final MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders localVarHeaderParams = new HttpHeaders();
+        final MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap<String, Object>();
+
+        final String[] localVarAccepts = { 
+            "application/json"
+         };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = {  };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<StakeAddress> localReturnType = new ParameterizedTypeReference<StakeAddress>() {};
+        return apiClient.invokeAPI("/cardanoDbSyncApi/stakeAddress/{stakeAddressHash}", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
+    /**
+     * Find stakeAddressHash by stakeAddress
+     * 
+     * <p><b>200</b> - OK
+     * @param stakeAddress  (required)
+     * @return StakeAddress
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public StakeAddress getStakeHashByAddress(String stakeAddress) throws RestClientException {
+        return getStakeHashByAddressWithHttpInfo(stakeAddress).getBody();
+    }
+
+    /**
+     * Find stakeAddressHash by stakeAddress
+     * 
+     * <p><b>200</b> - OK
+     * @param stakeAddress  (required)
+     * @return ResponseEntity&lt;StakeAddress&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public ResponseEntity<StakeAddress> getStakeHashByAddressWithHttpInfo(String stakeAddress) throws RestClientException {
+        Object localVarPostBody = null;
+        
+        // verify the required parameter 'stakeAddress' is set
+        if (stakeAddress == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'stakeAddress' when calling getStakeHashByAddress");
+        }
+        
+        // create path and map variables
+        final Map<String, Object> uriVariables = new HashMap<String, Object>();
+        uriVariables.put("stakeAddress", stakeAddress);
+
+        final MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders localVarHeaderParams = new HttpHeaders();
+        final MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap<String, Object>();
+
+        final String[] localVarAccepts = { 
+            "application/json"
+         };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = {  };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<StakeAddress> localReturnType = new ParameterizedTypeReference<StakeAddress>() {};
+        return apiClient.invokeAPI("/cardanoDbSyncApi/stakeHash/{stakeAddress}", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
+    /**
      * Get infos where address is staked to
      * 
      * <p><b>200</b> - OK
@@ -395,6 +748,45 @@ public class RestHandlerApi {
         return apiClient.invokeAPI("/cardanoDbSyncApi/{address}/statement", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
     }
     /**
+     * Returns current tip of db
+     * 
+     * <p><b>200</b> - OK
+     * @return Long
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public Long getTip() throws RestClientException {
+        return getTipWithHttpInfo().getBody();
+    }
+
+    /**
+     * Returns current tip of db
+     * 
+     * <p><b>200</b> - OK
+     * @return ResponseEntity&lt;Long&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public ResponseEntity<Long> getTipWithHttpInfo() throws RestClientException {
+        Object localVarPostBody = null;
+        
+
+        final MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders localVarHeaderParams = new HttpHeaders();
+        final MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap<String, Object>();
+
+        final String[] localVarAccepts = { 
+            "application/json"
+         };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = {  };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<Long> localReturnType = new ParameterizedTypeReference<Long>() {};
+        return apiClient.invokeAPI("/cardanoDbSyncApi/tip", HttpMethod.GET, Collections.<String, Object>emptyMap(), localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
+    /**
      * getTokenDetails
      * 
      * <p><b>200</b> - OK
@@ -487,7 +879,7 @@ public class RestHandlerApi {
         localVarQueryParams.putAll(apiClient.parameterToMultiValueMap(null, "afterMintid", afterMintid));
         localVarQueryParams.putAll(apiClient.parameterToMultiValueMap(null, "beforeMintid", beforeMintid));
         localVarQueryParams.putAll(apiClient.parameterToMultiValueMap(null, "filter", filter));
-
+        
 
         final String[] localVarAccepts = { 
             "application/json"
@@ -549,5 +941,54 @@ public class RestHandlerApi {
 
         ParameterizedTypeReference<List<Utxo>> localReturnType = new ParameterizedTypeReference<List<Utxo>>() {};
         return apiClient.invokeAPI("/cardanoDbSyncApi/{address}/utxos", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
+    /**
+     * Checks is a txid has been included in the chain
+     * 
+     * <p><b>200</b> - OK
+     * @param txId  (required)
+     * @return Boolean
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public Boolean isTransactionConfirmed(String txId) throws RestClientException {
+        return isTransactionConfirmedWithHttpInfo(txId).getBody();
+    }
+
+    /**
+     * Checks is a txid has been included in the chain
+     * 
+     * <p><b>200</b> - OK
+     * @param txId  (required)
+     * @return ResponseEntity&lt;Boolean&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public ResponseEntity<Boolean> isTransactionConfirmedWithHttpInfo(String txId) throws RestClientException {
+        Object localVarPostBody = null;
+        
+        // verify the required parameter 'txId' is set
+        if (txId == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'txId' when calling isTransactionConfirmed");
+        }
+        
+        // create path and map variables
+        final Map<String, Object> uriVariables = new HashMap<String, Object>();
+        uriVariables.put("txId", txId);
+
+        final MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders localVarHeaderParams = new HttpHeaders();
+        final MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap<String, Object>();
+
+        final String[] localVarAccepts = { 
+            "application/json"
+         };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = {  };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<Boolean> localReturnType = new ParameterizedTypeReference<Boolean>() {};
+        return apiClient.invokeAPI("/cardanoDbSyncApi/transaction/{txId}/confirmed", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
     }
 }

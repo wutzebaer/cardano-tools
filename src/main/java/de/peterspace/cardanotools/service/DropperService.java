@@ -38,6 +38,7 @@ import de.peterspace.cardanotools.model.Drop;
 import de.peterspace.cardanotools.model.DropNft;
 import de.peterspace.cardanotools.model.Wallet;
 import de.peterspace.cardanotools.repository.DropRepository;
+import de.peterspace.cardanotools.repository.MintingStatusRepository;
 import de.peterspace.cardanotools.repository.WalletRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +58,7 @@ public class DropperService {
 	private final CardanoCli cardanoCli;
 	private final TaskExecutor taskExecutor;
 	private final WalletRepository walletRepository;
+	private final MintingStatusRepository mintingStatusRepository;
 
 	private final Cache<String, Boolean> temporaryBlacklist = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
 	private final Set<Utxo> permanentBlacklist = new HashSet<>();
@@ -86,16 +88,17 @@ public class DropperService {
 			Map<String, List<Utxo>> transactionInputGroups = findUtxosGroupedBySourceWallet(fundAddress.getAddress());
 
 			for (List<Utxo> utxos : transactionInputGroups.values()) {
-				String stakeAddress = CardanoUtils.extractStakePart(utxos.get(0).getSourceAddress());
+				final String stakeAddress = CardanoUtils.extractStakePart(utxos.get(0).getSourceAddress());
+				final String stakeAddressHash = CardanoUtils.stakeToHash(stakeAddress);
 				try {
 
 					List<String> whitelist = drop.getWhitelist();
 					long lockedFunds = calculateLockedFunds(utxos);
 
 					if (!whitelist.isEmpty() && !whitelist.contains(stakeAddress)) {
-						refund(fundAddress, utxos, lockedFunds, "Not in whitelist");
+						refund(fundAddress, utxos, lockedFunds, "Not in whitelist", stakeAddressHash);
 					} else if (!drop.isRunning()) {
-						refund(fundAddress, utxos, lockedFunds, "Not running");
+						refund(fundAddress, utxos, lockedFunds, "Not running", stakeAddressHash);
 					} else {
 
 						Optional<Wallet> wallet = Optional.empty();
@@ -110,11 +113,11 @@ public class DropperService {
 						int mintsLeft = drop.getMaxPerTransaction() - wallet.map(w -> w.getTokensMinted()).orElse(0);
 
 						if (drop.getDropNftsAvailableAssetNames().size() == 0) {
-							refund(fundAddress, utxos, lockedFunds, "No tokens left");
+							refund(fundAddress, utxos, lockedFunds, "No tokens left", stakeAddressHash);
 						} else if (mintsLeft < 1) {
-							refund(fundAddress, utxos, lockedFunds, "No tokens left for your wallet");
+							refund(fundAddress, utxos, lockedFunds, "No tokens left for your wallet", stakeAddressHash);
 						} else if (drop.getPolicy().getPolicyDueSlot() < CardanoUtil.currentSlot()) {
-							refund(fundAddress, utxos, lockedFunds, "Policy has locked");
+							refund(fundAddress, utxos, lockedFunds, "Policy has locked", stakeAddressHash);
 						} else if (hasEnoughFunds(price, utxos, lockedFunds)) {
 							long funds = calculateAvailableFunds(utxos) - lockedFunds;
 							int amount = (int) NumberUtils.min(funds / price, mintsLeft);
@@ -134,7 +137,7 @@ public class DropperService {
 
 							sell(drop, utxos, tokens, totalPrice, lockedFunds);
 						} else {
-							refund(fundAddress, utxos, lockedFunds, "Noth enough funds");
+							refund(fundAddress, utxos, lockedFunds, "Noth enough funds", stakeAddressHash);
 						}
 
 					}
@@ -163,6 +166,9 @@ public class DropperService {
 
 		taskExecutor.execute(() -> {
 			try {
+
+				mintingStatusRepository.updateMintingStatus(utxos.get(0).getTxHash(), "Minting...", false, utxos.get(0).getTxHash(), false);
+
 				String buyerAddress = cardanoDbSyncClient.getReturnAddress(utxos.get(0).getSourceAddress());
 
 				log.info("selling {} tokens to {} : {}", tokens.size(), buyerAddress, tokens);
@@ -207,6 +213,8 @@ public class DropperService {
 				// submit transaction
 				String txId = cardanoCli.mint(utxos, transactionOutputs, metaData, drop.getAddress(), drop.getPolicy(), drop.getProfitAddress());
 				permanentBlacklist.addAll(utxos);
+
+				mintingStatusRepository.updateMintingStatus(utxos.get(0).getTxHash(), "Waiting for mint confirmation", false, txId, true);
 				log.info("Successfully sold {} for {}, txid: {}", tokens.size(), totalPrice, txId);
 			} catch (Exception e) {
 				log.error("sell failed", e);
@@ -221,10 +229,12 @@ public class DropperService {
 
 	}
 
-	private void refund(Address fundAddress, List<Utxo> utxos, long lockedFunds, String reason) throws Exception {
+	private void refund(Address fundAddress, List<Utxo> utxos, long lockedFunds, String reason, String stakeAddressHash) throws Exception {
 
 		taskExecutor.execute(() -> {
 			try {
+				mintingStatusRepository.updateMintingStatus(utxos.get(0).getTxHash(), "Refunding: " + reason, false, utxos.get(0).getTxHash(), false);
+
 				// determine amount of tokens
 				String buyerAddress = cardanoDbSyncClient.getReturnAddress(utxos.get(0).getSourceAddress());
 
@@ -239,6 +249,8 @@ public class DropperService {
 				String txId = cardanoCli.mint(utxos, transactionOutputs, message, fundAddress, null, buyerAddress);
 				permanentBlacklist.addAll(utxos);
 				log.info("Successfully refunded, txid: {} Reason: {}", txId, reason);
+
+				mintingStatusRepository.updateMintingStatus(utxos.get(0).getTxHash(), "Waiting for refund confirmation: " + reason, false, utxos.get(0).getTxHash(), true);
 
 			} catch (Exception e) {
 				log.error("Refund failed (Reason " + reason + ")", e);

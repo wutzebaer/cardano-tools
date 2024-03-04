@@ -12,6 +12,7 @@
 |**maPolicyId** | **String** |  |  [optional] |
 |**maName** | **String** |  |  [optional] |
 |**value** | **Long** |  |  |
+|**owningAddress** | **String** |  |  |
 |**sourceAddress** | **String** |  |  |
 
 

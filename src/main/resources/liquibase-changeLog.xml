@@ -316,5 +316,23 @@
 		<dropSequence sequenceName="token_offer_seq" />
 	</changeSet>
 
+	<changeSet author="wutze (generated)" id="14">
+		<createTable tableName="minting_status">
+			<column name="payment_tx_id" type="VARCHAR(255)">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="minting_statusPK" />
+			</column>
+			<column name="final_step" type="BOOLEAN">
+				<constraints nullable="false" />
+			</column>
+			<column name="finished" type="BOOLEAN">
+				<constraints nullable="false" />
+			</column>
+			<column name="status" type="TEXT" />
+			<column name="tx_id" type="VARCHAR(255)" />
+			<column name="valid_until_slot" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+	</changeSet>
 
 </databaseChangeLog>

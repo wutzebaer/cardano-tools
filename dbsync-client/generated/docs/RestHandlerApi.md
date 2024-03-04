@@ -4,17 +4,90 @@ All URIs are relative to *http://localhost:8080*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
+| [**getAddressByHandle**](RestHandlerApi.md#getAddressByHandle) | **GET** /cardanoDbSyncApi/handles/{handle} | Get address for handle |
 | [**getAddressTokenList**](RestHandlerApi.md#getAddressTokenList) | **GET** /cardanoDbSyncApi/{address}/token | getAddressTokenList |
 | [**getEpochStake**](RestHandlerApi.md#getEpochStake) | **GET** /cardanoDbSyncApi/epochStake/{poolHash}/{epoch} | getEpochStake |
+| [**getHandles**](RestHandlerApi.md#getHandles) | **GET** /cardanoDbSyncApi/{stakeAddress}/handles | Get all handles from a stakeAddress |
+| [**getLastMint**](RestHandlerApi.md#getLastMint) | **POST** /cardanoDbSyncApi/lastMint | Get last minted tokens for stakeAddress and policy ids |
+| [**getMinswapPools**](RestHandlerApi.md#getMinswapPools) | **GET** /cardanoDbSyncApi/minswap/{policyId}/{assetName} | Get minswap pools for token |
+| [**getOwners**](RestHandlerApi.md#getOwners) | **GET** /cardanoDbSyncApi/policy/{policyId}/owners | Get all token owners of a policyId, values get updated twice a day |
 | [**getPoolList**](RestHandlerApi.md#getPoolList) | **GET** /cardanoDbSyncApi/poolList | getPoolList |
 | [**getReturnAddress**](RestHandlerApi.md#getReturnAddress) | **GET** /cardanoDbSyncApi/{stakeAddress}/returnAddress | Find the first known address with the same stake address, which should not be mangled |
 | [**getStakeAddress**](RestHandlerApi.md#getStakeAddress) | **GET** /cardanoDbSyncApi/{address}/stakeAddress | Find stakeAddress of address |
+| [**getStakeAddressByHash**](RestHandlerApi.md#getStakeAddressByHash) | **GET** /cardanoDbSyncApi/stakeAddress/{stakeAddressHash} | Find stakeAddress by stakeAddressHash |
+| [**getStakeHashByAddress**](RestHandlerApi.md#getStakeHashByAddress) | **GET** /cardanoDbSyncApi/stakeHash/{stakeAddress} | Find stakeAddressHash by stakeAddress |
 | [**getStakeInfo**](RestHandlerApi.md#getStakeInfo) | **GET** /cardanoDbSyncApi/{stakeAddress}/stakeInfo | Get infos where address is staked to |
 | [**getStatement**](RestHandlerApi.md#getStatement) | **GET** /cardanoDbSyncApi/{address}/statement | Get all transactions for an address or stakeAddress |
+| [**getTip**](RestHandlerApi.md#getTip) | **GET** /cardanoDbSyncApi/tip | Returns current tip of db |
 | [**getTokenDetails**](RestHandlerApi.md#getTokenDetails) | **GET** /cardanoDbSyncApi/token/{policyId}/{assetName} | getTokenDetails |
 | [**getTokenList**](RestHandlerApi.md#getTokenList) | **GET** /cardanoDbSyncApi/token | getTokenList |
 | [**getUtxos**](RestHandlerApi.md#getUtxos) | **GET** /cardanoDbSyncApi/{address}/utxos | Find utxos of given address or stakeAddress including multi assets |
+| [**isTransactionConfirmed**](RestHandlerApi.md#isTransactionConfirmed) | **GET** /cardanoDbSyncApi/transaction/{txId}/confirmed | Checks is a txid has been included in the chain |
 
+
+
+## getAddressByHandle
+
+> StakeAddress getAddressByHandle(handle)
+
+Get address for handle
+
+### Example
+
+```java
+// Import classes:
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
+import de.peterspace.cardanodbsyncapi.client.ApiException;
+import de.peterspace.cardanodbsyncapi.client.Configuration;
+import de.peterspace.cardanodbsyncapi.client.models.*;
+import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost:8080");
+
+        RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
+        String handle = "petergrossmann"; // String | 
+        try {
+            StakeAddress result = apiInstance.getAddressByHandle(handle);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling RestHandlerApi#getAddressByHandle");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **handle** | **String**|  | |
+
+### Return type
+
+[**StakeAddress**](StakeAddress.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 
 
 ## getAddressTokenList
@@ -130,6 +203,264 @@ public class Example {
 ### Return type
 
 [**List&lt;EpochStake&gt;**](EpochStake.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+
+
+## getHandles
+
+> List&lt;StakeAddress&gt; getHandles(stakeAddress)
+
+Get all handles from a stakeAddress
+
+### Example
+
+```java
+// Import classes:
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
+import de.peterspace.cardanodbsyncapi.client.ApiException;
+import de.peterspace.cardanodbsyncapi.client.Configuration;
+import de.peterspace.cardanodbsyncapi.client.models.*;
+import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost:8080");
+
+        RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
+        String stakeAddress = "stake1u8wmu7jc0e4a6fn5haflczfjy6aagwhsxh6w5p7hsyt8jeshhy0rn"; // String | 
+        try {
+            List<StakeAddress> result = apiInstance.getHandles(stakeAddress);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling RestHandlerApi#getHandles");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **stakeAddress** | **String**|  | |
+
+### Return type
+
+[**List&lt;StakeAddress&gt;**](StakeAddress.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+
+
+## getLastMint
+
+> List&lt;TokenDetails&gt; getLastMint(getLastMintRequest)
+
+Get last minted tokens for stakeAddress and policy ids
+
+### Example
+
+```java
+// Import classes:
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
+import de.peterspace.cardanodbsyncapi.client.ApiException;
+import de.peterspace.cardanodbsyncapi.client.Configuration;
+import de.peterspace.cardanodbsyncapi.client.models.*;
+import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost:8080");
+
+        RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
+        GetLastMintRequest getLastMintRequest = new GetLastMintRequest(); // GetLastMintRequest | 
+        try {
+            List<TokenDetails> result = apiInstance.getLastMint(getLastMintRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling RestHandlerApi#getLastMint");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **getLastMintRequest** | [**GetLastMintRequest**](GetLastMintRequest.md)|  | |
+
+### Return type
+
+[**List&lt;TokenDetails&gt;**](TokenDetails.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+
+
+## getMinswapPools
+
+> List&lt;LiquidityPool&gt; getMinswapPools(policyId, assetName)
+
+Get minswap pools for token
+
+### Example
+
+```java
+// Import classes:
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
+import de.peterspace.cardanodbsyncapi.client.ApiException;
+import de.peterspace.cardanodbsyncapi.client.Configuration;
+import de.peterspace.cardanodbsyncapi.client.models.*;
+import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost:8080");
+
+        RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
+        String policyId = "89267e9a35153a419e1b8ffa23e511ac39ea4e3b00452e9d500f2982"; // String | 
+        String assetName = "436176616c6965724b696e67436861726c6573"; // String | 
+        try {
+            List<LiquidityPool> result = apiInstance.getMinswapPools(policyId, assetName);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling RestHandlerApi#getMinswapPools");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **policyId** | **String**|  | |
+| **assetName** | **String**|  | |
+
+### Return type
+
+[**List&lt;LiquidityPool&gt;**](LiquidityPool.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+
+
+## getOwners
+
+> List&lt;OwnerInfo&gt; getOwners(policyId)
+
+Get all token owners of a policyId, values get updated twice a day
+
+### Example
+
+```java
+// Import classes:
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
+import de.peterspace.cardanodbsyncapi.client.ApiException;
+import de.peterspace.cardanodbsyncapi.client.Configuration;
+import de.peterspace.cardanodbsyncapi.client.models.*;
+import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost:8080");
+
+        RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
+        String policyId = "89267e9a35153a419e1b8ffa23e511ac39ea4e3b00452e9d500f2982"; // String | 
+        try {
+            List<OwnerInfo> result = apiInstance.getOwners(policyId);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling RestHandlerApi#getOwners");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **policyId** | **String**|  | |
+
+### Return type
+
+[**List&lt;OwnerInfo&gt;**](OwnerInfo.md)
 
 ### Authorization
 
@@ -335,6 +666,134 @@ No authorization required
 | **200** | OK |  -  |
 
 
+## getStakeAddressByHash
+
+> StakeAddress getStakeAddressByHash(stakeAddressHash)
+
+Find stakeAddress by stakeAddressHash
+
+### Example
+
+```java
+// Import classes:
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
+import de.peterspace.cardanodbsyncapi.client.ApiException;
+import de.peterspace.cardanodbsyncapi.client.Configuration;
+import de.peterspace.cardanodbsyncapi.client.models.*;
+import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost:8080");
+
+        RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
+        String stakeAddressHash = "e1ddbe7a587e6bdd2674bf53fc093226bbd43af035f4ea07d781167966"; // String | 
+        try {
+            StakeAddress result = apiInstance.getStakeAddressByHash(stakeAddressHash);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling RestHandlerApi#getStakeAddressByHash");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **stakeAddressHash** | **String**|  | |
+
+### Return type
+
+[**StakeAddress**](StakeAddress.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+
+
+## getStakeHashByAddress
+
+> StakeAddress getStakeHashByAddress(stakeAddress)
+
+Find stakeAddressHash by stakeAddress
+
+### Example
+
+```java
+// Import classes:
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
+import de.peterspace.cardanodbsyncapi.client.ApiException;
+import de.peterspace.cardanodbsyncapi.client.Configuration;
+import de.peterspace.cardanodbsyncapi.client.models.*;
+import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost:8080");
+
+        RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
+        String stakeAddress = "stake1u8wmu7jc0e4a6fn5haflczfjy6aagwhsxh6w5p7hsyt8jeshhy0rn"; // String | 
+        try {
+            StakeAddress result = apiInstance.getStakeHashByAddress(stakeAddress);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling RestHandlerApi#getStakeHashByAddress");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **stakeAddress** | **String**|  | |
+
+### Return type
+
+[**StakeAddress**](StakeAddress.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+
+
 ## getStakeInfo
 
 > StakeInfo getStakeInfo(stakeAddress)
@@ -463,6 +922,66 @@ No authorization required
 | **200** | OK |  -  |
 
 
+## getTip
+
+> Long getTip()
+
+Returns current tip of db
+
+### Example
+
+```java
+// Import classes:
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
+import de.peterspace.cardanodbsyncapi.client.ApiException;
+import de.peterspace.cardanodbsyncapi.client.Configuration;
+import de.peterspace.cardanodbsyncapi.client.models.*;
+import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost:8080");
+
+        RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
+        try {
+            Long result = apiInstance.getTip();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling RestHandlerApi#getTip");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+This endpoint does not need any parameter.
+
+### Return type
+
+**Long**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+
+
 ## getTokenDetails
 
 > TokenDetails getTokenDetails(policyId, assetName)
@@ -485,8 +1004,8 @@ public class Example {
         defaultClient.setBasePath("http://localhost:8080");
 
         RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
-        String policyId = "d1edc4dfb4f5f7fb240239ad64a4730c2fd4744eda3c8a7d0fff1f92"; // String | 
-        String assetName = "504f524b5958383835"; // String | 
+        String policyId = "89267e9a35153a419e1b8ffa23e511ac39ea4e3b00452e9d500f2982"; // String | 
+        String assetName = "436176616c6965724b696e67436861726c6573"; // String | 
         try {
             TokenDetails result = apiInstance.getTokenDetails(policyId, assetName);
             System.out.println(result);
@@ -553,7 +1072,7 @@ public class Example {
         RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
         Long afterMintid = 56L; // Long | 
         Long beforeMintid = 56L; // Long | 
-        String filter = "d1edc4dfb4f5f7fb240239ad64a4730c2fd4744eda3c8a7d0fff1f92"; // String | 
+        String filter = "89267e9a35153a419e1b8ffa23e511ac39ea4e3b00452e9d500f2982"; // String | 
         try {
             List<TokenListItem> result = apiInstance.getTokenList(afterMintid, beforeMintid, filter);
             System.out.println(result);
@@ -644,6 +1163,70 @@ public class Example {
 ### Return type
 
 [**List&lt;Utxo&gt;**](Utxo.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+
+
+## isTransactionConfirmed
+
+> Boolean isTransactionConfirmed(txId)
+
+Checks is a txid has been included in the chain
+
+### Example
+
+```java
+// Import classes:
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
+import de.peterspace.cardanodbsyncapi.client.ApiException;
+import de.peterspace.cardanodbsyncapi.client.Configuration;
+import de.peterspace.cardanodbsyncapi.client.models.*;
+import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost:8080");
+
+        RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
+        String txId = "a6ca444bd39cb51c7e997a9cead4a8071e2f7e5d1579ac4194b6aaaba923bc58"; // String | 
+        try {
+            Boolean result = apiInstance.isTransactionConfirmed(txId);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling RestHandlerApi#isTransactionConfirmed");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **txId** | **String**|  | |
+
+### Return type
+
+**Boolean**
 
 ### Authorization
 
