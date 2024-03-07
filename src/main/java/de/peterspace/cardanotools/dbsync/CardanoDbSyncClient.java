@@ -11,6 +11,7 @@ import de.peterspace.cardanodbsyncapi.client.ApiClient;
 import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
 import de.peterspace.cardanodbsyncapi.client.model.AccountStatementRow;
 import de.peterspace.cardanodbsyncapi.client.model.EpochStake;
+import de.peterspace.cardanodbsyncapi.client.model.TxOut;
 import de.peterspace.cardanodbsyncapi.client.model.Utxo;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +61,14 @@ public class CardanoDbSyncClient {
 
 	public boolean isTransactionConfirmed(String txId) {
 		return restHandlerApi.isTransactionConfirmed(txId);
+	}
+
+	public String getTransactionMetadata(String txId) {
+		return restHandlerApi.getTransactionMetadata(txId);
+	}
+
+	public List<TxOut> getTransactionOutputs(String txId) {
+		return restHandlerApi.getTransactionOutputs(txId);
 	}
 
 }

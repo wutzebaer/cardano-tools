@@ -111,7 +111,7 @@ public class DropRestInterface {
 		mintingStatusRepository.save(mintingStatus);
 	}
 
-	@GetMapping("status/{stakeAddressHash}")
+	@GetMapping("status/{paymentTxId}")
 	public MintingStatus getMintingStatus(@PathVariable String paymentTxId) throws Exception {
 		return mintingStatusRepository.findByPaymentTxId(paymentTxId);
 	}

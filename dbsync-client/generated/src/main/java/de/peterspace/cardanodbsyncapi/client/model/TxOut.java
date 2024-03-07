@@ -24,72 +24,72 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
- * EpochStake
+ * TxOut
  */
 @JsonPropertyOrder({
-  EpochStake.JSON_PROPERTY_STAKE_ADDRESS,
-  EpochStake.JSON_PROPERTY_AMOUNT
+  TxOut.JSON_PROPERTY_TARGET_ADDRESS,
+  TxOut.JSON_PROPERTY_VALUE
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2024-03-06T20:43:49.743375300+01:00[Europe/Berlin]")
-public class EpochStake {
-  public static final String JSON_PROPERTY_STAKE_ADDRESS = "stakeAddress";
-  private String stakeAddress;
+public class TxOut {
+  public static final String JSON_PROPERTY_TARGET_ADDRESS = "targetAddress";
+  private String targetAddress;
 
-  public static final String JSON_PROPERTY_AMOUNT = "amount";
-  private Long amount;
+  public static final String JSON_PROPERTY_VALUE = "value";
+  private Long value;
 
-  public EpochStake() {
+  public TxOut() {
   }
 
-  public EpochStake stakeAddress(String stakeAddress) {
+  public TxOut targetAddress(String targetAddress) {
     
-    this.stakeAddress = stakeAddress;
+    this.targetAddress = targetAddress;
     return this;
   }
 
    /**
-   * Get stakeAddress
-   * @return stakeAddress
+   * Get targetAddress
+   * @return targetAddress
   **/
   @jakarta.annotation.Nonnull
-  @JsonProperty(JSON_PROPERTY_STAKE_ADDRESS)
+  @JsonProperty(JSON_PROPERTY_TARGET_ADDRESS)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
-  public String getStakeAddress() {
-    return stakeAddress;
+  public String getTargetAddress() {
+    return targetAddress;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_STAKE_ADDRESS)
+  @JsonProperty(JSON_PROPERTY_TARGET_ADDRESS)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setStakeAddress(String stakeAddress) {
-    this.stakeAddress = stakeAddress;
+  public void setTargetAddress(String targetAddress) {
+    this.targetAddress = targetAddress;
   }
 
 
-  public EpochStake amount(Long amount) {
+  public TxOut value(Long value) {
     
-    this.amount = amount;
+    this.value = value;
     return this;
   }
 
    /**
-   * Get amount
-   * @return amount
+   * Get value
+   * @return value
   **/
   @jakarta.annotation.Nonnull
-  @JsonProperty(JSON_PROPERTY_AMOUNT)
+  @JsonProperty(JSON_PROPERTY_VALUE)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
 
-  public Long getAmount() {
-    return amount;
+  public Long getValue() {
+    return value;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_AMOUNT)
+  @JsonProperty(JSON_PROPERTY_VALUE)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAmount(Long amount) {
-    this.amount = amount;
+  public void setValue(Long value) {
+    this.value = value;
   }
 
   @Override
@@ -100,22 +100,22 @@ public class EpochStake {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    EpochStake epochStake = (EpochStake) o;
-    return Objects.equals(this.stakeAddress, epochStake.stakeAddress) &&
-        Objects.equals(this.amount, epochStake.amount);
+    TxOut txOut = (TxOut) o;
+    return Objects.equals(this.targetAddress, txOut.targetAddress) &&
+        Objects.equals(this.value, txOut.value);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(stakeAddress, amount);
+    return Objects.hash(targetAddress, value);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class EpochStake {\n");
-    sb.append("    stakeAddress: ").append(toIndentedString(stakeAddress)).append("\n");
-    sb.append("    amount: ").append(toIndentedString(amount)).append("\n");
+    sb.append("class TxOut {\n");
+    sb.append("    targetAddress: ").append(toIndentedString(targetAddress)).append("\n");
+    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("}");
     return sb.toString();
   }

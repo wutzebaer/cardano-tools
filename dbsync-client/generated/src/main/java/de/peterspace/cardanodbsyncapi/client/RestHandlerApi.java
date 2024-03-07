@@ -13,6 +13,7 @@ import de.peterspace.cardanodbsyncapi.client.model.StakeAddress;
 import de.peterspace.cardanodbsyncapi.client.model.StakeInfo;
 import de.peterspace.cardanodbsyncapi.client.model.TokenDetails;
 import de.peterspace.cardanodbsyncapi.client.model.TokenListItem;
+import de.peterspace.cardanodbsyncapi.client.model.TxOut;
 import de.peterspace.cardanodbsyncapi.client.model.Utxo;
 
 import java.util.Collections;
@@ -36,7 +37,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2024-03-04T20:45:00.021345200+01:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2024-03-06T20:43:49.743375300+01:00[Europe/Berlin]")
 public class RestHandlerApi {
     private ApiClient apiClient;
 
@@ -892,6 +893,104 @@ public class RestHandlerApi {
 
         ParameterizedTypeReference<List<TokenListItem>> localReturnType = new ParameterizedTypeReference<List<TokenListItem>>() {};
         return apiClient.invokeAPI("/cardanoDbSyncApi/token", HttpMethod.GET, Collections.<String, Object>emptyMap(), localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
+    /**
+     * Get json metadata of tx
+     * 
+     * <p><b>200</b> - OK
+     * @param txId  (required)
+     * @return String
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public String getTransactionMetadata(String txId) throws RestClientException {
+        return getTransactionMetadataWithHttpInfo(txId).getBody();
+    }
+
+    /**
+     * Get json metadata of tx
+     * 
+     * <p><b>200</b> - OK
+     * @param txId  (required)
+     * @return ResponseEntity&lt;String&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public ResponseEntity<String> getTransactionMetadataWithHttpInfo(String txId) throws RestClientException {
+        Object localVarPostBody = null;
+        
+        // verify the required parameter 'txId' is set
+        if (txId == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'txId' when calling getTransactionMetadata");
+        }
+        
+        // create path and map variables
+        final Map<String, Object> uriVariables = new HashMap<String, Object>();
+        uriVariables.put("txId", txId);
+
+        final MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders localVarHeaderParams = new HttpHeaders();
+        final MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap<String, Object>();
+
+        final String[] localVarAccepts = { 
+            "application/json"
+         };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = {  };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<String> localReturnType = new ParameterizedTypeReference<String>() {};
+        return apiClient.invokeAPI("/cardanoDbSyncApi/transaction/{txId}/metadata", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
+    /**
+     * Get ada outputs if tx
+     * 
+     * <p><b>200</b> - OK
+     * @param txId  (required)
+     * @return List&lt;TxOut&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public List<TxOut> getTransactionOutputs(String txId) throws RestClientException {
+        return getTransactionOutputsWithHttpInfo(txId).getBody();
+    }
+
+    /**
+     * Get ada outputs if tx
+     * 
+     * <p><b>200</b> - OK
+     * @param txId  (required)
+     * @return ResponseEntity&lt;List&lt;TxOut&gt;&gt;
+     * @throws RestClientException if an error occurs while attempting to invoke the API
+     */
+    public ResponseEntity<List<TxOut>> getTransactionOutputsWithHttpInfo(String txId) throws RestClientException {
+        Object localVarPostBody = null;
+        
+        // verify the required parameter 'txId' is set
+        if (txId == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'txId' when calling getTransactionOutputs");
+        }
+        
+        // create path and map variables
+        final Map<String, Object> uriVariables = new HashMap<String, Object>();
+        uriVariables.put("txId", txId);
+
+        final MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders localVarHeaderParams = new HttpHeaders();
+        final MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap<String, Object>();
+
+        final String[] localVarAccepts = { 
+            "application/json"
+         };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = {  };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<List<TxOut>> localReturnType = new ParameterizedTypeReference<List<TxOut>>() {};
+        return apiClient.invokeAPI("/cardanoDbSyncApi/transaction/{txId}/outputs", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
     }
     /**
      * Find utxos of given address or stakeAddress including multi assets

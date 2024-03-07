@@ -17,6 +17,7 @@ docs/StakeAddress.md
 docs/StakeInfo.md
 docs/TokenDetails.md
 docs/TokenListItem.md
+docs/TxOut.md
 docs/Utxo.md
 git_push.sh
 gradle.properties
@@ -48,4 +49,6 @@ src/main/java/de/peterspace/cardanodbsyncapi/client/model/StakeAddress.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/model/StakeInfo.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/model/TokenDetails.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/model/TokenListItem.java
+src/main/java/de/peterspace/cardanodbsyncapi/client/model/TxOut.java
 src/main/java/de/peterspace/cardanodbsyncapi/client/model/Utxo.java
+src/test/java/de/peterspace/cardanodbsyncapi/client/model/TxOutTest.java

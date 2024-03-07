@@ -7,9 +7,11 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONStringer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +20,9 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.google.common.base.Objects;
+
+import de.peterspace.cardanodbsyncapi.client.model.TxOut;
 import de.peterspace.cardanodbsyncapi.client.model.Utxo;
 import de.peterspace.cardanotools.cardano.CardanoCli;
 import de.peterspace.cardanotools.dbsync.CardanoDbSyncClient;
@@ -34,6 +39,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/api/mint")
 public class MintRestInterface {
+
+	@Value("${pledge-address}")
+	private String pledgeAddress;
 
 	private final CardanoCli cardanoCli;
 	private final IpfsClient ipfsClient;
@@ -79,6 +87,30 @@ public class MintRestInterface {
 		cardanoCli.submitTransaction(mintTransaction);
 		mintTransactionRepository.save(mintTransaction);
 		return new ResponseEntity<Void>(HttpStatus.OK);
+	}
+
+	@PostMapping("calculatePinFee")
+	public long calculatePinFee(@RequestBody String metadata) throws Exception {
+		return cardanoCli.calculatePinFee(metadata);
+	}
+
+	@GetMapping("txConfirmed/{txId}")
+	public boolean txConfirmed(@PathVariable String txId) throws Exception {
+		return cardanoDbSyncClient.isTransactionConfirmed(txId);
+	}
+
+	@PostMapping("pinFiles")
+	public ResponseEntity<Void> pinFiles(@RequestBody String txId) throws Exception {
+		var metadata = cardanoDbSyncClient.getTransactionMetadata(txId);
+		List<TxOut> outputs = cardanoDbSyncClient.getTransactionOutputs(txId);
+		long fee = cardanoCli.calculatePinFee(metadata);
+		boolean paid = outputs.stream().anyMatch(o -> Objects.equal(pledgeAddress, o.getTargetAddress()) && Objects.equal(fee, o.getValue()));
+		if (paid) {
+			cardanoCli.pinFiles(metadata);
+			return new ResponseEntity<Void>(HttpStatus.OK);
+		} else {
+			return new ResponseEntity<Void>(HttpStatus.PAYMENT_REQUIRED);
+		}
 	}
 
 }

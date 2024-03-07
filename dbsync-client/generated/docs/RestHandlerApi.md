@@ -21,6 +21,8 @@ All URIs are relative to *http://localhost:8080*
 | [**getTip**](RestHandlerApi.md#getTip) | **GET** /cardanoDbSyncApi/tip | Returns current tip of db |
 | [**getTokenDetails**](RestHandlerApi.md#getTokenDetails) | **GET** /cardanoDbSyncApi/token/{policyId}/{assetName} | getTokenDetails |
 | [**getTokenList**](RestHandlerApi.md#getTokenList) | **GET** /cardanoDbSyncApi/token | getTokenList |
+| [**getTransactionMetadata**](RestHandlerApi.md#getTransactionMetadata) | **GET** /cardanoDbSyncApi/transaction/{txId}/metadata | Get json metadata of tx |
+| [**getTransactionOutputs**](RestHandlerApi.md#getTransactionOutputs) | **GET** /cardanoDbSyncApi/transaction/{txId}/outputs | Get ada outputs if tx |
 | [**getUtxos**](RestHandlerApi.md#getUtxos) | **GET** /cardanoDbSyncApi/{address}/utxos | Find utxos of given address or stakeAddress including multi assets |
 | [**isTransactionConfirmed**](RestHandlerApi.md#isTransactionConfirmed) | **GET** /cardanoDbSyncApi/transaction/{txId}/confirmed | Checks is a txid has been included in the chain |
 
@@ -1099,6 +1101,134 @@ public class Example {
 ### Return type
 
 [**List&lt;TokenListItem&gt;**](TokenListItem.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+
+
+## getTransactionMetadata
+
+> String getTransactionMetadata(txId)
+
+Get json metadata of tx
+
+### Example
+
+```java
+// Import classes:
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
+import de.peterspace.cardanodbsyncapi.client.ApiException;
+import de.peterspace.cardanodbsyncapi.client.Configuration;
+import de.peterspace.cardanodbsyncapi.client.models.*;
+import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost:8080");
+
+        RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
+        String txId = "a6ca444bd39cb51c7e997a9cead4a8071e2f7e5d1579ac4194b6aaaba923bc58"; // String | 
+        try {
+            String result = apiInstance.getTransactionMetadata(txId);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling RestHandlerApi#getTransactionMetadata");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **txId** | **String**|  | |
+
+### Return type
+
+**String**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+
+
+## getTransactionOutputs
+
+> List&lt;TxOut&gt; getTransactionOutputs(txId)
+
+Get ada outputs if tx
+
+### Example
+
+```java
+// Import classes:
+import de.peterspace.cardanodbsyncapi.client.ApiClient;
+import de.peterspace.cardanodbsyncapi.client.ApiException;
+import de.peterspace.cardanodbsyncapi.client.Configuration;
+import de.peterspace.cardanodbsyncapi.client.models.*;
+import de.peterspace.cardanodbsyncapi.client.RestHandlerApi;
+
+public class Example {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setBasePath("http://localhost:8080");
+
+        RestHandlerApi apiInstance = new RestHandlerApi(defaultClient);
+        String txId = "a6ca444bd39cb51c7e997a9cead4a8071e2f7e5d1579ac4194b6aaaba923bc58"; // String | 
+        try {
+            List<TxOut> result = apiInstance.getTransactionOutputs(txId);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling RestHandlerApi#getTransactionOutputs");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **txId** | **String**|  | |
+
+### Return type
+
+[**List&lt;TxOut&gt;**](TxOut.md)
 
 ### Authorization
 

@@ -1,5 +1,6 @@
 package de.peterspace.cardanotools.cardano;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -258,14 +259,8 @@ public class CardanoCli {
 
 		long pinFee = 0;
 		if (mintOrderSubmission.getPin() && !account.getFreePin()) {
-			Set<String> ipfsUrls = getIpfsUrls(mintOrderSubmission.getMetaData());
-			long size = 0;
-			for (String url : ipfsUrls) {
-				if (!StringUtils.isBlank(url)) {
-					size += ipfsClient.getSize(url);
-				}
-			}
-			pinFee += (long) Math.max(size * 0.04, 1_000_000);
+			String metaData = mintOrderSubmission.getMetaData();
+			pinFee = calculatePinFee(metaData);
 			transactionOutputs.add(pledgeAddress, "", pinFee);
 		}
 
@@ -299,6 +294,29 @@ public class CardanoCli {
 		mintTransaction.setMinOutput(minUtxo);
 		mintTransaction.setPinFee(pinFee);
 		return mintTransaction;
+	}
+
+	public long calculatePinFee(String metaData) throws IOException {
+		long pinFee = 0;
+		Set<String> ipfsUrls = getIpfsUrls(metaData);
+		long size = 0;
+		for (String url : ipfsUrls) {
+			if (!StringUtils.isBlank(url)) {
+				size += ipfsClient.getSize(url);
+			}
+		}
+		pinFee += (long) Math.max(size * 0.04, 1_000_000);
+		return pinFee;
+	}
+
+	public void pinFiles(String metaData) throws Exception {
+		Set<String> ipfsUrls = getIpfsUrls(metaData);
+		for (String image : ipfsUrls) {
+			if (!StringUtils.isBlank(image)) {
+				log.info("Pinning {}", image);
+				ipfsClient.pinFile(image);
+			}
+		}
 	}
 
 	public Transaction buildTransaction(Address address, TransactionOutputs transactionOutputs, String metaData) throws Exception {
@@ -523,13 +541,7 @@ public class CardanoCli {
 			if (mintTransaction.getMintOrderSubmission() != null && mintTransaction.getMintOrderSubmission().getPin()) {
 				String metaData = mintTransaction.getMintOrderSubmission().getMetaData();
 				if (!StringUtils.isBlank(metaData)) {
-					Set<String> ipfsUrls = getIpfsUrls(metaData);
-					for (String image : ipfsUrls) {
-						if (!StringUtils.isBlank(image)) {
-							log.info("Pinning {}", image);
-							ipfsClient.pinFile(image);
-						}
-					}
+					pinFiles(metaData);
 				}
 			}
 

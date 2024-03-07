@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   LiquidityPool.JSON_PROPERTY_ASSET_A,
   LiquidityPool.JSON_PROPERTY_ASSET_B
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2024-03-04T20:45:00.021345200+01:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2024-03-06T20:43:49.743375300+01:00[Europe/Berlin]")
 public class LiquidityPool {
   public static final String JSON_PROPERTY_ASSET_A = "assetA";
   private Utxo assetA;

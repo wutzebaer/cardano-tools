@@ -36,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   TokenDetails.JSON_PROPERTY_TX_HASH,
   TokenDetails.JSON_PROPERTY_TOTAL_SUPPLY
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2024-03-04T20:45:00.021345200+01:00[Europe/Berlin]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2024-03-06T20:43:49.743375300+01:00[Europe/Berlin]")
 public class TokenDetails {
   public static final String JSON_PROPERTY_SLOT_NO = "slotNo";
   private Long slotNo;
