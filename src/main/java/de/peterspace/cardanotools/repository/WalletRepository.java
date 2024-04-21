@@ -9,7 +9,7 @@ import de.peterspace.cardanotools.model.Drop;
 import de.peterspace.cardanotools.model.Wallet;
 
 @Repository
-public interface WalletRepository extends JpaRepository<Wallet, String> {
+public interface WalletRepository extends JpaRepository<Wallet, Long> {
 
 	Optional<Wallet> findByDropAndStakeAddress(Drop drop, String stakeAddress);
 

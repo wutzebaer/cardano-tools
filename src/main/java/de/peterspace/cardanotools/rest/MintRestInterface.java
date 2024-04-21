@@ -104,7 +104,7 @@ public class MintRestInterface {
 		var metadata = cardanoDbSyncClient.getTransactionMetadata(txId);
 		List<TxOut> outputs = cardanoDbSyncClient.getTransactionOutputs(txId);
 		long fee = cardanoCli.calculatePinFee(metadata);
-		boolean paid = outputs.stream().anyMatch(o -> Objects.equal(pledgeAddress, o.getTargetAddress()) && Objects.equal(fee, o.getValue()));
+		boolean paid = outputs.stream().anyMatch(o -> Objects.equal(pledgeAddress, o.getTargetAddress()) && o.getValue() >= fee);
 		if (paid) {
 			cardanoCli.pinFiles(metadata);
 			return new ResponseEntity<Void>(HttpStatus.OK);
