@@ -335,4 +335,9 @@
 		</createTable>
 	</changeSet>
 
+    <changeSet author="wutze (generated)" id="15">
+        <addUniqueConstraint columnNames="drop_id, drop_nfts_available_asset_names" constraintName="dropNftsAvailableAssetNames_unique" tableName="drop_drop_nfts_available_asset_names"/>
+        <addUniqueConstraint columnNames="drop_id, drop_nfts_sold_asset_names" constraintName="dropNftsSoldAssetNames_unique" tableName="drop_drop_nfts_sold_asset_names"/>
+    </changeSet>
+
 </databaseChangeLog>

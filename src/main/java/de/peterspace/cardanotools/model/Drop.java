@@ -1,12 +1,12 @@
 package de.peterspace.cardanotools.model;
 
 import java.util.List;
-import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
 import de.peterspace.cardanotools.rest.dto.Views.Persisted;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -16,6 +16,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -69,10 +70,12 @@ public class Drop {
 
 	@NotNull
 	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(uniqueConstraints = @UniqueConstraint(columnNames = { "drop_id", "dropNftsSoldAssetNames" }, name = "dropNftsSoldAssetNames_unique"))
 	private List<String> dropNftsSoldAssetNames;
 
 	@NotNull
 	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(uniqueConstraints = @UniqueConstraint(columnNames = { "drop_id", "dropNftsAvailableAssetNames" }, name = "dropNftsAvailableAssetNames_unique"))
 	private List<String> dropNftsAvailableAssetNames;
 
 	@NotNull
