@@ -365,12 +365,9 @@ public class CardanoCli {
 		Map<String, String> inputFiles = new HashMap<>();
 		ArrayList<String> cmd = new ArrayList<String>();
 
+		cmd.add("conway");
 		cmd.add("transaction");
 		cmd.add("build");
-
-		if ("Babbage".equals(cardanoNode.getEra())) {
-			cmd.add("--babbage-era");
-		}
 
 		cmd.add("--change-address");
 		cmd.add(changeAddress);
