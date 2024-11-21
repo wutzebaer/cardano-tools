@@ -70,7 +70,15 @@ public class DropperService {
 				.map(d -> d.getAddress().getAddress())
 				.filter(fundAddress -> {
 					Map<String, List<Utxo>> transactionInputGroups = findUtxosGroupedBySourceWallet(fundAddress);
-					return transactionInputGroups.size() > 0;
+
+					Map<String, List<Utxo>> filteredGroups = transactionInputGroups.entrySet().stream()
+							.filter(entry -> entry.getValue().stream()
+									.filter(utxo -> utxo.getMaPolicyId() == null) // Nur UTXOs ohne maPolicyId berücksichtigen
+									.mapToLong(Utxo::getValue) // Werte summieren
+									.sum() >= 2000000) // Bedingung: Summe >= 2000000
+							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+					return filteredGroups.size() > 0;
 				})
 				.collect(Collectors.toList());
 	}
