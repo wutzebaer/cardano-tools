@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PriceService {
 
-	private static final LocalDate INITIAL_DATE = LocalDate.parse("2017-10-01");
+	private static final LocalDate INITIAL_DATE = LocalDate.parse("2024-02-03");
 
 	private final PriceRepository priceRepository;
 

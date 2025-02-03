@@ -2,6 +2,8 @@ package de.peterspace.cardanotools.ipfs;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,8 +12,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import io.ipfs.api.IPFS;
+import io.ipfs.api.JSONParser;
 import io.ipfs.api.IPFS.PinType;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
@@ -34,7 +38,7 @@ public class IpfsClient {
 	@PostConstruct
 	public IPFS buildIpfsClient() {
 		MultiAddress multiAddress = new MultiAddress(apiUrl);
-		IPFS ipfs = new IPFS(multiAddress.getHost(), multiAddress.getTCPPort(), "/api/v0/", 10_000, 60_000, multiAddress.toString().contains("/https"));
+		IPFS ipfs = new IPFS(multiAddress.getHost(), multiAddress.getPort(), "/api/v0/", 10_000, 60_000, multiAddress.toString().contains("/https"));
 		return ipfs;
 	}
 
@@ -75,8 +79,13 @@ public class IpfsClient {
 	}
 
 	public long getSize(String ipfsUrl) throws IOException {
-		IPFS ipfs = buildIpfsClient();
-		return ((Number) ipfs.object.stat(Multihash.fromBase58(StringUtils.right(ipfsUrl, 46))).get("CumulativeSize")).longValue();
+		MultiAddress multiAddress = new MultiAddress(apiUrl);
+		RestTemplate restTemplate = new RestTemplate();
+		String hashString = StringUtils.right(ipfsUrl, 46);
+		String url = "http://" + multiAddress.getHost() + ":" + multiAddress.getPort() + "/api/v0/dag/stat?arg=" + hashString + "&progress=false";
+		String response = restTemplate.postForObject(url, null, String.class);
+		Map result = (Map) JSONParser.parse(response);
+		return ((Number) result.get("TotalSize")).longValue();
 	}
 
 }
