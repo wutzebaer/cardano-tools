@@ -24,7 +24,7 @@ services:
       environment:
       - working.dir=/work
       - cardano-db-sync.password=XXX
-      - pledge-address=addr1qx6pnsm9n3lrvtwx24kq7a0mfwq2txum2tvtaevnpkn4mpyghzw2ukr33p5k45j42w62pqysdkf65p34mrvl4yu4n72s7yfgkq
+      - pledge-address=addr1qy556kyh5vx2k2qgatj75m4f3un0p282dkkvcm38pewkzvrv0h6rckjajnad9l4xc3eczdsel7r7r6t4amhpql5jvaxsr78krj
       - spring.datasource.url=jdbc:h2:file:/work/database
       - server.port=8087
       - network=mainnet

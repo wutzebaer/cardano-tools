@@ -144,7 +144,7 @@ public class StakeRewardRestInterface {
 		if (tip) {
 			StakeRewardPosition srp = new StakeRewardPosition();
 			srp.setAmount(0l);
-			srp.setStakeAddress("stake1uxyt389wtpccs6t26f248d9qszgxmya2qc6a3k06jw2el9g42aktg");
+			srp.setStakeAddress("stake1u9k8maputfwef7kjl6nvguupxcvllplpa967amss06fxwngzsj30w");
 			srp.setShare(0);
 			srp.setOutputs(Map.of("", ONE_ADA + Math.max(availableLovelace, 0l)));
 			stakeRewardPositions.add(srp);

@@ -1,1 +1,1 @@
-docker run --name mainnet-node --restart unless-stopped -v D:\mainenet-data:/data -v %cd%\cardano-minter-workdir:/work -v mainnet-ipc:/ipc -e NETWORK=mainnet ghcr.io/intersectmbo/cardano-node:10.4.1
+docker run --name mainnet-node --restart unless-stopped -v D:\mainenet-data:/data -v %cd%\cardano-minter-workdir:/work -v mainnet-ipc:/ipc -e NETWORK=mainnet ghcr.io/intersectmbo/cardano-node:10.5.1

@@ -24,7 +24,7 @@ public class CardanoDbSyncTest {
 
 	@Test
 	void getBalance2() throws Exception {
-		long balance = cardanoDbSyncClient.getBalance2("addr1qx6pnsm9n3lrvtwx24kq7a0mfwq2txum2tvtaevnpkn4mpyghzw2ukr33p5k45j42w62pqysdkf65p34mrvl4yu4n72s7yfgkq");
+		long balance = cardanoDbSyncClient.getBalance2("addr1qy556kyh5vx2k2qgatj75m4f3un0p282dkkvcm38pewkzvrv0h6rckjajnad9l4xc3eczdsel7r7r6t4amhpql5jvaxsr78krj");
 		assertThat(balance).isEqualTo(52214010213L);
 	}
 
